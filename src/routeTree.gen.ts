@@ -9,38 +9,130 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as GirisRouteImport } from './routes/giris'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppYonetimRouteImport } from './routes/_app.yonetim'
+import { Route as AppUretimRouteImport } from './routes/_app.uretim'
+import { Route as AppPanelRouteImport } from './routes/_app.panel'
+import { Route as AppKaliteRouteImport } from './routes/_app.kalite'
+import { Route as AppDurusRouteImport } from './routes/_app.durus'
 
+const GirisRoute = GirisRouteImport.update({
+  id: '/giris',
+  path: '/giris',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppYonetimRoute = AppYonetimRouteImport.update({
+  id: '/yonetim',
+  path: '/yonetim',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUretimRoute = AppUretimRouteImport.update({
+  id: '/uretim',
+  path: '/uretim',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPanelRoute = AppPanelRouteImport.update({
+  id: '/panel',
+  path: '/panel',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppKaliteRoute = AppKaliteRouteImport.update({
+  id: '/kalite',
+  path: '/kalite',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDurusRoute = AppDurusRouteImport.update({
+  id: '/durus',
+  path: '/durus',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/giris': typeof GirisRoute
+  '/durus': typeof AppDurusRoute
+  '/kalite': typeof AppKaliteRoute
+  '/panel': typeof AppPanelRoute
+  '/uretim': typeof AppUretimRoute
+  '/yonetim': typeof AppYonetimRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/giris': typeof GirisRoute
+  '/durus': typeof AppDurusRoute
+  '/kalite': typeof AppKaliteRoute
+  '/panel': typeof AppPanelRoute
+  '/uretim': typeof AppUretimRoute
+  '/yonetim': typeof AppYonetimRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/giris': typeof GirisRoute
+  '/_app/durus': typeof AppDurusRoute
+  '/_app/kalite': typeof AppKaliteRoute
+  '/_app/panel': typeof AppPanelRoute
+  '/_app/uretim': typeof AppUretimRoute
+  '/_app/yonetim': typeof AppYonetimRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/giris'
+    | '/durus'
+    | '/kalite'
+    | '/panel'
+    | '/uretim'
+    | '/yonetim'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/giris' | '/durus' | '/kalite' | '/panel' | '/uretim' | '/yonetim'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/giris'
+    | '/_app/durus'
+    | '/_app/kalite'
+    | '/_app/panel'
+    | '/_app/uretim'
+    | '/_app/yonetim'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  GirisRoute: typeof GirisRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/giris': {
+      id: '/giris'
+      path: '/giris'
+      fullPath: '/giris'
+      preLoaderRoute: typeof GirisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +140,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/yonetim': {
+      id: '/_app/yonetim'
+      path: '/yonetim'
+      fullPath: '/yonetim'
+      preLoaderRoute: typeof AppYonetimRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/uretim': {
+      id: '/_app/uretim'
+      path: '/uretim'
+      fullPath: '/uretim'
+      preLoaderRoute: typeof AppUretimRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/panel': {
+      id: '/_app/panel'
+      path: '/panel'
+      fullPath: '/panel'
+      preLoaderRoute: typeof AppPanelRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/kalite': {
+      id: '/_app/kalite'
+      path: '/kalite'
+      fullPath: '/kalite'
+      preLoaderRoute: typeof AppKaliteRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/durus': {
+      id: '/_app/durus'
+      path: '/durus'
+      fullPath: '/durus'
+      preLoaderRoute: typeof AppDurusRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppDurusRoute: typeof AppDurusRoute
+  AppKaliteRoute: typeof AppKaliteRoute
+  AppPanelRoute: typeof AppPanelRoute
+  AppUretimRoute: typeof AppUretimRoute
+  AppYonetimRoute: typeof AppYonetimRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDurusRoute: AppDurusRoute,
+  AppKaliteRoute: AppKaliteRoute,
+  AppPanelRoute: AppPanelRoute,
+  AppUretimRoute: AppUretimRoute,
+  AppYonetimRoute: AppYonetimRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  GirisRoute: GirisRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

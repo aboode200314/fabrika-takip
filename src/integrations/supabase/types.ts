@@ -1,0 +1,479 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      downtime_categories: {
+        Row: {
+          ad: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          ad: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          ad?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      downtime_logs: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          machine_id: string
+          notlar: string | null
+          operator_id: string
+          sure_dakika: number
+          vardiya: Database["public"]["Enums"]["shift_type"]
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          machine_id: string
+          notlar?: string | null
+          operator_id: string
+          sure_dakika: number
+          vardiya: Database["public"]["Enums"]["shift_type"]
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          machine_id?: string
+          notlar?: string | null
+          operator_id?: string
+          sure_dakika?: number
+          vardiya?: Database["public"]["Enums"]["shift_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "downtime_logs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "downtime_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "downtime_logs_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      machines: {
+        Row: {
+          ad: string
+          aktif: boolean
+          created_at: string
+          id: string
+          kod: string
+        }
+        Insert: {
+          ad: string
+          aktif?: boolean
+          created_at?: string
+          id?: string
+          kod: string
+        }
+        Update: {
+          ad?: string
+          aktif?: boolean
+          created_at?: string
+          id?: string
+          kod?: string
+        }
+        Relationships: []
+      }
+      product_operations: {
+        Row: {
+          ad: string
+          created_at: string
+          id: string
+          product_id: string
+          sira: number
+        }
+        Insert: {
+          ad: string
+          created_at?: string
+          id?: string
+          product_id: string
+          sira: number
+        }
+        Update: {
+          ad?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          sira?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_operations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_logs: {
+        Row: {
+          created_at: string
+          id: string
+          machine_id: string
+          miktar: number
+          operation_id: string
+          operator_id: string
+          product_id: string
+          vardiya: Database["public"]["Enums"]["shift_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          machine_id: string
+          miktar: number
+          operation_id: string
+          operator_id: string
+          product_id: string
+          vardiya: Database["public"]["Enums"]["shift_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          machine_id?: string
+          miktar?: number
+          operation_id?: string
+          operator_id?: string
+          product_id?: string
+          vardiya?: Database["public"]["Enums"]["shift_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_logs_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_logs_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "product_operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          ad: string
+          created_at: string
+          id: string
+          ideal_cevrim_saniye: number | null
+          kod: string
+        }
+        Insert: {
+          ad: string
+          created_at?: string
+          id?: string
+          ideal_cevrim_saniye?: number | null
+          kod: string
+        }
+        Update: {
+          ad?: string
+          created_at?: string
+          id?: string
+          ideal_cevrim_saniye?: number | null
+          kod?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          ad_soyad: string
+          created_at: string
+          departman: string | null
+          id: string
+          personel_id: string
+        }
+        Insert: {
+          ad_soyad: string
+          created_at?: string
+          departman?: string | null
+          id: string
+          personel_id: string
+        }
+        Update: {
+          ad_soyad?: string
+          created_at?: string
+          departman?: string | null
+          id?: string
+          personel_id?: string
+        }
+        Relationships: []
+      }
+      quality_logs: {
+        Row: {
+          created_at: string
+          id: string
+          machine_id: string
+          notlar: string | null
+          operator_id: string
+          product_id: string
+          red_miktari: number
+          vardiya: Database["public"]["Enums"]["shift_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          machine_id: string
+          notlar?: string | null
+          operator_id: string
+          product_id: string
+          red_miktari: number
+          vardiya: Database["public"]["Enums"]["shift_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          machine_id?: string
+          notlar?: string | null
+          operator_id?: string
+          product_id?: string
+          red_miktari?: number
+          vardiya?: Database["public"]["Enums"]["shift_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_logs_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_settings: {
+        Row: {
+          durus_url: string | null
+          id: number
+          kalite_url: string | null
+          updated_at: string
+          uretim_url: string | null
+        }
+        Insert: {
+          durus_url?: string | null
+          id?: number
+          kalite_url?: string | null
+          updated_at?: string
+          uretim_url?: string | null
+        }
+        Update: {
+          durus_url?: string | null
+          id?: number
+          kalite_url?: string | null
+          updated_at?: string
+          uretim_url?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+    }
+    Enums: {
+      app_role: "operator" | "supervisor"
+      shift_type: "Sabah" | "Akşam" | "Gece"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_role: ["operator", "supervisor"],
+      shift_type: ["Sabah", "Akşam", "Gece"],
+    },
+  },
+} as const
