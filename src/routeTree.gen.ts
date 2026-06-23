@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as GirisRouteImport } from './routes/giris'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppUretimRouteImport } from './routes/_app.uretim'
 import { Route as AppPanelRouteImport } from './routes/_app.panel'
 
 const GirisRoute = GirisRouteImport.update({
@@ -28,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppUretimRoute = AppUretimRouteImport.update({
+  id: '/uretim',
+  path: '/uretim',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPanelRoute = AppPanelRouteImport.update({
   id: '/panel',
   path: '/panel',
@@ -38,11 +44,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
   '/panel': typeof AppPanelRoute
+  '/uretim': typeof AppUretimRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
   '/panel': typeof AppPanelRoute
+  '/uretim': typeof AppUretimRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,13 +58,14 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/giris': typeof GirisRoute
   '/_app/panel': typeof AppPanelRoute
+  '/_app/uretim': typeof AppUretimRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/giris' | '/panel'
+  fullPaths: '/' | '/giris' | '/panel' | '/uretim'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/giris' | '/panel'
-  id: '__root__' | '/' | '/_app' | '/giris' | '/_app/panel'
+  to: '/' | '/giris' | '/panel' | '/uretim'
+  id: '__root__' | '/' | '/_app' | '/giris' | '/_app/panel' | '/_app/uretim'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -88,6 +97,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/uretim': {
+      id: '/_app/uretim'
+      path: '/uretim'
+      fullPath: '/uretim'
+      preLoaderRoute: typeof AppUretimRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/panel': {
       id: '/_app/panel'
       path: '/panel'
@@ -100,10 +116,12 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppPanelRoute: typeof AppPanelRoute
+  AppUretimRoute: typeof AppUretimRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppPanelRoute: AppPanelRoute,
+  AppUretimRoute: AppUretimRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
