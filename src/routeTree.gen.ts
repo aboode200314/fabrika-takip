@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as GirisRouteImport } from './routes/giris'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppYonetimRouteImport } from './routes/_app.yonetim'
 import { Route as AppUretimRouteImport } from './routes/_app.uretim'
 import { Route as AppPanelRouteImport } from './routes/_app.panel'
 import { Route as AppKaliteRouteImport } from './routes/_app.kalite'
@@ -30,6 +31,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppYonetimRoute = AppYonetimRouteImport.update({
+  id: '/yonetim',
+  path: '/yonetim',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppUretimRoute = AppUretimRouteImport.update({
   id: '/uretim',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/kalite': typeof AppKaliteRoute
   '/panel': typeof AppPanelRoute
   '/uretim': typeof AppUretimRoute
+  '/yonetim': typeof AppYonetimRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/kalite': typeof AppKaliteRoute
   '/panel': typeof AppPanelRoute
   '/uretim': typeof AppUretimRoute
+  '/yonetim': typeof AppYonetimRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,12 +85,20 @@ export interface FileRoutesById {
   '/_app/kalite': typeof AppKaliteRoute
   '/_app/panel': typeof AppPanelRoute
   '/_app/uretim': typeof AppUretimRoute
+  '/_app/yonetim': typeof AppYonetimRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/giris' | '/durus' | '/kalite' | '/panel' | '/uretim'
+  fullPaths:
+    | '/'
+    | '/giris'
+    | '/durus'
+    | '/kalite'
+    | '/panel'
+    | '/uretim'
+    | '/yonetim'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/giris' | '/durus' | '/kalite' | '/panel' | '/uretim'
+  to: '/' | '/giris' | '/durus' | '/kalite' | '/panel' | '/uretim' | '/yonetim'
   id:
     | '__root__'
     | '/'
@@ -92,6 +108,7 @@ export interface FileRouteTypes {
     | '/_app/kalite'
     | '/_app/panel'
     | '/_app/uretim'
+    | '/_app/yonetim'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -122,6 +139,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/yonetim': {
+      id: '/_app/yonetim'
+      path: '/yonetim'
+      fullPath: '/yonetim'
+      preLoaderRoute: typeof AppYonetimRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/uretim': {
       id: '/_app/uretim'
@@ -159,6 +183,7 @@ interface AppRouteChildren {
   AppKaliteRoute: typeof AppKaliteRoute
   AppPanelRoute: typeof AppPanelRoute
   AppUretimRoute: typeof AppUretimRoute
+  AppYonetimRoute: typeof AppYonetimRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -166,6 +191,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppKaliteRoute: AppKaliteRoute,
   AppPanelRoute: AppPanelRoute,
   AppUretimRoute: AppUretimRoute,
+  AppYonetimRoute: AppYonetimRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
