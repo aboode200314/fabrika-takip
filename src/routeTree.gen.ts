@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppUretimRouteImport } from './routes/_app.uretim'
 import { Route as AppPanelRouteImport } from './routes/_app.panel'
+import { Route as AppDurusRouteImport } from './routes/_app.durus'
 
 const GirisRoute = GirisRouteImport.update({
   id: '/giris',
@@ -39,16 +40,23 @@ const AppPanelRoute = AppPanelRouteImport.update({
   path: '/panel',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDurusRoute = AppDurusRouteImport.update({
+  id: '/durus',
+  path: '/durus',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
+  '/durus': typeof AppDurusRoute
   '/panel': typeof AppPanelRoute
   '/uretim': typeof AppUretimRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
+  '/durus': typeof AppDurusRoute
   '/panel': typeof AppPanelRoute
   '/uretim': typeof AppUretimRoute
 }
@@ -57,15 +65,23 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/giris': typeof GirisRoute
+  '/_app/durus': typeof AppDurusRoute
   '/_app/panel': typeof AppPanelRoute
   '/_app/uretim': typeof AppUretimRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/giris' | '/panel' | '/uretim'
+  fullPaths: '/' | '/giris' | '/durus' | '/panel' | '/uretim'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/giris' | '/panel' | '/uretim'
-  id: '__root__' | '/' | '/_app' | '/giris' | '/_app/panel' | '/_app/uretim'
+  to: '/' | '/giris' | '/durus' | '/panel' | '/uretim'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/giris'
+    | '/_app/durus'
+    | '/_app/panel'
+    | '/_app/uretim'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -111,15 +127,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPanelRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/durus': {
+      id: '/_app/durus'
+      path: '/durus'
+      fullPath: '/durus'
+      preLoaderRoute: typeof AppDurusRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppDurusRoute: typeof AppDurusRoute
   AppPanelRoute: typeof AppPanelRoute
   AppUretimRoute: typeof AppUretimRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppDurusRoute: AppDurusRoute,
   AppPanelRoute: AppPanelRoute,
   AppUretimRoute: AppUretimRoute,
 }
