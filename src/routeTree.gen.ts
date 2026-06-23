@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as GirisRouteImport } from './routes/giris'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppPanelRouteImport } from './routes/_app.panel'
 
 const GirisRoute = GirisRouteImport.update({
   id: '/giris',
   path: '/giris',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,30 +28,40 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppPanelRoute = AppPanelRouteImport.update({
+  id: '/panel',
+  path: '/panel',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
+  '/panel': typeof AppPanelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
+  '/panel': typeof AppPanelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/giris': typeof GirisRoute
+  '/_app/panel': typeof AppPanelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/giris'
+  fullPaths: '/' | '/giris' | '/panel'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/giris'
-  id: '__root__' | '/' | '/giris'
+  to: '/' | '/giris' | '/panel'
+  id: '__root__' | '/' | '/_app' | '/giris' | '/_app/panel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   GirisRoute: typeof GirisRoute
 }
 
@@ -58,6 +74,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GirisRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,11 +88,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/panel': {
+      id: '/_app/panel'
+      path: '/panel'
+      fullPath: '/panel'
+      preLoaderRoute: typeof AppPanelRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppPanelRoute: typeof AppPanelRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppPanelRoute: AppPanelRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   GirisRoute: GirisRoute,
 }
 export const routeTree = rootRouteImport
