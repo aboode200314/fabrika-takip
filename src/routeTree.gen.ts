@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppUretimRouteImport } from './routes/_app.uretim'
 import { Route as AppPanelRouteImport } from './routes/_app.panel'
+import { Route as AppKaliteRouteImport } from './routes/_app.kalite'
 import { Route as AppDurusRouteImport } from './routes/_app.durus'
 
 const GirisRoute = GirisRouteImport.update({
@@ -40,6 +41,11 @@ const AppPanelRoute = AppPanelRouteImport.update({
   path: '/panel',
   getParentRoute: () => AppRoute,
 } as any)
+const AppKaliteRoute = AppKaliteRouteImport.update({
+  id: '/kalite',
+  path: '/kalite',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDurusRoute = AppDurusRouteImport.update({
   id: '/durus',
   path: '/durus',
@@ -50,6 +56,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
   '/durus': typeof AppDurusRoute
+  '/kalite': typeof AppKaliteRoute
   '/panel': typeof AppPanelRoute
   '/uretim': typeof AppUretimRoute
 }
@@ -57,6 +64,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
   '/durus': typeof AppDurusRoute
+  '/kalite': typeof AppKaliteRoute
   '/panel': typeof AppPanelRoute
   '/uretim': typeof AppUretimRoute
 }
@@ -66,20 +74,22 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/giris': typeof GirisRoute
   '/_app/durus': typeof AppDurusRoute
+  '/_app/kalite': typeof AppKaliteRoute
   '/_app/panel': typeof AppPanelRoute
   '/_app/uretim': typeof AppUretimRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/giris' | '/durus' | '/panel' | '/uretim'
+  fullPaths: '/' | '/giris' | '/durus' | '/kalite' | '/panel' | '/uretim'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/giris' | '/durus' | '/panel' | '/uretim'
+  to: '/' | '/giris' | '/durus' | '/kalite' | '/panel' | '/uretim'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/giris'
     | '/_app/durus'
+    | '/_app/kalite'
     | '/_app/panel'
     | '/_app/uretim'
   fileRoutesById: FileRoutesById
@@ -127,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPanelRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/kalite': {
+      id: '/_app/kalite'
+      path: '/kalite'
+      fullPath: '/kalite'
+      preLoaderRoute: typeof AppKaliteRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/durus': {
       id: '/_app/durus'
       path: '/durus'
@@ -139,12 +156,14 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppDurusRoute: typeof AppDurusRoute
+  AppKaliteRoute: typeof AppKaliteRoute
   AppPanelRoute: typeof AppPanelRoute
   AppUretimRoute: typeof AppUretimRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDurusRoute: AppDurusRoute,
+  AppKaliteRoute: AppKaliteRoute,
   AppPanelRoute: AppPanelRoute,
   AppUretimRoute: AppUretimRoute,
 }
