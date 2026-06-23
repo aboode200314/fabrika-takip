@@ -76,7 +76,7 @@ function UretimPage() {
   });
 
   // reset operation when product changes
-  useMemo(() => setOperation(""), [product]);
+  useEffect(() => { setOperation(""); }, [product]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
