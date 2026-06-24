@@ -500,107 +500,218 @@ function WebhookTab() {
 
 /* -------------------- KAYITLAR -------------------- */
 function KayitlarTab() {
+  const qc = useQueryClient();
   const { data: prod } = useQuery({
     queryKey: ["all-prod-logs"],
     queryFn: async () => (await supabase
       .from("production_logs")
       .select("id,created_at,vardiya,miktar,machines(kod),products(ad),product_operations(ad),profiles(personel_id)")
-      .order("created_at", { ascending: false }).limit(50)).data ?? [],
+      .order("created_at", { ascending: false }).limit(100)).data ?? [],
   });
   const { data: dur } = useQuery({
     queryKey: ["all-dur-logs"],
     queryFn: async () => (await supabase
       .from("downtime_logs")
       .select("id,created_at,vardiya,sure_dakika,notlar,machines(kod),downtime_categories(ad),profiles(personel_id)")
-      .order("created_at", { ascending: false }).limit(50)).data ?? [],
+      .order("created_at", { ascending: false }).limit(100)).data ?? [],
   });
   const { data: kal } = useQuery({
     queryKey: ["all-kal-logs"],
     queryFn: async () => (await supabase
       .from("quality_logs")
       .select("id,created_at,vardiya,red_miktari,notlar,machines(kod),products(ad),profiles(personel_id)")
-      .order("created_at", { ascending: false }).limit(50)).data ?? [],
+      .order("created_at", { ascending: false }).limit(100)).data ?? [],
   });
 
+  const [editing, setEditing] = useState<{ table: string; id: string; field: string; value: string } | null>(null);
+
+  async function saveEdit() {
+    if (!editing) return;
+    const num = Number(editing.value);
+    if (!Number.isFinite(num) || num < 0) return toast.error("Geçersiz değer");
+    const { error } = await supabase.from(editing.table as any).update({ [editing.field]: num }).eq("id", editing.id);
+    if (error) return toast.error(error.message);
+    toast.success("Güncellendi");
+    setEditing(null);
+    qc.invalidateQueries({ queryKey: ["all-prod-logs"] });
+    qc.invalidateQueries({ queryKey: ["all-dur-logs"] });
+    qc.invalidateQueries({ queryKey: ["all-kal-logs"] });
+    qc.invalidateQueries({ queryKey: ["yonetim-ozet"] });
+    qc.invalidateQueries({ queryKey: ["products-with-ops"] });
+  }
+
+  async function deleteRow(table: string, id: string) {
+    if (!confirm("Bu kaydı silmek istediğinize emin misiniz?")) return;
+    const { error } = await supabase.from(table as any).delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Kayıt silindi");
+    qc.invalidateQueries({ queryKey: ["all-prod-logs"] });
+    qc.invalidateQueries({ queryKey: ["all-dur-logs"] });
+    qc.invalidateQueries({ queryKey: ["all-kal-logs"] });
+    qc.invalidateQueries({ queryKey: ["yonetim-ozet"] });
+    qc.invalidateQueries({ queryKey: ["products-with-ops"] });
+  }
+
+  async function resetAll(which: "uretim" | "durus" | "kalite" | "hepsi") {
+    const labels = { uretim: "TÜM Üretim", durus: "TÜM Duruş", kalite: "TÜM Kalite", hepsi: "TÜM Üretim, Duruş ve Kalite" };
+    if (!confirm(`${labels[which]} kayıtları kalıcı olarak silinecek. Devam edilsin mi?`)) return;
+    if (!confirm("Bu işlem geri alınamaz. Onaylıyor musunuz?")) return;
+    const tables =
+      which === "hepsi" ? ["production_logs", "downtime_logs", "quality_logs"]
+      : which === "uretim" ? ["production_logs"]
+      : which === "durus" ? ["downtime_logs"]
+      : ["quality_logs"];
+    for (const t of tables) {
+      const { error } = await supabase.from(t as any).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (error) { toast.error(`${t}: ${error.message}`); return; }
+    }
+    toast.success("Sıfırlama tamamlandı");
+    qc.invalidateQueries();
+  }
+
+  const editCell = (table: string, id: string, field: string, value: number, suffix?: string) => {
+    const isEditing = editing?.table === table && editing?.id === id && editing?.field === field;
+    if (isEditing) {
+      return (
+        <div className="flex items-center justify-end gap-1">
+          <Input
+            type="number"
+            value={editing!.value}
+            onChange={(e) => setEditing({ ...editing!, value: e.target.value })}
+            className="h-8 w-20 text-right"
+            autoFocus
+          />
+          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={saveEdit}><Save className="h-3.5 w-3.5 text-success" /></Button>
+        </div>
+      );
+    }
+    return (
+      <button
+        className="font-display hover:underline"
+        onClick={() => setEditing({ table, id, field, value: String(value) })}
+        title="Düzenlemek için tıklayın"
+      >
+        {value}{suffix ? <span className="ml-1 text-xs text-muted-foreground">{suffix}</span> : null}
+      </button>
+    );
+  };
+
   return (
-    <Tabs defaultValue="uretim" className="space-y-4">
-      <TabsList>
-        <TabsTrigger value="uretim">Üretim</TabsTrigger>
-        <TabsTrigger value="durus">Duruş</TabsTrigger>
-        <TabsTrigger value="kalite">Kalite</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="uretim">
-        <div className="rounded-xl border bg-card overflow-x-auto">
-          <Table>
-            <TableHeader><TableRow>
-              <TableHead>Zaman</TableHead><TableHead>Operatör</TableHead><TableHead>Makine</TableHead>
-              <TableHead>Ürün</TableHead><TableHead>Operasyon</TableHead><TableHead>Vardiya</TableHead><TableHead className="text-right">Miktar</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {prod?.map((r: any) => (
-                <TableRow key={r.id}>
-                  <TableCell className="text-xs">{new Date(r.created_at).toLocaleString("tr-TR")}</TableCell>
-                  <TableCell className="font-mono text-xs">{r.profiles?.personel_id}</TableCell>
-                  <TableCell className="font-mono text-xs">{r.machines?.kod}</TableCell>
-                  <TableCell>{r.products?.ad}</TableCell>
-                  <TableCell>{r.product_operations?.ad}</TableCell>
-                  <TableCell>{r.vardiya}</TableCell>
-                  <TableCell className="text-right font-display">{r.miktar}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold text-destructive">Tehlikeli Bölge — Sıfırlama</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">Tüm geçmiş kayıtları silerek sıfırdan başlayabilirsiniz. Bu işlem geri alınamaz.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => resetAll("uretim")}>Üretimi Sıfırla</Button>
+            <Button variant="outline" size="sm" onClick={() => resetAll("durus")}>Duruşu Sıfırla</Button>
+            <Button variant="outline" size="sm" onClick={() => resetAll("kalite")}>Kaliteyi Sıfırla</Button>
+            <Button variant="destructive" size="sm" className="gap-1" onClick={() => resetAll("hepsi")}>
+              <Trash2 className="h-4 w-4" />Hepsini Sıfırla
+            </Button>
+          </div>
         </div>
-      </TabsContent>
+      </div>
 
-      <TabsContent value="durus">
-        <div className="rounded-xl border bg-card overflow-x-auto">
-          <Table>
-            <TableHeader><TableRow>
-              <TableHead>Zaman</TableHead><TableHead>Operatör</TableHead><TableHead>Makine</TableHead>
-              <TableHead>Kategori</TableHead><TableHead>Vardiya</TableHead><TableHead className="text-right">Süre</TableHead><TableHead>Not</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {dur?.map((r: any) => (
-                <TableRow key={r.id}>
-                  <TableCell className="text-xs">{new Date(r.created_at).toLocaleString("tr-TR")}</TableCell>
-                  <TableCell className="font-mono text-xs">{r.profiles?.personel_id}</TableCell>
-                  <TableCell className="font-mono text-xs">{r.machines?.kod}</TableCell>
-                  <TableCell>{r.downtime_categories?.ad}</TableCell>
-                  <TableCell>{r.vardiya}</TableCell>
-                  <TableCell className="text-right font-display">{r.sure_dakika} dk</TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{r.notlar}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </TabsContent>
+      <Tabs defaultValue="uretim" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="uretim">Üretim</TabsTrigger>
+          <TabsTrigger value="durus">Duruş</TabsTrigger>
+          <TabsTrigger value="kalite">Kalite</TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="kalite">
-        <div className="rounded-xl border bg-card overflow-x-auto">
-          <Table>
-            <TableHeader><TableRow>
-              <TableHead>Zaman</TableHead><TableHead>Operatör</TableHead><TableHead>Makine</TableHead>
-              <TableHead>Ürün</TableHead><TableHead>Vardiya</TableHead><TableHead className="text-right">Red</TableHead><TableHead>Not</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {kal?.map((r: any) => (
-                <TableRow key={r.id}>
-                  <TableCell className="text-xs">{new Date(r.created_at).toLocaleString("tr-TR")}</TableCell>
-                  <TableCell className="font-mono text-xs">{r.profiles?.personel_id}</TableCell>
-                  <TableCell className="font-mono text-xs">{r.machines?.kod}</TableCell>
-                  <TableCell>{r.products?.ad}</TableCell>
-                  <TableCell>{r.vardiya}</TableCell>
-                  <TableCell className="text-right font-display text-destructive">{r.red_miktari}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{r.notlar}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="uretim">
+          <div className="rounded-xl border bg-card overflow-x-auto">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Zaman</TableHead><TableHead>Operatör</TableHead><TableHead>Makine</TableHead>
+                <TableHead>Ürün</TableHead><TableHead>Operasyon</TableHead><TableHead>Vardiya</TableHead>
+                <TableHead className="text-right">Miktar</TableHead><TableHead></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {prod?.map((r: any) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-xs">{new Date(r.created_at).toLocaleString("tr-TR")}</TableCell>
+                    <TableCell className="font-mono text-xs">{r.profiles?.personel_id}</TableCell>
+                    <TableCell className="font-mono text-xs">{r.machines?.kod}</TableCell>
+                    <TableCell>{r.products?.ad}</TableCell>
+                    <TableCell>{r.product_operations?.ad}</TableCell>
+                    <TableCell>{r.vardiya}</TableCell>
+                    <TableCell className="text-right">{editCell("production_logs", r.id, "miktar", r.miktar)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => deleteRow("production_logs", r.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="durus">
+          <div className="rounded-xl border bg-card overflow-x-auto">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Zaman</TableHead><TableHead>Operatör</TableHead><TableHead>Makine</TableHead>
+                <TableHead>Kategori</TableHead><TableHead>Vardiya</TableHead>
+                <TableHead className="text-right">Süre</TableHead><TableHead>Not</TableHead><TableHead></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {dur?.map((r: any) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-xs">{new Date(r.created_at).toLocaleString("tr-TR")}</TableCell>
+                    <TableCell className="font-mono text-xs">{r.profiles?.personel_id}</TableCell>
+                    <TableCell className="font-mono text-xs">{r.machines?.kod}</TableCell>
+                    <TableCell>{r.downtime_categories?.ad}</TableCell>
+                    <TableCell>{r.vardiya}</TableCell>
+                    <TableCell className="text-right">{editCell("downtime_logs", r.id, "sure_dakika", r.sure_dakika, "dk")}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{r.notlar}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => deleteRow("downtime_logs", r.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="kalite">
+          <div className="rounded-xl border bg-card overflow-x-auto">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Zaman</TableHead><TableHead>Operatör</TableHead><TableHead>Makine</TableHead>
+                <TableHead>Ürün</TableHead><TableHead>Vardiya</TableHead>
+                <TableHead className="text-right">Red</TableHead><TableHead>Not</TableHead><TableHead></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {kal?.map((r: any) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-xs">{new Date(r.created_at).toLocaleString("tr-TR")}</TableCell>
+                    <TableCell className="font-mono text-xs">{r.profiles?.personel_id}</TableCell>
+                    <TableCell className="font-mono text-xs">{r.machines?.kod}</TableCell>
+                    <TableCell>{r.products?.ad}</TableCell>
+                    <TableCell>{r.vardiya}</TableCell>
+                    <TableCell className="text-right text-destructive">{editCell("quality_logs", r.id, "red_miktari", r.red_miktari)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{r.notlar}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => deleteRow("quality_logs", r.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
