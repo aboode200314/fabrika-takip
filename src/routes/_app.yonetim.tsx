@@ -591,11 +591,12 @@ function KayitlarTab() {
     }
     return (
       <button
-        className="font-display hover:underline"
+        className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border/60 px-2 py-1 font-display hover:border-primary hover:bg-primary/5 hover:text-primary transition-colors"
         onClick={() => setEditing({ table, id, field, value: String(value) })}
         title="Düzenlemek için tıklayın"
       >
-        {value}{suffix ? <span className="ml-1 text-xs text-muted-foreground">{suffix}</span> : null}
+        {value}{suffix ? <span className="text-xs text-muted-foreground">{suffix}</span> : null}
+        <Pencil className="h-3 w-3 opacity-60" />
       </button>
     );
   };
