@@ -735,7 +735,7 @@ function KullanicilarTab() {
 
   const { data: workers, isLoading } = useQuery({
     queryKey: ["workers"],
-    queryFn: () => listFn({}),
+    queryFn: () => listFn(),
   });
 
   const [personelId, setPersonelId] = useState("");
