@@ -2,7 +2,7 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Activity, Clock, AlertCircle, TrendingUp, Trash2, Plus, Loader2, Save, Pencil, Users, X } from "lucide-react";
+import { Activity, Clock, AlertCircle, TrendingUp, Trash2, Plus, Loader2, Save, Pencil, Users } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole } from "@/lib/workers.functions";
 
