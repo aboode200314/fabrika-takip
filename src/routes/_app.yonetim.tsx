@@ -603,6 +603,10 @@ function KayitlarTab() {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground flex items-center gap-2">
+        <Pencil className="h-3.5 w-3.5" />
+        Bir kaydı düzeltmek için <span className="font-medium text-foreground">Miktar / Süre / Red</span> hücresine tıklayın. Silmek için satır sonundaki kırmızı çöp kutusunu kullanın.
+      </div>
       <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
