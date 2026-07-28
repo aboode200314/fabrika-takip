@@ -732,6 +732,7 @@ function KullanicilarTab() {
   const createFn = useServerFn(createWorkerAccount);
   const deleteFn = useServerFn(deleteWorkerAccount);
   const roleFn = useServerFn(setWorkerRole);
+  const pwFn = useServerFn(resetWorkerPassword);
 
   const { data: workers, isLoading } = useQuery({
     queryKey: ["workers"],
