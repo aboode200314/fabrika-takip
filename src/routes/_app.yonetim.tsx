@@ -903,3 +903,43 @@ function KullanicilarTab() {
     </div>
   );
 }
+
+/* -------------------- KENDİ ŞİFREM -------------------- */
+function KendiSifreCard() {
+  const [yeni, setYeni] = useState("");
+  const [tekrar, setTekrar] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (yeni.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
+    if (yeni !== tekrar) return toast.error("Şifreler eşleşmiyor");
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: yeni });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Şifreniz güncellendi");
+    setYeni(""); setTekrar("");
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-3 rounded-2xl border bg-card p-5">
+      <div className="flex items-center gap-2">
+        <KeyRound className="h-5 w-5 text-primary" />
+        <h3 className="text-lg">Kendi Şifremi Değiştir</h3>
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-sm">Yeni şifre</Label>
+        <Input type="password" value={yeni} onChange={(e) => setYeni(e.target.value)} placeholder="en az 6 karakter" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-sm">Yeni şifre (tekrar)</Label>
+        <Input type="password" value={tekrar} onChange={(e) => setTekrar(e.target.value)} />
+      </div>
+      <Button type="submit" disabled={busy} className="w-full gap-2">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        Şifreyi Güncelle
+      </Button>
+    </form>
+  );
+}
