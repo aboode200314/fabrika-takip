@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Activity, Clock, AlertCircle, TrendingUp, Trash2, Plus, Loader2, Save, Pencil, Users, KeyRound } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole, resetWorkerPassword } from "@/lib/workers.functions";
+import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole, resetWorkerPassword, changeOwnPassword } from "@/lib/workers.functions";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
