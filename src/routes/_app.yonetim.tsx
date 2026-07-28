@@ -774,6 +774,8 @@ function KullanicilarTab() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[420px_1fr]">
+      <div className="space-y-4">
+      <KendiSifreCard />
       <form onSubmit={handleCreate} className="space-y-3 rounded-2xl border bg-card p-5">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
