@@ -845,7 +845,25 @@ function KullanicilarTab() {
                         }}
                       />
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right whitespace-nowrap">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Şifreyi değiştir"
+                        onClick={async () => {
+                          const yeni = prompt(`${w.ad_soyad} için yeni şifre (en az 6 karakter):`);
+                          if (!yeni) return;
+                          if (yeni.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
+                          try {
+                            await pwFn({ data: { user_id: w.id, password: yeni } });
+                            toast.success("Şifre güncellendi");
+                          } catch (err: any) {
+                            toast.error(err?.message ?? "Hata");
+                          }
+                        }}
+                      >
+                        <KeyRound className="h-4 w-4 text-primary" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
