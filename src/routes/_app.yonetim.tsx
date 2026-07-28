@@ -2,9 +2,9 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Activity, Clock, AlertCircle, TrendingUp, Trash2, Plus, Loader2, Save, Pencil, Users } from "lucide-react";
+import { Activity, Clock, AlertCircle, TrendingUp, Trash2, Plus, Loader2, Save, Pencil, Users, KeyRound } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole } from "@/lib/workers.functions";
+import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole, resetWorkerPassword } from "@/lib/workers.functions";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -732,6 +732,7 @@ function KullanicilarTab() {
   const createFn = useServerFn(createWorkerAccount);
   const deleteFn = useServerFn(deleteWorkerAccount);
   const roleFn = useServerFn(setWorkerRole);
+  const pwFn = useServerFn(resetWorkerPassword);
 
   const { data: workers, isLoading } = useQuery({
     queryKey: ["workers"],
@@ -773,6 +774,8 @@ function KullanicilarTab() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[420px_1fr]">
+      <div className="space-y-4">
+      <KendiSifreCard />
       <form onSubmit={handleCreate} className="space-y-3 rounded-2xl border bg-card p-5">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
@@ -806,6 +809,8 @@ function KullanicilarTab() {
           Hesap Oluştur
         </Button>
       </form>
+      </div>
+
 
       <div className="rounded-2xl border bg-card overflow-x-auto">
         <div className="border-b p-4">
@@ -845,7 +850,25 @@ function KullanicilarTab() {
                         }}
                       />
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right whitespace-nowrap">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Şifreyi değiştir"
+                        onClick={async () => {
+                          const yeni = prompt(`${w.ad_soyad} için yeni şifre (en az 6 karakter):`);
+                          if (!yeni) return;
+                          if (yeni.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
+                          try {
+                            await pwFn({ data: { user_id: w.id, password: yeni } });
+                            toast.success("Şifre güncellendi");
+                          } catch (err: any) {
+                            toast.error(err?.message ?? "Hata");
+                          }
+                        }}
+                      >
+                        <KeyRound className="h-4 w-4 text-primary" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -878,5 +901,45 @@ function KullanicilarTab() {
         )}
       </div>
     </div>
+  );
+}
+
+/* -------------------- KENDİ ŞİFREM -------------------- */
+function KendiSifreCard() {
+  const [yeni, setYeni] = useState("");
+  const [tekrar, setTekrar] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (yeni.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
+    if (yeni !== tekrar) return toast.error("Şifreler eşleşmiyor");
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password: yeni });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Şifreniz güncellendi");
+    setYeni(""); setTekrar("");
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-3 rounded-2xl border bg-card p-5">
+      <div className="flex items-center gap-2">
+        <KeyRound className="h-5 w-5 text-primary" />
+        <h3 className="text-lg">Kendi Şifremi Değiştir</h3>
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-sm">Yeni şifre</Label>
+        <Input type="password" value={yeni} onChange={(e) => setYeni(e.target.value)} placeholder="en az 6 karakter" />
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-sm">Yeni şifre (tekrar)</Label>
+        <Input type="password" value={tekrar} onChange={(e) => setTekrar(e.target.value)} />
+      </div>
+      <Button type="submit" disabled={busy} className="w-full gap-2">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        Şifreyi Güncelle
+      </Button>
+    </form>
   );
 }
