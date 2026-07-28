@@ -909,17 +909,22 @@ function KendiSifreCard() {
   const [yeni, setYeni] = useState("");
   const [tekrar, setTekrar] = useState("");
   const [busy, setBusy] = useState(false);
+  const changePw = useServerFn(changeOwnPassword);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (yeni.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
     if (yeni !== tekrar) return toast.error("Şifreler eşleşmiyor");
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password: yeni });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Şifreniz güncellendi");
-    setYeni(""); setTekrar("");
+    try {
+      await changePw({ data: { password: yeni } });
+      toast.success("Şifreniz güncellendi");
+      setYeni(""); setTekrar("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Şifre değiştirilemedi");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
