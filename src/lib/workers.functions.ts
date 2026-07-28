@@ -110,3 +110,22 @@ export const setWorkerRole = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+export const resetWorkerPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ user_id: z.string().uuid(), password: z.string().min(6) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: isSup } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "supervisor",
+    });
+    if (!isSup) throw new Response("Forbidden", { status: 403 });
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
+      password: data.password,
+    });
+    if (error) throw new Response(error.message, { status: 400 });
+    return { ok: true };
+  });
