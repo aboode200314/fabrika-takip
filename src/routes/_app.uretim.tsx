@@ -230,6 +230,8 @@ function UretimPage() {
           Gönder
         </Button>
       </form>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
