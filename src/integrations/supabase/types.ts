@@ -34,6 +34,8 @@ export type Database = {
       }
       downtime_logs: {
         Row: {
+          baslangic: string | null
+          bitis: string | null
           category_id: string
           created_at: string
           id: string
@@ -44,6 +46,8 @@ export type Database = {
           vardiya: Database["public"]["Enums"]["shift_type"]
         }
         Insert: {
+          baslangic?: string | null
+          bitis?: string | null
           category_id: string
           created_at?: string
           id?: string
@@ -54,6 +58,8 @@ export type Database = {
           vardiya: Database["public"]["Enums"]["shift_type"]
         }
         Update: {
+          baslangic?: string | null
+          bitis?: string | null
           category_id?: string
           created_at?: string
           id?: string
@@ -103,6 +109,77 @@ export type Database = {
           kod?: string
         }
         Relationships: []
+      }
+      plasma_cuts: {
+        Row: {
+          baslangic: string
+          bitis: string
+          created_at: string
+          genislik_mm: number
+          id: string
+          kalinlik_mm: number
+          levha_adedi: number
+          levha_agirlik_kg: number | null
+          machine_id: string
+          notlar: string | null
+          operator_id: string
+          sac_tipi: string | null
+          sure_dakika: number | null
+          toplam_agirlik_kg: number | null
+          updated_at: string
+          uzunluk_mm: number
+          vardiya: Database["public"]["Enums"]["shift_type"]
+          yogunluk: number
+        }
+        Insert: {
+          baslangic: string
+          bitis: string
+          created_at?: string
+          genislik_mm: number
+          id?: string
+          kalinlik_mm: number
+          levha_adedi?: number
+          levha_agirlik_kg?: number | null
+          machine_id: string
+          notlar?: string | null
+          operator_id: string
+          sac_tipi?: string | null
+          sure_dakika?: number | null
+          toplam_agirlik_kg?: number | null
+          updated_at?: string
+          uzunluk_mm: number
+          vardiya: Database["public"]["Enums"]["shift_type"]
+          yogunluk?: number
+        }
+        Update: {
+          baslangic?: string
+          bitis?: string
+          created_at?: string
+          genislik_mm?: number
+          id?: string
+          kalinlik_mm?: number
+          levha_adedi?: number
+          levha_agirlik_kg?: number | null
+          machine_id?: string
+          notlar?: string | null
+          operator_id?: string
+          sac_tipi?: string | null
+          sure_dakika?: number | null
+          toplam_agirlik_kg?: number | null
+          updated_at?: string
+          uzunluk_mm?: number
+          vardiya?: Database["public"]["Enums"]["shift_type"]
+          yogunluk?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plasma_cuts_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_operations: {
         Row: {
