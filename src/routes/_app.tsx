@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, Navigate, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Factory, Gauge, ClipboardList, AlertTriangle, ShieldCheck, LogOut, Loader2 } from "lucide-react";
+import { Factory, Gauge, ClipboardList, AlertTriangle, ShieldCheck, LogOut, Loader2, BarChart3 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -28,12 +28,14 @@ function AppLayout() {
     { to: "/uretim", label: "Üretim", icon: ClipboardList },
     { to: "/durus", label: "Duruş", icon: AlertTriangle },
     { to: "/kalite", label: "Kalite", icon: ShieldCheck },
+    { to: "/raporlar", label: "Raporlar", icon: BarChart3 },
   ];
   const supervisorNav = [
     { to: "/yonetim", label: "Yönetim", icon: Gauge },
     { to: "/uretim", label: "Üretim", icon: ClipboardList },
     { to: "/durus", label: "Duruş", icon: AlertTriangle },
     { to: "/kalite", label: "Kalite", icon: ShieldCheck },
+    { to: "/raporlar", label: "Raporlar", icon: BarChart3 },
   ];
   const nav = isSupervisor ? supervisorNav : operatorNav;
 
@@ -94,7 +96,7 @@ function AppLayout() {
 
       {/* Mobil alt navigasyon */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-5">
           {nav.map((n) => {
             const active = pathname === n.to;
             return (

@@ -53,7 +53,14 @@ function DurusPage() {
   const [shift, setShift] = useState<(typeof SHIFTS)[number] | "">("");
   const [sure, setSure] = useState("");
   const [notlar, setNotlar] = useState("");
+  const [basla, setBasla] = useState("");
+  const [bitir, setBitir] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Başlangıç/bitiş girilirse süre otomatik hesaplanır
+  const autoSure =
+    basla && bitir ? Math.round((new Date(bitir).getTime() - new Date(basla).getTime()) / 60000) : null;
+  const effectiveSure = autoSure !== null && autoSure > 0 ? String(autoSure) : sure;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -61,7 +68,7 @@ function DurusPage() {
       machine_id: machine,
       category_id: cat,
       vardiya: shift,
-      sure_dakika: sure,
+      sure_dakika: effectiveSure,
       notlar: notlar || undefined,
     });
     if (!parsed.success) {
@@ -77,6 +84,8 @@ function DurusPage() {
       vardiya: parsed.data.vardiya,
       sure_dakika: parsed.data.sure_dakika,
       notlar: parsed.data.notlar ?? null,
+      baslangic: basla ? new Date(basla).toISOString() : null,
+      bitis: bitir ? new Date(bitir).toISOString() : null,
     });
     if (error) {
       setBusy(false);
@@ -160,6 +169,23 @@ function DurusPage() {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Duruş Başlangıç (ops.)</Label>
+            <Input type="datetime-local" value={basla} onChange={(e) => setBasla(e.target.value)} className="tap-target text-base" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Duruş Bitiş (ops.)</Label>
+            <Input type="datetime-local" value={bitir} onChange={(e) => setBitir(e.target.value)} className="tap-target text-base" />
+          </div>
+        </div>
+
+        {autoSure !== null && autoSure > 0 && (
+          <p className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
+            Otomatik hesaplanan duruş süresi: <strong>{autoSure} dakika</strong>
+          </p>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="sure" className="text-sm font-medium">Duruş Süresi (dakika)</Label>
           <Input
@@ -167,8 +193,9 @@ function DurusPage() {
             type="number"
             min={1}
             inputMode="numeric"
-            value={sure}
+            value={autoSure !== null && autoSure > 0 ? String(autoSure) : sure}
             onChange={(e) => setSure(e.target.value)}
+            disabled={autoSure !== null && autoSure > 0}
             className="tap-target text-2xl font-display"
             placeholder="0"
           />
