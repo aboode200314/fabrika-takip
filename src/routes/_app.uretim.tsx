@@ -145,10 +145,21 @@ function UretimPage() {
       <div>
         <h1 className="text-3xl tracking-tight">Üretim Girişi</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Makine, ürün ve operasyon seçip ürettiğiniz miktarı girin.
+          Genel üretim veya CNC Plazma kesim kaydı girin.
         </p>
       </div>
 
+      <Tabs defaultValue="genel">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="genel">Genel Üretim</TabsTrigger>
+          <TabsTrigger value="plazma">CNC Plazma</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="plazma" className="pt-4">
+          <PlazmaForm />
+        </TabsContent>
+
+        <TabsContent value="genel" className="pt-4">
       <form onSubmit={onSubmit} className="space-y-5 rounded-2xl border bg-card p-6 shadow-industrial">
         <FieldSelect label="Makine" value={machine} onChange={setMachine} placeholder="Makine seçiniz">
           {machines?.map((m) => (
