@@ -220,7 +220,10 @@ function RaporlarPage() {
           </section>
         </TabsContent>
       </Tabs>
+        </TabsContent>
+      </Tabs>
     </div>
+
   );
 }
 
