@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { BarChart3, Clock, Layers, Package, TrendingUp, AlertTriangle } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SacKesimRaporu } from "@/components/sac-kesim-raporu";
+import { OturumRaporu } from "@/components/oturum-raporu";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/raporlar")({
