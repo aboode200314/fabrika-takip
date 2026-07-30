@@ -93,7 +93,7 @@ function AppLayout() {
 
       {/* Mobil alt navigasyon */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-5">
+        <div className="grid" style={{ gridTemplateColumns: `repeat(${Math.max(nav.length, 1)}, minmax(0, 1fr))` }}>
           {nav.map((n) => {
             const active = pathname === n.to;
             return (
