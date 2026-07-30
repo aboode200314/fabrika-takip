@@ -126,12 +126,23 @@ function RaporlarPage() {
         </p>
       </div>
 
+      <Tabs defaultValue="performans">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="performans">Performans</TabsTrigger>
+          <TabsTrigger value="sac">Sac Kesim</TabsTrigger>
+          <TabsTrigger value="oturum">İş Oturumları</TabsTrigger>
+        </TabsList>
+        <TabsContent value="sac" className="pt-4"><SacKesimRaporu /></TabsContent>
+        <TabsContent value="oturum" className="pt-4"><OturumRaporu /></TabsContent>
+        <TabsContent value="performans" className="pt-4">
+
       <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="gunluk">Günlük</TabsTrigger>
           <TabsTrigger value="haftalik">Haftalık</TabsTrigger>
           <TabsTrigger value="aylik">Aylık</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value={period} className="space-y-6 pt-4">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
