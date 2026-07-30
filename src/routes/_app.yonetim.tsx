@@ -6,6 +6,7 @@ import { Activity, Clock, AlertCircle, TrendingUp, Trash2, Plus, Loader2, Save, 
 import { useServerFn } from "@tanstack/react-start";
 import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole, resetWorkerPassword, changeOwnPassword } from "@/lib/workers.functions";
 
+import { YetkilerTab } from "@/components/yetkiler-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
