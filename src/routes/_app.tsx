@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, Navigate, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Factory, Gauge, ClipboardList, AlertTriangle, ShieldCheck, LogOut, Loader2, BarChart3 } from "lucide-react";
+import { Factory, Gauge, ClipboardList, AlertTriangle, ShieldCheck, LogOut, Loader2, BarChart3, Radio } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { session, loading, role, profile, signOut } = useAuth();
+  const { session, loading, role, profile, signOut, can, isSuperAdmin } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
 
@@ -21,23 +21,20 @@ function AppLayout() {
   }
   if (!session) return <Navigate to="/giris" replace />;
 
-  const isSupervisor = role === "supervisor";
+  const isSupervisor = role === "supervisor" || isSuperAdmin;
 
-  const operatorNav = [
-    { to: "/panel", label: "Panel", icon: Gauge },
-    { to: "/uretim", label: "Üretim", icon: ClipboardList },
-    { to: "/durus", label: "Duruş", icon: AlertTriangle },
-    { to: "/kalite", label: "Kalite", icon: ShieldCheck },
-    { to: "/raporlar", label: "Raporlar", icon: BarChart3 },
+  const allNav = [
+    isSupervisor
+      ? { to: "/yonetim" as const, label: "Yönetim", icon: Gauge, perm: "page.yonetim" }
+      : { to: "/panel" as const, label: "Panel", icon: Gauge, perm: "page.panel" },
+    { to: "/canli" as const, label: "Canlı", icon: Radio, perm: "page.canli" },
+    { to: "/uretim" as const, label: "Üretim", icon: ClipboardList, perm: "page.uretim" },
+    { to: "/durus" as const, label: "Duruş", icon: AlertTriangle, perm: "page.durus" },
+    { to: "/kalite" as const, label: "Kalite", icon: ShieldCheck, perm: "page.kalite" },
+    { to: "/raporlar" as const, label: "Raporlar", icon: BarChart3, perm: "page.raporlar" },
   ];
-  const supervisorNav = [
-    { to: "/yonetim", label: "Yönetim", icon: Gauge },
-    { to: "/uretim", label: "Üretim", icon: ClipboardList },
-    { to: "/durus", label: "Duruş", icon: AlertTriangle },
-    { to: "/kalite", label: "Kalite", icon: ShieldCheck },
-    { to: "/raporlar", label: "Raporlar", icon: BarChart3 },
-  ];
-  const nav = isSupervisor ? supervisorNav : operatorNav;
+  const nav = allNav.filter((n) => can(n.perm));
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-20 md:pb-0">
@@ -96,7 +93,7 @@ function AppLayout() {
 
       {/* Mobil alt navigasyon */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card/95 backdrop-blur md:hidden">
-        <div className="grid grid-cols-5">
+        <div className="grid" style={{ gridTemplateColumns: `repeat(${Math.max(nav.length, 1)}, minmax(0, 1fr))` }}>
           {nav.map((n) => {
             const active = pathname === n.to;
             return (

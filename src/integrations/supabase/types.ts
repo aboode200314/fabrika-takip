@@ -268,6 +268,82 @@ export type Database = {
           },
         ]
       }
+      production_sessions: {
+        Row: {
+          baslangic: string
+          bitis: string | null
+          created_at: string
+          durum: string
+          hurda: number
+          id: string
+          machine_id: string
+          miktar: number | null
+          notlar: string | null
+          operation_id: string | null
+          operator_id: string
+          product_id: string | null
+          sure_dakika: number | null
+          updated_at: string
+          vardiya: Database["public"]["Enums"]["shift_type"]
+        }
+        Insert: {
+          baslangic?: string
+          bitis?: string | null
+          created_at?: string
+          durum?: string
+          hurda?: number
+          id?: string
+          machine_id: string
+          miktar?: number | null
+          notlar?: string | null
+          operation_id?: string | null
+          operator_id: string
+          product_id?: string | null
+          sure_dakika?: number | null
+          updated_at?: string
+          vardiya: Database["public"]["Enums"]["shift_type"]
+        }
+        Update: {
+          baslangic?: string
+          bitis?: string | null
+          created_at?: string
+          durum?: string
+          hurda?: number
+          id?: string
+          machine_id?: string
+          miktar?: number | null
+          notlar?: string | null
+          operation_id?: string | null
+          operator_id?: string
+          product_id?: string | null
+          sure_dakika?: number | null
+          updated_at?: string
+          vardiya?: Database["public"]["Enums"]["shift_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_sessions_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_sessions_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "product_operations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_sessions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           ad: string
@@ -364,6 +440,100 @@ export type Database = {
           },
         ]
       }
+      super_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_machines: {
+        Row: {
+          created_at: string
+          id: string
+          machine_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          machine_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          machine_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_machines_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_products: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -411,6 +581,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_permission: {
+        Args: { _perm: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -418,6 +592,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "operator" | "supervisor"

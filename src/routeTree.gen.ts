@@ -18,6 +18,7 @@ import { Route as AppRaporlarRouteImport } from './routes/_app.raporlar'
 import { Route as AppPanelRouteImport } from './routes/_app.panel'
 import { Route as AppKaliteRouteImport } from './routes/_app.kalite'
 import { Route as AppDurusRouteImport } from './routes/_app.durus'
+import { Route as AppCanliRouteImport } from './routes/_app.canli'
 
 const GirisRoute = GirisRouteImport.update({
   id: '/giris',
@@ -63,10 +64,16 @@ const AppDurusRoute = AppDurusRouteImport.update({
   path: '/durus',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCanliRoute = AppCanliRouteImport.update({
+  id: '/canli',
+  path: '/canli',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
+  '/canli': typeof AppCanliRoute
   '/durus': typeof AppDurusRoute
   '/kalite': typeof AppKaliteRoute
   '/panel': typeof AppPanelRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
+  '/canli': typeof AppCanliRoute
   '/durus': typeof AppDurusRoute
   '/kalite': typeof AppKaliteRoute
   '/panel': typeof AppPanelRoute
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/giris': typeof GirisRoute
+  '/_app/canli': typeof AppCanliRoute
   '/_app/durus': typeof AppDurusRoute
   '/_app/kalite': typeof AppKaliteRoute
   '/_app/panel': typeof AppPanelRoute
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/giris'
+    | '/canli'
     | '/durus'
     | '/kalite'
     | '/panel'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/giris'
+    | '/canli'
     | '/durus'
     | '/kalite'
     | '/panel'
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/giris'
+    | '/_app/canli'
     | '/_app/durus'
     | '/_app/kalite'
     | '/_app/panel'
@@ -201,10 +213,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDurusRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/canli': {
+      id: '/_app/canli'
+      path: '/canli'
+      fullPath: '/canli'
+      preLoaderRoute: typeof AppCanliRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppCanliRoute: typeof AppCanliRoute
   AppDurusRoute: typeof AppDurusRoute
   AppKaliteRoute: typeof AppKaliteRoute
   AppPanelRoute: typeof AppPanelRoute
@@ -214,6 +234,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppCanliRoute: AppCanliRoute,
   AppDurusRoute: AppDurusRoute,
   AppKaliteRoute: AppKaliteRoute,
   AppPanelRoute: AppPanelRoute,
