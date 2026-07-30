@@ -36,11 +36,12 @@ function YonetimPanel() {
       </div>
 
       <Tabs defaultValue="ozet" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-7">
           <TabsTrigger value="ozet">Özet</TabsTrigger>
           <TabsTrigger value="ilerleme">İlerleme</TabsTrigger>
           <TabsTrigger value="master">Master Data</TabsTrigger>
           <TabsTrigger value="kullanicilar">Kullanıcılar</TabsTrigger>
+          <TabsTrigger value="yetkiler">Yetkiler</TabsTrigger>
           <TabsTrigger value="webhook">Webhook</TabsTrigger>
           <TabsTrigger value="kayitlar">Kayıtlar</TabsTrigger>
         </TabsList>
@@ -49,8 +50,10 @@ function YonetimPanel() {
         <TabsContent value="ilerleme"><IlerlemeTab /></TabsContent>
         <TabsContent value="master"><MasterTab /></TabsContent>
         <TabsContent value="kullanicilar"><KullanicilarTab /></TabsContent>
+        <TabsContent value="yetkiler"><YetkilerTab /></TabsContent>
         <TabsContent value="webhook"><WebhookTab /></TabsContent>
         <TabsContent value="kayitlar"><KayitlarTab /></TabsContent>
+
       </Tabs>
     </div>
   );
