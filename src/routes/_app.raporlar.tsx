@@ -6,6 +6,8 @@ import { BarChart3, Clock, Layers, Package, TrendingUp, AlertTriangle } from "lu
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SacKesimRaporu } from "@/components/sac-kesim-raporu";
 import { OturumRaporu } from "@/components/oturum-raporu";
+import { KullaniciRaporu } from "@/components/kullanici-raporu";
+
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/raporlar")({
@@ -129,13 +131,16 @@ function RaporlarPage() {
       </div>
 
       <Tabs defaultValue="performans">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="performans">Performans</TabsTrigger>
           <TabsTrigger value="sac">Sac Kesim</TabsTrigger>
           <TabsTrigger value="oturum">İş Oturumları</TabsTrigger>
+          <TabsTrigger value="kullanici">Kullanıcılar</TabsTrigger>
         </TabsList>
         <TabsContent value="sac" className="pt-4"><SacKesimRaporu /></TabsContent>
         <TabsContent value="oturum" className="pt-4"><OturumRaporu /></TabsContent>
+        <TabsContent value="kullanici" className="pt-4"><KullaniciRaporu /></TabsContent>
+
         <TabsContent value="performans" className="pt-4">
 
       <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
