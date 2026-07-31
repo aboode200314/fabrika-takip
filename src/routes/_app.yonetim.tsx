@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Activity, Clock, AlertCircle, TrendingUp, Trash2, Plus, Loader2, Save, Pencil, Users, KeyRound } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole, resetWorkerPassword, changeOwnPassword } from "@/lib/workers.functions";
+import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole, resetWorkerPassword, changeOwnPassword, setWorkerTitle } from "@/lib/workers.functions";
 
 import { YetkilerTab } from "@/components/yetkiler-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -737,6 +737,7 @@ function KullanicilarTab() {
   const deleteFn = useServerFn(deleteWorkerAccount);
   const roleFn = useServerFn(setWorkerRole);
   const pwFn = useServerFn(resetWorkerPassword);
+  const titleFn = useServerFn(setWorkerTitle);
 
   const { data: workers, isLoading } = useQuery({
     queryKey: ["workers"],
@@ -746,6 +747,7 @@ function KullanicilarTab() {
   const [personelId, setPersonelId] = useState("");
   const [adSoyad, setAdSoyad] = useState("");
   const [departman, setDepartman] = useState("");
+  const [unvan, setUnvan] = useState("");
   const [password, setPassword] = useState("");
   const [makeSup, setMakeSup] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -762,12 +764,13 @@ function KullanicilarTab() {
           personel_id: personelId,
           ad_soyad: adSoyad,
           departman: departman || null,
+          unvan: unvan || null,
           password,
           role: makeSup ? "supervisor" : "operator",
         },
       });
       toast.success("Hesap oluşturuldu");
-      setPersonelId(""); setAdSoyad(""); setDepartman(""); setPassword(""); setMakeSup(false);
+      setPersonelId(""); setAdSoyad(""); setDepartman(""); setUnvan(""); setPassword(""); setMakeSup(false);
       qc.invalidateQueries({ queryKey: ["workers"] });
     } catch (err: any) {
       toast.error(err?.message ?? "Hata oluştu");
@@ -775,6 +778,7 @@ function KullanicilarTab() {
       setSubmitting(false);
     }
   }
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-[420px_1fr]">
