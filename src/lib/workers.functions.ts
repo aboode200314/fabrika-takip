@@ -100,7 +100,7 @@ export const listWorkers = createServerFn({ method: "GET" })
     if (!isSup) throw new Response("Forbidden", { status: 403 });
 
     const [{ data: profiles }, { data: roles }] = await Promise.all([
-      context.supabase.from("profiles").select("id,personel_id,ad_soyad,departman,created_at").order("created_at", { ascending: false }),
+      context.supabase.from("profiles").select("id,personel_id,ad_soyad,departman,unvan,created_at").order("created_at", { ascending: false }),
       context.supabase.from("user_roles").select("user_id,role"),
     ]);
     const roleMap = new Map<string, string[]>();
