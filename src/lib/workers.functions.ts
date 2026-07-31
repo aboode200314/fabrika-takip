@@ -6,9 +6,11 @@ const CreateSchema = z.object({
   personel_id: z.string().trim().min(1),
   ad_soyad: z.string().trim().min(1),
   departman: z.string().trim().optional().nullable(),
+  unvan: z.string().trim().optional().nullable(),
   password: z.string().min(6),
   role: z.enum(["operator", "supervisor"]).default("operator"),
 });
+
 
 export const createWorkerAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -38,6 +40,11 @@ export const createWorkerAccount = createServerFn({ method: "POST" })
     });
     if (error || !created.user) throw new Response(error?.message ?? "Hata", { status: 400 });
 
+    await supabaseAdmin
+      .from("profiles")
+      .update({ unvan: data.unvan ?? null, departman: data.departman ?? null })
+      .eq("id", created.user.id);
+
     if (data.role === "supervisor") {
       await supabaseAdmin
         .from("user_roles")
@@ -45,6 +52,27 @@ export const createWorkerAccount = createServerFn({ method: "POST" })
     }
     return { id: created.user.id };
   });
+
+export const setWorkerTitle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ user_id: z.string().uuid(), unvan: z.string().trim().nullable() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: isSup } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "supervisor",
+    });
+    if (!isSup) throw new Response("Forbidden", { status: 403 });
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ unvan: data.unvan || null })
+      .eq("id", data.user_id);
+    if (error) throw new Response(error.message, { status: 400 });
+    return { ok: true };
+  });
+
 
 export const deleteWorkerAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -72,7 +100,7 @@ export const listWorkers = createServerFn({ method: "GET" })
     if (!isSup) throw new Response("Forbidden", { status: 403 });
 
     const [{ data: profiles }, { data: roles }] = await Promise.all([
-      context.supabase.from("profiles").select("id,personel_id,ad_soyad,departman,created_at").order("created_at", { ascending: false }),
+      context.supabase.from("profiles").select("id,personel_id,ad_soyad,departman,unvan,created_at").order("created_at", { ascending: false }),
       context.supabase.from("user_roles").select("user_id,role"),
     ]);
     const roleMap = new Map<string, string[]>();

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, Navigate, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Factory, Gauge, ClipboardList, AlertTriangle, ShieldCheck, LogOut, Loader2, BarChart3, Radio } from "lucide-react";
+import { Factory, Gauge, ClipboardList, AlertTriangle, ShieldCheck, LogOut, Loader2, BarChart3, Settings } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -24,16 +24,17 @@ function AppLayout() {
   const isSupervisor = role === "supervisor" || isSuperAdmin;
 
   const allNav = [
-    isSupervisor
-      ? { to: "/yonetim" as const, label: "Yönetim", icon: Gauge, perm: "page.yonetim" }
-      : { to: "/panel" as const, label: "Panel", icon: Gauge, perm: "page.panel" },
-    { to: "/canli" as const, label: "Canlı", icon: Radio, perm: "page.canli" },
+    { to: "/panel" as const, label: "Panel", icon: Gauge, perm: "page.panel" },
     { to: "/uretim" as const, label: "Üretim", icon: ClipboardList, perm: "page.uretim" },
     { to: "/durus" as const, label: "Duruş", icon: AlertTriangle, perm: "page.durus" },
     { to: "/kalite" as const, label: "Kalite", icon: ShieldCheck, perm: "page.kalite" },
     { to: "/raporlar" as const, label: "Raporlar", icon: BarChart3, perm: "page.raporlar" },
+    ...(isSupervisor
+      ? [{ to: "/yonetim" as const, label: "Yönetim", icon: Settings, perm: "page.yonetim" }]
+      : []),
   ];
   const nav = allNav.filter((n) => can(n.perm));
+
 
 
   return (

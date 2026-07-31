@@ -1,6 +1,5 @@
 export const PAGE_PERMISSIONS = [
-  { key: "page.panel", label: "Panel" },
-  { key: "page.canli", label: "Canlı Takip" },
+  { key: "page.panel", label: "Ana Panel (Canlı)" },
   { key: "page.uretim", label: "Üretim" },
   { key: "page.durus", label: "Duruş" },
   { key: "page.kalite", label: "Kalite" },
@@ -10,6 +9,7 @@ export const PAGE_PERMISSIONS = [
   { key: "page.ayarlar", label: "Sistem Ayarları" },
   { key: "page.stok", label: "Stok" },
 ] as const;
+
 
 export const ACTION_PERMISSIONS = [
   { key: "kayit.ekle", label: "Ekleme" },
@@ -26,12 +26,12 @@ export const ALL_PERMISSIONS = [...PAGE_PERMISSIONS, ...ACTION_PERMISSIONS];
 /** Hiç özel yetki tanımlanmamış operatörler için varsayılan yetkiler. */
 export const DEFAULT_OPERATOR_PERMISSIONS = [
   "page.panel",
-  "page.canli",
   "page.uretim",
   "page.durus",
   "page.kalite",
   "page.raporlar",
   "kayit.ekle",
 ];
+
 
 export type PermissionKey = (typeof ALL_PERMISSIONS)[number]["key"] | (string & {});

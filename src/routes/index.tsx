@@ -16,6 +16,7 @@ function IndexRedirect() {
     );
   }
   if (!session) return <Navigate to="/giris" replace />;
-  if (role === "supervisor") return <Navigate to="/yonetim" replace />;
+  void role;
   return <Navigate to="/panel" replace />;
 }
+

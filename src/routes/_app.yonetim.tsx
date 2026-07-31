@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Activity, Clock, AlertCircle, TrendingUp, Trash2, Plus, Loader2, Save, Pencil, Users, KeyRound } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole, resetWorkerPassword, changeOwnPassword } from "@/lib/workers.functions";
+import { createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole, resetWorkerPassword, changeOwnPassword, setWorkerTitle } from "@/lib/workers.functions";
 
 import { YetkilerTab } from "@/components/yetkiler-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -737,6 +737,7 @@ function KullanicilarTab() {
   const deleteFn = useServerFn(deleteWorkerAccount);
   const roleFn = useServerFn(setWorkerRole);
   const pwFn = useServerFn(resetWorkerPassword);
+  const titleFn = useServerFn(setWorkerTitle);
 
   const { data: workers, isLoading } = useQuery({
     queryKey: ["workers"],
@@ -746,6 +747,7 @@ function KullanicilarTab() {
   const [personelId, setPersonelId] = useState("");
   const [adSoyad, setAdSoyad] = useState("");
   const [departman, setDepartman] = useState("");
+  const [unvan, setUnvan] = useState("");
   const [password, setPassword] = useState("");
   const [makeSup, setMakeSup] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -762,12 +764,13 @@ function KullanicilarTab() {
           personel_id: personelId,
           ad_soyad: adSoyad,
           departman: departman || null,
+          unvan: unvan || null,
           password,
           role: makeSup ? "supervisor" : "operator",
         },
       });
       toast.success("Hesap oluşturuldu");
-      setPersonelId(""); setAdSoyad(""); setDepartman(""); setPassword(""); setMakeSup(false);
+      setPersonelId(""); setAdSoyad(""); setDepartman(""); setUnvan(""); setPassword(""); setMakeSup(false);
       qc.invalidateQueries({ queryKey: ["workers"] });
     } catch (err: any) {
       toast.error(err?.message ?? "Hata oluştu");
@@ -775,6 +778,7 @@ function KullanicilarTab() {
       setSubmitting(false);
     }
   }
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-[420px_1fr]">
@@ -800,6 +804,11 @@ function KullanicilarTab() {
           <Label className="text-sm">Departman <span className="text-muted-foreground">(opsiyonel)</span></Label>
           <Input value={departman} onChange={(e) => setDepartman(e.target.value)} placeholder="Üretim" />
         </div>
+        <div className="space-y-1.5">
+          <Label className="text-sm">Ünvan / Görev <span className="text-muted-foreground">(opsiyonel)</span></Label>
+          <Input value={unvan} onChange={(e) => setUnvan(e.target.value)} placeholder="Örn: Üretim Sorumlusu, Muhasebeci, Operatör" />
+        </div>
+
         <div className="space-y-1.5">
           <Label className="text-sm">Şifre</Label>
           <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="en az 6 karakter" />
@@ -828,7 +837,9 @@ function KullanicilarTab() {
               <TableRow>
                 <TableHead>Personel ID</TableHead>
                 <TableHead>Ad Soyad</TableHead>
+                <TableHead>Ünvan</TableHead>
                 <TableHead>Departman</TableHead>
+
                 <TableHead>Süpervizör</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -840,6 +851,25 @@ function KullanicilarTab() {
                   <TableRow key={w.id}>
                     <TableCell className="font-mono text-xs">{w.personel_id}</TableCell>
                     <TableCell>{w.ad_soyad}</TableCell>
+                    <TableCell className="text-sm">
+                      <button
+                        className="underline decoration-dotted underline-offset-4"
+                        onClick={async () => {
+                          const yeni = prompt(`${w.ad_soyad} ünvanı:`, w.unvan ?? "");
+                          if (yeni === null) return;
+                          try {
+                            await titleFn({ data: { user_id: w.id, unvan: yeni } });
+                            toast.success("Ünvan güncellendi");
+                            qc.invalidateQueries({ queryKey: ["workers"] });
+                          } catch (err: any) {
+                            toast.error(err?.message ?? "Hata");
+                          }
+                        }}
+                      >
+                        {w.unvan ?? "— ekle"}
+                      </button>
+                    </TableCell>
+
                     <TableCell className="text-muted-foreground text-sm">{w.departman ?? "—"}</TableCell>
                     <TableCell>
                       <Switch
