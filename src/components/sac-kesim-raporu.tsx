@@ -62,14 +62,15 @@ export function SacKesimRaporu() {
   const grouped = useMemo(() => {
     const map = new Map<
       string,
-      { gun: string; olcu: string; tip: string; kesim: number; levha: number; kg: number; dk: number }
+      { gun: string; kalinlik: string; olcu: string; tip: string; kesim: number; levha: number; kg: number; dk: number }
     >();
     for (const r of rows ?? []) {
       const gun = new Date(r.baslangic).toISOString().slice(0, 10);
-      const olcu = `${Number(r.uzunluk_mm)}×${Number(r.genislik_mm)}×${Number(r.kalinlik_mm)}`;
+      const kalinlik = `${Number(r.kalinlik_mm)} mm`;
+      const olcu = `${Number(r.uzunluk_mm)}×${Number(r.genislik_mm)}`;
       const tip = r.sac_tipi ?? "—";
-      const key = `${gun}|${olcu}|${tip}`;
-      const e = map.get(key) ?? { gun, olcu, tip, kesim: 0, levha: 0, kg: 0, dk: 0 };
+      const key = `${gun}|${kalinlik}|${olcu}|${tip}`;
+      const e = map.get(key) ?? { gun, kalinlik, olcu, tip, kesim: 0, levha: 0, kg: 0, dk: 0 };
       e.kesim += 1;
       e.levha += r.levha_adedi ?? 0;
       e.kg += Number(r.toplam_agirlik_kg ?? 0);
@@ -78,6 +79,7 @@ export function SacKesimRaporu() {
     }
     return [...map.values()].sort((a, b) => (a.gun === b.gun ? b.levha - a.levha : b.gun.localeCompare(a.gun)));
   }, [rows]);
+
 
   const totals = useMemo(
     () =>
