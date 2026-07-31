@@ -805,6 +805,11 @@ function KullanicilarTab() {
           <Input value={departman} onChange={(e) => setDepartman(e.target.value)} placeholder="Üretim" />
         </div>
         <div className="space-y-1.5">
+          <Label className="text-sm">Ünvan / Görev <span className="text-muted-foreground">(opsiyonel)</span></Label>
+          <Input value={unvan} onChange={(e) => setUnvan(e.target.value)} placeholder="Örn: Üretim Sorumlusu, Muhasebeci, Operatör" />
+        </div>
+
+        <div className="space-y-1.5">
           <Label className="text-sm">Şifre</Label>
           <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="en az 6 karakter" />
         </div>
