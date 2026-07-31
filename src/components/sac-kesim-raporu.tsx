@@ -91,10 +91,11 @@ export function SacKesimRaporu() {
   );
 
   function exportCsv() {
-    const head = ["Tarih", "Sac Ölçüsü (mm)", "Sac Tipi", "Kesim Sayısı", "Levha Adedi", "Toplam kg", "Süre (dk)"];
+    const head = ["Tarih", "Kalınlık", "Ölçü (mm)", "Sac Tipi", "Kesim Sayısı", "Levha Adedi", "Toplam kg", "Süre (dk)"];
     const lines = grouped.map((g) =>
-      [g.gun, g.olcu, g.tip, g.kesim, g.levha, g.kg.toFixed(1), g.dk.toFixed(1)].join(";"),
+      [g.gun, g.kalinlik, g.olcu, g.tip, g.kesim, g.levha, g.kg.toFixed(1), g.dk.toFixed(1)].join(";"),
     );
+
     const csv = "\uFEFF" + [head.join(";"), ...lines].join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
@@ -163,7 +164,8 @@ export function SacKesimRaporu() {
               <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
                   <th className="py-2">Tarih</th>
-                  <th className="py-2">Sac Ölçüsü (mm)</th>
+                  <th className="py-2">Kalınlık</th>
+                  <th className="py-2">Ölçü (mm)</th>
                   <th className="py-2">Tip</th>
                   <th className="py-2">Kesim Sayısı</th>
                   <th className="py-2">Levha Adedi</th>
@@ -172,8 +174,9 @@ export function SacKesimRaporu() {
               </thead>
               <tbody>
                 {grouped.map((g) => (
-                  <tr key={`${g.gun}|${g.olcu}|${g.tip}`} className="border-t border-border/60">
+                  <tr key={`${g.gun}|${g.kalinlik}|${g.olcu}|${g.tip}`} className="border-t border-border/60">
                     <td className="py-2 font-medium">{dateFmt.format(new Date(g.gun))}</td>
+                    <td className="py-2 font-display">{g.kalinlik}</td>
                     <td className="py-2 font-display">{g.olcu}</td>
                     <td className="py-2 text-muted-foreground">{g.tip}</td>
                     <td className="py-2">{g.kesim}</td>
@@ -182,11 +185,12 @@ export function SacKesimRaporu() {
                   </tr>
                 ))}
                 <tr className="border-t-2 border-border font-semibold">
-                  <td className="py-2" colSpan={3}>TOPLAM</td>
+                  <td className="py-2" colSpan={4}>TOPLAM</td>
                   <td className="py-2">{totals.kesim}</td>
                   <td className="py-2">{totals.levha}</td>
                   <td className="py-2">{totals.kg.toFixed(1)}</td>
                 </tr>
+
               </tbody>
             </table>
           </div>
