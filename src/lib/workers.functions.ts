@@ -6,9 +6,11 @@ const CreateSchema = z.object({
   personel_id: z.string().trim().min(1),
   ad_soyad: z.string().trim().min(1),
   departman: z.string().trim().optional().nullable(),
+  unvan: z.string().trim().optional().nullable(),
   password: z.string().min(6),
   role: z.enum(["operator", "supervisor"]).default("operator"),
 });
+
 
 export const createWorkerAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
