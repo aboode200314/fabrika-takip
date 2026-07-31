@@ -837,7 +837,9 @@ function KullanicilarTab() {
               <TableRow>
                 <TableHead>Personel ID</TableHead>
                 <TableHead>Ad Soyad</TableHead>
+                <TableHead>Ünvan</TableHead>
                 <TableHead>Departman</TableHead>
+
                 <TableHead>Süpervizör</TableHead>
                 <TableHead></TableHead>
               </TableRow>
