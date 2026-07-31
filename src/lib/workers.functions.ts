@@ -40,6 +40,11 @@ export const createWorkerAccount = createServerFn({ method: "POST" })
     });
     if (error || !created.user) throw new Response(error?.message ?? "Hata", { status: 400 });
 
+    await supabaseAdmin
+      .from("profiles")
+      .update({ unvan: data.unvan ?? null, departman: data.departman ?? null })
+      .eq("id", created.user.id);
+
     if (data.role === "supervisor") {
       await supabaseAdmin
         .from("user_roles")
@@ -47,6 +52,27 @@ export const createWorkerAccount = createServerFn({ method: "POST" })
     }
     return { id: created.user.id };
   });
+
+export const setWorkerTitle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ user_id: z.string().uuid(), unvan: z.string().trim().nullable() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: isSup } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "supervisor",
+    });
+    if (!isSup) throw new Response("Forbidden", { status: 403 });
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ unvan: data.unvan || null })
+      .eq("id", data.user_id);
+    if (error) throw new Response(error.message, { status: 400 });
+    return { ok: true };
+  });
+
 
 export const deleteWorkerAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
