@@ -274,6 +274,7 @@ export type Database = {
           bitis: string | null
           created_at: string
           durum: string
+          durus_sayisi: number
           hurda: number
           id: string
           machine_id: string
@@ -283,6 +284,7 @@ export type Database = {
           operator_id: string
           product_id: string | null
           sure_dakika: number | null
+          toplam_durus_dakika: number
           updated_at: string
           vardiya: Database["public"]["Enums"]["shift_type"]
         }
@@ -291,6 +293,7 @@ export type Database = {
           bitis?: string | null
           created_at?: string
           durum?: string
+          durus_sayisi?: number
           hurda?: number
           id?: string
           machine_id: string
@@ -300,6 +303,7 @@ export type Database = {
           operator_id: string
           product_id?: string | null
           sure_dakika?: number | null
+          toplam_durus_dakika?: number
           updated_at?: string
           vardiya: Database["public"]["Enums"]["shift_type"]
         }
@@ -308,6 +312,7 @@ export type Database = {
           bitis?: string | null
           created_at?: string
           durum?: string
+          durus_sayisi?: number
           hurda?: number
           id?: string
           machine_id?: string
@@ -317,6 +322,7 @@ export type Database = {
           operator_id?: string
           product_id?: string | null
           sure_dakika?: number | null
+          toplam_durus_dakika?: number
           updated_at?: string
           vardiya?: Database["public"]["Enums"]["shift_type"]
         }
@@ -375,6 +381,7 @@ export type Database = {
           departman: string | null
           id: string
           personel_id: string
+          unvan: string | null
         }
         Insert: {
           ad_soyad: string
@@ -382,6 +389,7 @@ export type Database = {
           departman?: string | null
           id: string
           personel_id: string
+          unvan?: string | null
         }
         Update: {
           ad_soyad?: string
@@ -389,6 +397,7 @@ export type Database = {
           departman?: string | null
           id?: string
           personel_id?: string
+          unvan?: string | null
         }
         Relationships: []
       }
@@ -436,6 +445,53 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_pauses: {
+        Row: {
+          baslangic: string
+          bitis: string | null
+          created_at: string
+          id: string
+          neden: string
+          notlar: string | null
+          operator_id: string
+          session_id: string
+          sure_dakika: number | null
+          updated_at: string
+        }
+        Insert: {
+          baslangic?: string
+          bitis?: string | null
+          created_at?: string
+          id?: string
+          neden: string
+          notlar?: string | null
+          operator_id: string
+          session_id: string
+          sure_dakika?: number | null
+          updated_at?: string
+        }
+        Update: {
+          baslangic?: string
+          bitis?: string | null
+          created_at?: string
+          id?: string
+          neden?: string
+          notlar?: string | null
+          operator_id?: string
+          session_id?: string
+          sure_dakika?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_pauses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "production_sessions"
             referencedColumns: ["id"]
           },
         ]
