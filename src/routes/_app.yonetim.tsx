@@ -851,6 +851,25 @@ function KullanicilarTab() {
                   <TableRow key={w.id}>
                     <TableCell className="font-mono text-xs">{w.personel_id}</TableCell>
                     <TableCell>{w.ad_soyad}</TableCell>
+                    <TableCell className="text-sm">
+                      <button
+                        className="underline decoration-dotted underline-offset-4"
+                        onClick={async () => {
+                          const yeni = prompt(`${w.ad_soyad} ünvanı:`, w.unvan ?? "");
+                          if (yeni === null) return;
+                          try {
+                            await titleFn({ data: { user_id: w.id, unvan: yeni } });
+                            toast.success("Ünvan güncellendi");
+                            qc.invalidateQueries({ queryKey: ["workers"] });
+                          } catch (err: any) {
+                            toast.error(err?.message ?? "Hata");
+                          }
+                        }}
+                      >
+                        {w.unvan ?? "— ekle"}
+                      </button>
+                    </TableCell>
+
                     <TableCell className="text-muted-foreground text-sm">{w.departman ?? "—"}</TableCell>
                     <TableCell>
                       <Switch
