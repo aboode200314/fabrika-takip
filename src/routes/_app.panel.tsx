@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { SAC_TIPLERI, isPlasmaMachine } from "@/lib/sac";
 
 export const Route = createFileRoute("/_app/panel")({
   component: PanelPage,
