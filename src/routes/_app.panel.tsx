@@ -488,6 +488,60 @@ function PanelPage() {
                 </Select>
               </div>
             </div>
+
+            {isPlasma && (
+              <div className="space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-primary">
+                  <Flame className="h-4 w-4" /> CNC Plazma — Sac Bilgileri
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                  <div className="space-y-1.5 lg:col-span-1">
+                    <Label className="text-xs">Sac Türü</Label>
+                    <Select value={sacTipi} onValueChange={setSacTipi}>
+                      <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {SAC_TIPLERI.map((s) => (
+                          <SelectItem key={s.ad} value={s.ad}>{s.ad}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-uzunluk">Uzunluk (mm)</Label>
+                    <Input id="s-uzunluk" type="number" inputMode="decimal" min={1} value={uzunluk}
+                      onChange={(e) => setUzunluk(e.target.value)} className="tap-target" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-genislik">Genişlik (mm)</Label>
+                    <Input id="s-genislik" type="number" inputMode="decimal" min={1} value={genislik}
+                      onChange={(e) => setGenislik(e.target.value)} className="tap-target" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-kalinlik">Kalınlık (mm)</Label>
+                    <Input id="s-kalinlik" type="number" inputMode="decimal" min={0.1} step="0.1" value={kalinlik}
+                      onChange={(e) => setKalinlik(e.target.value)} className="tap-target" placeholder="örn. 10" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-adet">Kesilen Sac Adedi</Label>
+                    <Input id="s-adet" type="number" inputMode="numeric" min={1} value={levha}
+                      onChange={(e) => setLevha(e.target.value)} className="tap-target" />
+                  </div>
+                </div>
+                {(() => {
+                  const u = Number(uzunluk), g = Number(genislik), k = Number(kalinlik), a = Number(levha);
+                  const yog = SAC_TIPLERI.find((s) => s.ad === sacTipi)?.yogunluk ?? 7.85;
+                  const kg = (u * g * k * yog) / 1_000_000 * (a || 0);
+                  if (!Number.isFinite(kg) || kg <= 0) return null;
+                  return (
+                    <div className="text-sm text-muted-foreground">
+                      Tahmini toplam ağırlık:{" "}
+                      <strong className="text-foreground">{kg.toFixed(1)} kg</strong> ({(kg / 1000).toFixed(3)} ton)
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
             <Button size="lg" onClick={start} disabled={busy} className="tap-target w-full gap-2 sm:w-auto">
               {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />} Başlat
             </Button>
