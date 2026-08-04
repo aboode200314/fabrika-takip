@@ -64,7 +64,14 @@ interface SessionRow {
   vardiya: Shift;
   baslangic: string;
   durum: string;
+  sac_tipi: string | null;
+  uzunluk_mm: number | null;
+  genislik_mm: number | null;
+  kalinlik_mm: number | null;
+  levha_adedi: number | null;
+  yogunluk: number | null;
 }
+
 
 interface PauseRow {
   id: string;
