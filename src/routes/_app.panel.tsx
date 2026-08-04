@@ -316,22 +316,45 @@ function PanelPage() {
     if (!finishFor) return;
     const n = Number(qty);
     if (!Number.isFinite(n) || n < 0) return toast.error("Geçerli bir miktar giriniz");
+    const bitisTs = new Date().toISOString();
     setBusy(true);
     const open = openPauseOf(finishFor.id);
     if (open) {
-      await supabase.from("session_pauses").update({ bitis: new Date().toISOString() }).eq("id", open.id);
+      await supabase.from("session_pauses").update({ bitis: bitisTs }).eq("id", open.id);
     }
     const { error } = await supabase
       .from("production_sessions")
       .update({
-        bitis: new Date().toISOString(),
+        bitis: bitisTs,
         miktar: Math.round(n),
         hurda: Math.round(Number(scrap) || 0),
         notlar: note.trim() || null,
       })
       .eq("id", finishFor.id);
+    if (error) {
+      setBusy(false);
+      return toast.error("Kaydedilemedi: " + error.message);
+    }
+
+    // CNC Plazma işi ise kesim kaydı da oluştur (raporlar için)
+    if (finishFor.uzunluk_mm && finishFor.genislik_mm && finishFor.kalinlik_mm && finishFor.levha_adedi) {
+      await supabase.from("plasma_cuts").insert({
+        operator_id: finishFor.operator_id,
+        machine_id: finishFor.machine_id,
+        vardiya: finishFor.vardiya,
+        sac_tipi: finishFor.sac_tipi,
+        uzunluk_mm: finishFor.uzunluk_mm,
+        genislik_mm: finishFor.genislik_mm,
+        kalinlik_mm: finishFor.kalinlik_mm,
+        yogunluk: finishFor.yogunluk ?? 7.85,
+        levha_adedi: finishFor.levha_adedi,
+        baslangic: finishFor.baslangic,
+        bitis: bitisTs,
+        notlar: note.trim() || null,
+      });
+    }
+
     setBusy(false);
-    if (error) return toast.error("Kaydedilemedi: " + error.message);
     toast.success("İş tamamlandı ve kaydedildi");
     setFinishFor(null);
     setQty("");
@@ -341,6 +364,7 @@ function PanelPage() {
     qc.invalidateQueries({ queryKey: ["running-pauses"] });
     qc.invalidateQueries({ queryKey: ["session-history"] });
   }
+
 
   const nameOf = (id: string) => {
     const p = profiles?.find((x) => x.id === id);
