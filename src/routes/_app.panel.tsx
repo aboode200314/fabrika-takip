@@ -124,7 +124,9 @@ function PanelPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("production_sessions")
-        .select("id,operator_id,machine_id,product_id,vardiya,baslangic,durum")
+        .select(
+          "id,operator_id,machine_id,product_id,vardiya,baslangic,durum,sac_tipi,uzunluk_mm,genislik_mm,kalinlik_mm,levha_adedi,yogunluk",
+        )
         .is("bitis", null)
         .order("baslangic");
       if (error) throw error;
