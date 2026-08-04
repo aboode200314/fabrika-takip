@@ -25,15 +25,13 @@ function AppLayout() {
 
   const allNav = [
     { to: "/panel" as const, label: "Panel", icon: Gauge, perm: "page.panel" },
-    { to: "/uretim" as const, label: "Üretim", icon: ClipboardList, perm: "page.uretim" },
-    { to: "/durus" as const, label: "Duruş", icon: AlertTriangle, perm: "page.durus" },
-    { to: "/kalite" as const, label: "Kalite", icon: ShieldCheck, perm: "page.kalite" },
     { to: "/raporlar" as const, label: "Raporlar", icon: BarChart3, perm: "page.raporlar" },
     ...(isSupervisor
       ? [{ to: "/yonetim" as const, label: "Yönetim", icon: Settings, perm: "page.yonetim" }]
       : []),
   ];
   const nav = allNav.filter((n) => can(n.perm));
+
 
 
 
