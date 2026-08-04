@@ -275,18 +275,25 @@ export type Database = {
           created_at: string
           durum: string
           durus_sayisi: number
+          genislik_mm: number | null
           hurda: number
           id: string
+          kalinlik_mm: number | null
+          levha_adedi: number | null
           machine_id: string
           miktar: number | null
           notlar: string | null
           operation_id: string | null
           operator_id: string
           product_id: string | null
+          sac_tipi: string | null
           sure_dakika: number | null
+          toplam_agirlik_kg: number | null
           toplam_durus_dakika: number
           updated_at: string
+          uzunluk_mm: number | null
           vardiya: Database["public"]["Enums"]["shift_type"]
+          yogunluk: number | null
         }
         Insert: {
           baslangic?: string
@@ -294,18 +301,25 @@ export type Database = {
           created_at?: string
           durum?: string
           durus_sayisi?: number
+          genislik_mm?: number | null
           hurda?: number
           id?: string
+          kalinlik_mm?: number | null
+          levha_adedi?: number | null
           machine_id: string
           miktar?: number | null
           notlar?: string | null
           operation_id?: string | null
           operator_id: string
           product_id?: string | null
+          sac_tipi?: string | null
           sure_dakika?: number | null
+          toplam_agirlik_kg?: number | null
           toplam_durus_dakika?: number
           updated_at?: string
+          uzunluk_mm?: number | null
           vardiya: Database["public"]["Enums"]["shift_type"]
+          yogunluk?: number | null
         }
         Update: {
           baslangic?: string
@@ -313,18 +327,25 @@ export type Database = {
           created_at?: string
           durum?: string
           durus_sayisi?: number
+          genislik_mm?: number | null
           hurda?: number
           id?: string
+          kalinlik_mm?: number | null
+          levha_adedi?: number | null
           machine_id?: string
           miktar?: number | null
           notlar?: string | null
           operation_id?: string | null
           operator_id?: string
           product_id?: string | null
+          sac_tipi?: string | null
           sure_dakika?: number | null
+          toplam_agirlik_kg?: number | null
           toplam_durus_dakika?: number
           updated_at?: string
+          uzunluk_mm?: number | null
           vardiya?: Database["public"]["Enums"]["shift_type"]
+          yogunluk?: number | null
         }
         Relationships: [
           {

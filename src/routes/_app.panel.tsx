@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Play, Square, Pause, Loader2, Radio, Timer, User as UserIcon, PlayCircle } from "lucide-react";
+import { Play, Square, Pause, Loader2, Radio, Timer, User as UserIcon, PlayCircle, Flame } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { SAC_TIPLERI, isPlasmaMachine } from "@/lib/sac";
 
 export const Route = createFileRoute("/_app/panel")({
   component: PanelPage,
@@ -64,7 +65,14 @@ interface SessionRow {
   vardiya: Shift;
   baslangic: string;
   durum: string;
+  sac_tipi: string | null;
+  uzunluk_mm: number | null;
+  genislik_mm: number | null;
+  kalinlik_mm: number | null;
+  levha_adedi: number | null;
+  yogunluk: number | null;
 }
+
 
 interface PauseRow {
   id: string;
@@ -117,7 +125,9 @@ function PanelPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("production_sessions")
-        .select("id,operator_id,machine_id,product_id,vardiya,baslangic,durum")
+        .select(
+          "id,operator_id,machine_id,product_id,vardiya,baslangic,durum,sac_tipi,uzunluk_mm,genislik_mm,kalinlik_mm,levha_adedi,yogunluk",
+        )
         .is("bitis", null)
         .order("baslangic");
       if (error) throw error;
@@ -200,9 +210,37 @@ function PanelPage() {
   const [shift, setShift] = useState<Shift>(autoShift());
   const [busy, setBusy] = useState(false);
 
+  // CNC Plazma alanları
+  const [sacTipi, setSacTipi] = useState(SAC_TIPLERI[0].ad);
+  const [uzunluk, setUzunluk] = useState("6000");
+  const [genislik, setGenislik] = useState("1500");
+  const [kalinlik, setKalinlik] = useState("");
+  const [levha, setLevha] = useState("1");
+
+  const selectedMachine = (machines ?? []).find((m) => m.id === machine) ?? null;
+  const isPlasma = isPlasmaMachine(selectedMachine);
+
   async function start() {
     if (!machine) return toast.error("Makine seçiniz");
     if (byMachine.has(machine)) return toast.error("Bu makine şu anda çalışıyor");
+
+    let plasma: Record<string, unknown> = {};
+    if (isPlasma) {
+      const u = Number(uzunluk), g = Number(genislik), k = Number(kalinlik), a = Number(levha);
+      if (!(u > 0)) return toast.error("Sac uzunluğu giriniz");
+      if (!(g > 0)) return toast.error("Sac genişliği giriniz");
+      if (!(k > 0)) return toast.error("Sac kalınlığı giriniz");
+      if (!(a > 0)) return toast.error("Kesilecek sac adedi giriniz");
+      plasma = {
+        sac_tipi: sacTipi,
+        uzunluk_mm: u,
+        genislik_mm: g,
+        kalinlik_mm: k,
+        levha_adedi: Math.round(a),
+        yogunluk: SAC_TIPLERI.find((s) => s.ad === sacTipi)?.yogunluk ?? 7.85,
+      };
+    }
+
     setBusy(true);
     const { error } = await supabase.from("production_sessions").insert({
       operator_id: user!.id,
@@ -211,12 +249,14 @@ function PanelPage() {
       vardiya: shift,
       baslangic: new Date().toISOString(),
       durum: "running",
+      ...plasma,
     });
     setBusy(false);
     if (error) return toast.error("Başlatılamadı: " + error.message);
     toast.success("İş başlatıldı");
     qc.invalidateQueries({ queryKey: ["running-sessions"] });
   }
+
 
   // ---- pause
   const [pauseFor, setPauseFor] = useState<SessionRow | null>(null);
@@ -276,22 +316,45 @@ function PanelPage() {
     if (!finishFor) return;
     const n = Number(qty);
     if (!Number.isFinite(n) || n < 0) return toast.error("Geçerli bir miktar giriniz");
+    const bitisTs = new Date().toISOString();
     setBusy(true);
     const open = openPauseOf(finishFor.id);
     if (open) {
-      await supabase.from("session_pauses").update({ bitis: new Date().toISOString() }).eq("id", open.id);
+      await supabase.from("session_pauses").update({ bitis: bitisTs }).eq("id", open.id);
     }
     const { error } = await supabase
       .from("production_sessions")
       .update({
-        bitis: new Date().toISOString(),
+        bitis: bitisTs,
         miktar: Math.round(n),
         hurda: Math.round(Number(scrap) || 0),
         notlar: note.trim() || null,
       })
       .eq("id", finishFor.id);
+    if (error) {
+      setBusy(false);
+      return toast.error("Kaydedilemedi: " + error.message);
+    }
+
+    // CNC Plazma işi ise kesim kaydı da oluştur (raporlar için)
+    if (finishFor.uzunluk_mm && finishFor.genislik_mm && finishFor.kalinlik_mm && finishFor.levha_adedi) {
+      await supabase.from("plasma_cuts").insert({
+        operator_id: finishFor.operator_id,
+        machine_id: finishFor.machine_id,
+        vardiya: finishFor.vardiya,
+        sac_tipi: finishFor.sac_tipi,
+        uzunluk_mm: finishFor.uzunluk_mm,
+        genislik_mm: finishFor.genislik_mm,
+        kalinlik_mm: finishFor.kalinlik_mm,
+        yogunluk: finishFor.yogunluk ?? 7.85,
+        levha_adedi: finishFor.levha_adedi,
+        baslangic: finishFor.baslangic,
+        bitis: bitisTs,
+        notlar: note.trim() || null,
+      });
+    }
+
     setBusy(false);
-    if (error) return toast.error("Kaydedilemedi: " + error.message);
     toast.success("İş tamamlandı ve kaydedildi");
     setFinishFor(null);
     setQty("");
@@ -301,6 +364,7 @@ function PanelPage() {
     qc.invalidateQueries({ queryKey: ["running-pauses"] });
     qc.invalidateQueries({ queryKey: ["session-history"] });
   }
+
 
   const nameOf = (id: string) => {
     const p = profiles?.find((x) => x.id === id);
@@ -424,6 +488,60 @@ function PanelPage() {
                 </Select>
               </div>
             </div>
+
+            {isPlasma && (
+              <div className="space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-primary">
+                  <Flame className="h-4 w-4" /> CNC Plazma — Sac Bilgileri
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                  <div className="space-y-1.5 lg:col-span-1">
+                    <Label className="text-xs">Sac Türü</Label>
+                    <Select value={sacTipi} onValueChange={setSacTipi}>
+                      <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {SAC_TIPLERI.map((s) => (
+                          <SelectItem key={s.ad} value={s.ad}>{s.ad}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-uzunluk">Uzunluk (mm)</Label>
+                    <Input id="s-uzunluk" type="number" inputMode="decimal" min={1} value={uzunluk}
+                      onChange={(e) => setUzunluk(e.target.value)} className="tap-target" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-genislik">Genişlik (mm)</Label>
+                    <Input id="s-genislik" type="number" inputMode="decimal" min={1} value={genislik}
+                      onChange={(e) => setGenislik(e.target.value)} className="tap-target" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-kalinlik">Kalınlık (mm)</Label>
+                    <Input id="s-kalinlik" type="number" inputMode="decimal" min={0.1} step="0.1" value={kalinlik}
+                      onChange={(e) => setKalinlik(e.target.value)} className="tap-target" placeholder="örn. 10" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-adet">Kesilen Sac Adedi</Label>
+                    <Input id="s-adet" type="number" inputMode="numeric" min={1} value={levha}
+                      onChange={(e) => setLevha(e.target.value)} className="tap-target" />
+                  </div>
+                </div>
+                {(() => {
+                  const u = Number(uzunluk), g = Number(genislik), k = Number(kalinlik), a = Number(levha);
+                  const yog = SAC_TIPLERI.find((s) => s.ad === sacTipi)?.yogunluk ?? 7.85;
+                  const kg = (u * g * k * yog) / 1_000_000 * (a || 0);
+                  if (!Number.isFinite(kg) || kg <= 0) return null;
+                  return (
+                    <div className="text-sm text-muted-foreground">
+                      Tahmini toplam ağırlık:{" "}
+                      <strong className="text-foreground">{kg.toFixed(1)} kg</strong> ({(kg / 1000).toFixed(3)} ton)
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
             <Button size="lg" onClick={start} disabled={busy} className="tap-target w-full gap-2 sm:w-auto">
               {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />} Başlat
             </Button>
@@ -469,6 +587,12 @@ function PanelPage() {
                     <UserIcon className="h-4 w-4" /> {nameOf(s.operator_id)}
                   </div>
                   <div className="text-muted-foreground">{productOf(s.product_id)}</div>
+                  {s.uzunluk_mm && (
+                    <div className="flex items-center gap-2 text-xs text-primary">
+                      <Flame className="h-3.5 w-3.5" />
+                      {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} · {s.levha_adedi} levha
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Timer className="h-4 w-4" /> Başlangıç: {timeFmt.format(new Date(s.baslangic))} · {s.vardiya}
                   </div>
