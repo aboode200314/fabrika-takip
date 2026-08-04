@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, Navigate, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Factory, Gauge, ClipboardList, AlertTriangle, ShieldCheck, LogOut, Loader2, BarChart3, Settings } from "lucide-react";
+import { Factory, Gauge, LogOut, Loader2, BarChart3, Settings } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
