@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Play, Square, Pause, Loader2, Radio, Timer, User as UserIcon, PlayCircle } from "lucide-react";
+import { Play, Square, Pause, Loader2, Radio, Timer, User as UserIcon, PlayCircle, Flame } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
