@@ -209,9 +209,37 @@ function PanelPage() {
   const [shift, setShift] = useState<Shift>(autoShift());
   const [busy, setBusy] = useState(false);
 
+  // CNC Plazma alanları
+  const [sacTipi, setSacTipi] = useState(SAC_TIPLERI[0].ad);
+  const [uzunluk, setUzunluk] = useState("6000");
+  const [genislik, setGenislik] = useState("1500");
+  const [kalinlik, setKalinlik] = useState("");
+  const [levha, setLevha] = useState("1");
+
+  const selectedMachine = (machines ?? []).find((m) => m.id === machine) ?? null;
+  const isPlasma = isPlasmaMachine(selectedMachine);
+
   async function start() {
     if (!machine) return toast.error("Makine seçiniz");
     if (byMachine.has(machine)) return toast.error("Bu makine şu anda çalışıyor");
+
+    let plasma: Record<string, unknown> = {};
+    if (isPlasma) {
+      const u = Number(uzunluk), g = Number(genislik), k = Number(kalinlik), a = Number(levha);
+      if (!(u > 0)) return toast.error("Sac uzunluğu giriniz");
+      if (!(g > 0)) return toast.error("Sac genişliği giriniz");
+      if (!(k > 0)) return toast.error("Sac kalınlığı giriniz");
+      if (!(a > 0)) return toast.error("Kesilecek sac adedi giriniz");
+      plasma = {
+        sac_tipi: sacTipi,
+        uzunluk_mm: u,
+        genislik_mm: g,
+        kalinlik_mm: k,
+        levha_adedi: Math.round(a),
+        yogunluk: SAC_TIPLERI.find((s) => s.ad === sacTipi)?.yogunluk ?? 7.85,
+      };
+    }
+
     setBusy(true);
     const { error } = await supabase.from("production_sessions").insert({
       operator_id: user!.id,
@@ -220,12 +248,14 @@ function PanelPage() {
       vardiya: shift,
       baslangic: new Date().toISOString(),
       durum: "running",
+      ...plasma,
     });
     setBusy(false);
     if (error) return toast.error("Başlatılamadı: " + error.message);
     toast.success("İş başlatıldı");
     qc.invalidateQueries({ queryKey: ["running-sessions"] });
   }
+
 
   // ---- pause
   const [pauseFor, setPauseFor] = useState<SessionRow | null>(null);
