@@ -587,6 +587,12 @@ function PanelPage() {
                     <UserIcon className="h-4 w-4" /> {nameOf(s.operator_id)}
                   </div>
                   <div className="text-muted-foreground">{productOf(s.product_id)}</div>
+                  {s.uzunluk_mm && (
+                    <div className="flex items-center gap-2 text-xs text-primary">
+                      <Flame className="h-3.5 w-3.5" />
+                      {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} · {s.levha_adedi} levha
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Timer className="h-4 w-4" /> Başlangıç: {timeFmt.format(new Date(s.baslangic))} · {s.vardiya}
                   </div>
