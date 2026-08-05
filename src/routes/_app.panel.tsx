@@ -507,53 +507,56 @@ function PanelPage() {
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-primary">
                   <Flame className="h-4 w-4" /> CNC Plazma — Sac Bilgileri
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                  <div className="space-y-1.5 lg:col-span-1">
-                    <Label className="text-xs">Sac Türü</Label>
-                    <Select value={sacTipi} onValueChange={setSacTipi}>
-                      <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {SAC_TIPLERI.map((s) => (
-                          <SelectItem key={s.ad} value={s.ad}>{s.ad}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs" htmlFor="s-uzunluk">Uzunluk (mm)</Label>
-                    <Input id="s-uzunluk" type="number" inputMode="decimal" min={1} value={uzunluk}
-                      onChange={(e) => setUzunluk(e.target.value)} className="tap-target" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs" htmlFor="s-genislik">Genişlik (mm)</Label>
-                    <Input id="s-genislik" type="number" inputMode="decimal" min={1} value={genislik}
-                      onChange={(e) => setGenislik(e.target.value)} className="tap-target" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs" htmlFor="s-kalinlik">Kalınlık (mm)</Label>
-                    <Input id="s-kalinlik" type="number" inputMode="decimal" min={0.1} step="0.1" value={kalinlik}
-                      onChange={(e) => setKalinlik(e.target.value)} className="tap-target" placeholder="örn. 10" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs" htmlFor="s-adet">Kesilen Sac Adedi</Label>
-                    <Input id="s-adet" type="number" inputMode="numeric" min={1} value={levha}
-                      onChange={(e) => setLevha(e.target.value)} className="tap-target" />
-                  </div>
-                </div>
-                {(() => {
-                  const u = Number(uzunluk), g = Number(genislik), k = Number(kalinlik), a = Number(levha);
-                  const yog = SAC_TIPLERI.find((s) => s.ad === sacTipi)?.yogunluk ?? 7.85;
-                  const kg = (u * g * k * yog) / 1_000_000 * (a || 0);
-                  if (!Number.isFinite(kg) || kg <= 0) return null;
-                  return (
-                    <div className="text-sm text-muted-foreground">
-                      Tahmini toplam ağırlık:{" "}
-                      <strong className="text-foreground">{kg.toFixed(1)} kg</strong> ({(kg / 1000).toFixed(3)} ton)
+                {stock && stock.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Stokta sac tanımlı değil. Yönetim → Sac Stok bölümünden sac ekleyin.
+                  </p>
+                ) : (
+                  <>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">Kullanılacak Sac (stoktan)</Label>
+                        <Select value={stokId} onValueChange={setStokId}>
+                          <SelectTrigger className="tap-target"><SelectValue placeholder="Sac seçiniz" /></SelectTrigger>
+                          <SelectContent>
+                            {(stock ?? []).map((s) => (
+                              <SelectItem key={s.id} value={s.id} disabled={s.adet <= 0}>
+                                {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} — stok: {s.adet}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs" htmlFor="s-adet">Kesilecek Sac Adedi</Label>
+                        <Input id="s-adet" type="number" inputMode="numeric" min={1}
+                          max={selectedStock?.adet ?? undefined} value={levha}
+                          onChange={(e) => setLevha(e.target.value)} className="tap-target" />
+                      </div>
                     </div>
-                  );
-                })()}
+                    {selectedStock && (
+                      <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                        <div>
+                          Ölçü: <strong className="text-foreground">{selectedStock.uzunluk_mm}×{selectedStock.genislik_mm} mm</strong> ·
+                          Kalınlık: <strong className="text-foreground">{selectedStock.kalinlik_mm} mm</strong>
+                        </div>
+                        <div>
+                          Tahmini ağırlık:{" "}
+                          <strong className="text-foreground">
+                            {(levhaKg(selectedStock) * (Number(levha) || 0)).toFixed(1)} kg
+                          </strong>{" "}
+                          · Kalan stok (iş sonrası):{" "}
+                          <strong className="text-foreground">
+                            {Math.max(0, selectedStock.adet - (Number(levha) || 0))}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
+
 
             <Button size="lg" onClick={start} disabled={busy} className="tap-target w-full gap-2 sm:w-auto">
               {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />} Başlat
