@@ -287,6 +287,8 @@ export type Database = {
           operator_id: string
           product_id: string | null
           sac_tipi: string | null
+          stok_dusuldu: boolean
+          stok_id: string | null
           sure_dakika: number | null
           toplam_agirlik_kg: number | null
           toplam_durus_dakika: number
@@ -313,6 +315,8 @@ export type Database = {
           operator_id: string
           product_id?: string | null
           sac_tipi?: string | null
+          stok_dusuldu?: boolean
+          stok_id?: string | null
           sure_dakika?: number | null
           toplam_agirlik_kg?: number | null
           toplam_durus_dakika?: number
@@ -339,6 +343,8 @@ export type Database = {
           operator_id?: string
           product_id?: string | null
           sac_tipi?: string | null
+          stok_dusuldu?: boolean
+          stok_id?: string | null
           sure_dakika?: number | null
           toplam_agirlik_kg?: number | null
           toplam_durus_dakika?: number
@@ -367,6 +373,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_sessions_stok_id_fkey"
+            columns: ["stok_id"]
+            isOneToOne: false
+            referencedRelation: "sheet_stock"
             referencedColumns: ["id"]
           },
         ]
@@ -513,6 +526,86 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "production_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sheet_stock: {
+        Row: {
+          adet: number
+          created_at: string
+          genislik_mm: number
+          id: string
+          kalinlik_mm: number
+          kritik_adet: number
+          notlar: string | null
+          sac_tipi: string
+          updated_at: string
+          uzunluk_mm: number
+          yogunluk: number
+        }
+        Insert: {
+          adet?: number
+          created_at?: string
+          genislik_mm: number
+          id?: string
+          kalinlik_mm: number
+          kritik_adet?: number
+          notlar?: string | null
+          sac_tipi: string
+          updated_at?: string
+          uzunluk_mm: number
+          yogunluk?: number
+        }
+        Update: {
+          adet?: number
+          created_at?: string
+          genislik_mm?: number
+          id?: string
+          kalinlik_mm?: number
+          kritik_adet?: number
+          notlar?: string | null
+          sac_tipi?: string
+          updated_at?: string
+          uzunluk_mm?: number
+          yogunluk?: number
+        }
+        Relationships: []
+      }
+      sheet_stock_moves: {
+        Row: {
+          created_at: string
+          degisim: number
+          id: string
+          notlar: string | null
+          session_id: string | null
+          stock_id: string | null
+          tip: string
+        }
+        Insert: {
+          created_at?: string
+          degisim: number
+          id?: string
+          notlar?: string | null
+          session_id?: string | null
+          stock_id?: string | null
+          tip: string
+        }
+        Update: {
+          created_at?: string
+          degisim?: number
+          id?: string
+          notlar?: string | null
+          session_id?: string | null
+          stock_id?: string | null
+          tip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sheet_stock_moves_stock_id_fkey"
+            columns: ["stock_id"]
+            isOneToOne: false
+            referencedRelation: "sheet_stock"
             referencedColumns: ["id"]
           },
         ]
