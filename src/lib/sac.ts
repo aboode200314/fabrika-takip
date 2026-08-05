@@ -23,3 +23,20 @@ export function isPlasmaMachine(m?: { kod?: string | null; ad?: string | null } 
   return /p/.test(compact) && /l/.test(compact) && /a/.test(compact) && /[zs]/.test(compact) && /m/.test(compact) && raw.includes("cnc");
 }
 
+
+export interface StockRow {
+  id: string;
+  sac_tipi: string;
+  kalinlik_mm: number;
+  uzunluk_mm: number;
+  genislik_mm: number;
+  adet: number;
+  kritik_adet: number;
+  yogunluk: number;
+  notlar: string | null;
+}
+
+/** Tek levhanın kg cinsinden ağırlığı. */
+export function levhaKg(r: Pick<StockRow, "uzunluk_mm" | "genislik_mm" | "kalinlik_mm" | "yogunluk">) {
+  return (Number(r.uzunluk_mm) * Number(r.genislik_mm) * Number(r.kalinlik_mm) * Number(r.yogunluk)) / 1_000_000;
+}

@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SacKesimRaporu } from "@/components/sac-kesim-raporu";
 import { OturumRaporu } from "@/components/oturum-raporu";
 import { KullaniciRaporu } from "@/components/kullanici-raporu";
+import { VeriYonetimi } from "@/components/veri-yonetimi";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -136,10 +137,12 @@ function RaporlarPage() {
           <TabsTrigger value="sac">Sac Kesim</TabsTrigger>
           <TabsTrigger value="oturum">İş Oturumları</TabsTrigger>
           <TabsTrigger value="kullanici">Kullanıcılar</TabsTrigger>
+          <TabsTrigger value="veri">Veri Yönetimi</TabsTrigger>
         </TabsList>
         <TabsContent value="sac" className="pt-4"><SacKesimRaporu /></TabsContent>
         <TabsContent value="oturum" className="pt-4"><OturumRaporu /></TabsContent>
         <TabsContent value="kullanici" className="pt-4"><KullaniciRaporu /></TabsContent>
+        <TabsContent value="veri" className="pt-4"><VeriYonetimi /></TabsContent>
 
         <TabsContent value="performans" className="pt-4">
 
