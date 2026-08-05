@@ -9,27 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { SAC_TIPLERI } from "@/lib/sac";
-
-export interface StockRow {
-  id: string;
-  sac_tipi: string;
-  kalinlik_mm: number;
-  uzunluk_mm: number;
-  genislik_mm: number;
-  adet: number;
-  kritik_adet: number;
-  yogunluk: number;
-  notlar: string | null;
-}
+import { SAC_TIPLERI, levhaKg, type StockRow } from "@/lib/sac";
 
 const dtFmt = new Intl.DateTimeFormat("tr-TR", {
   day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
 });
-
-export function levhaKg(r: Pick<StockRow, "uzunluk_mm" | "genislik_mm" | "kalinlik_mm" | "yogunluk">) {
-  return (Number(r.uzunluk_mm) * Number(r.genislik_mm) * Number(r.kalinlik_mm) * Number(r.yogunluk)) / 1_000_000;
-}
 
 export function StokTab() {
   const qc = useQueryClient();
