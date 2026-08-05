@@ -211,14 +211,25 @@ function PanelPage() {
   const [busy, setBusy] = useState(false);
 
   // CNC Plazma alanları
-  const [sacTipi, setSacTipi] = useState(SAC_TIPLERI[0].ad);
-  const [uzunluk, setUzunluk] = useState("6000");
-  const [genislik, setGenislik] = useState("1500");
-  const [kalinlik, setKalinlik] = useState("");
+  const [stokId, setStokId] = useState("");
   const [levha, setLevha] = useState("1");
+
+  const { data: stock } = useQuery({
+    queryKey: ["sheet-stock"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sheet_stock")
+        .select("id,sac_tipi,kalinlik_mm,uzunluk_mm,genislik_mm,adet,kritik_adet,yogunluk,notlar")
+        .order("sac_tipi")
+        .order("kalinlik_mm");
+      if (error) throw error;
+      return (data ?? []) as StockRow[];
+    },
+  });
 
   const selectedMachine = (machines ?? []).find((m) => m.id === machine) ?? null;
   const isPlasma = isPlasmaMachine(selectedMachine);
+  const selectedStock = (stock ?? []).find((s) => s.id === stokId) ?? null;
 
   async function start() {
     if (!machine) return toast.error("Makine seçiniz");
@@ -226,18 +237,18 @@ function PanelPage() {
 
     let plasma: Record<string, unknown> = {};
     if (isPlasma) {
-      const u = Number(uzunluk), g = Number(genislik), k = Number(kalinlik), a = Number(levha);
-      if (!(u > 0)) return toast.error("Sac uzunluğu giriniz");
-      if (!(g > 0)) return toast.error("Sac genişliği giriniz");
-      if (!(k > 0)) return toast.error("Sac kalınlığı giriniz");
+      if (!selectedStock) return toast.error("Kullanılacak sacı stoktan seçiniz");
+      const a = Number(levha);
       if (!(a > 0)) return toast.error("Kesilecek sac adedi giriniz");
+      if (a > selectedStock.adet) return toast.error(`Stokta yalnızca ${selectedStock.adet} levha var`);
       plasma = {
-        sac_tipi: sacTipi,
-        uzunluk_mm: u,
-        genislik_mm: g,
-        kalinlik_mm: k,
+        stok_id: selectedStock.id,
+        sac_tipi: selectedStock.sac_tipi,
+        uzunluk_mm: selectedStock.uzunluk_mm,
+        genislik_mm: selectedStock.genislik_mm,
+        kalinlik_mm: selectedStock.kalinlik_mm,
         levha_adedi: Math.round(a),
-        yogunluk: SAC_TIPLERI.find((s) => s.ad === sacTipi)?.yogunluk ?? 7.85,
+        yogunluk: selectedStock.yogunluk ?? 7.85,
       };
     }
 
@@ -254,8 +265,10 @@ function PanelPage() {
     setBusy(false);
     if (error) return toast.error("Başlatılamadı: " + error.message);
     toast.success("İş başlatıldı");
+    setStokId(""); setLevha("1");
     qc.invalidateQueries({ queryKey: ["running-sessions"] });
   }
+
 
 
   // ---- pause
