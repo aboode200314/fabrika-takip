@@ -194,8 +194,14 @@ function PanelPage() {
   const [busy, setBusy] = useState(false);
 
   // CNC Plazma alanları
+  const CUSTOM = "__custom__";
   const [stokId, setStokId] = useState("");
   const [levha, setLevha] = useState("1");
+  // Özel (stok dışı) sac
+  const [cSacTipi, setCSacTipi] = useState(SAC_TIPLERI[0].ad);
+  const [cUzunluk, setCUzunluk] = useState("");
+  const [cGenislik, setCGenislik] = useState("");
+  const [cKalinlik, setCKalinlik] = useState("");
 
   const { data: stock } = useQuery({
     queryKey: ["sheet-stock"],
@@ -212,6 +218,7 @@ function PanelPage() {
 
   const selectedMachine = (machines ?? []).find((m) => m.id === machine) ?? null;
   const isPlasma = isPlasmaMachine(selectedMachine);
+  const isCustomSheet = stokId === CUSTOM;
   const selectedStock = (stock ?? []).find((s) => s.id === stokId) ?? null;
 
   async function start() {
@@ -220,20 +227,38 @@ function PanelPage() {
 
     let plasma: Record<string, unknown> = {};
     if (isPlasma) {
-      if (!selectedStock) return toast.error("Kullanılacak sacı stoktan seçiniz");
       const a = Number(levha);
-      if (!(a > 0)) return toast.error("Kesilecek sac adedi giriniz");
-      if (a > selectedStock.adet) return toast.error(`Stokta yalnızca ${selectedStock.adet} levha var`);
-      plasma = {
-        stok_id: selectedStock.id,
-        sac_tipi: selectedStock.sac_tipi,
-        uzunluk_mm: selectedStock.uzunluk_mm,
-        genislik_mm: selectedStock.genislik_mm,
-        kalinlik_mm: selectedStock.kalinlik_mm,
-        levha_adedi: Math.round(a),
-        yogunluk: selectedStock.yogunluk ?? 7.85,
-      };
+      if (!(a > 0)) return toast.error("Kesilecek sac adedi giriniz (0.25 gibi kesirli olabilir)");
+
+      if (isCustomSheet) {
+        const u = Number(cUzunluk), g = Number(cGenislik), k = Number(cKalinlik);
+        if (!(u > 0) || !(g > 0) || !(k > 0))
+          return toast.error("Özel sac için uzunluk, genişlik ve kalınlık giriniz");
+        plasma = {
+          stok_id: null,
+          sac_tipi: cSacTipi,
+          uzunluk_mm: u,
+          genislik_mm: g,
+          kalinlik_mm: k,
+          levha_adedi: a,
+          yogunluk: SAC_TIPLERI.find((t) => t.ad === cSacTipi)?.yogunluk ?? 7.85,
+        };
+      } else {
+        if (!selectedStock) return toast.error("Kullanılacak sacı stoktan seçiniz");
+        if (a > Number(selectedStock.adet))
+          return toast.error(`Stokta yalnızca ${selectedStock.adet} levha var`);
+        plasma = {
+          stok_id: selectedStock.id,
+          sac_tipi: selectedStock.sac_tipi,
+          uzunluk_mm: selectedStock.uzunluk_mm,
+          genislik_mm: selectedStock.genislik_mm,
+          kalinlik_mm: selectedStock.kalinlik_mm,
+          levha_adedi: a,
+          yogunluk: selectedStock.yogunluk ?? 7.85,
+        };
+      }
     }
+
 
     setBusy(true);
     const { error } = await supabase.from("production_sessions").insert({
