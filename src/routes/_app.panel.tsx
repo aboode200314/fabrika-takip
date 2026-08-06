@@ -362,10 +362,8 @@ function PanelPage() {
   }
 
 
-  const nameOf = (id: string) => {
-    const p = profiles?.find((x) => x.id === id);
-    return p?.ad_soyad ?? p?.personel_id ?? "—";
-  };
+  const nameOf = (s: SessionRow) => s.operator_ad || "—";
+
   const productOf = (id: string | null) => {
     if (!id) return "—";
     const p = products?.find((x) => x.id === id);
