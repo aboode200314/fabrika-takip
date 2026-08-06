@@ -513,53 +513,86 @@ function PanelPage() {
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-primary">
                   <Flame className="h-4 w-4" /> CNC Plazma — Sac Bilgileri
                 </div>
-                {stock && stock.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Stokta sac tanımlı değil. Yönetim → Sac Stok bölümünden sac ekleyin.
-                  </p>
-                ) : (
-                  <>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Kullanılacak Sac (stoktan)</Label>
-                        <Select value={stokId} onValueChange={setStokId}>
-                          <SelectTrigger className="tap-target"><SelectValue placeholder="Sac seçiniz" /></SelectTrigger>
-                          <SelectContent>
-                            {(stock ?? []).map((s) => (
-                              <SelectItem key={s.id} value={s.id} disabled={s.adet <= 0}>
-                                {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} — stok: {s.adet}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs" htmlFor="s-adet">Kesilecek Sac Adedi</Label>
-                        <Input id="s-adet" type="number" inputMode="numeric" min={1}
-                          max={selectedStock?.adet ?? undefined} value={levha}
-                          onChange={(e) => setLevha(e.target.value)} className="tap-target" />
-                      </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Kullanılacak Sac</Label>
+                    <Select value={stokId} onValueChange={setStokId}>
+                      <SelectTrigger className="tap-target"><SelectValue placeholder="Sac seçiniz" /></SelectTrigger>
+                      <SelectContent>
+                        {(stock ?? []).map((s) => (
+                          <SelectItem key={s.id} value={s.id} disabled={Number(s.adet) <= 0}>
+                            {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} — stok: {s.adet}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value={CUSTOM}>Özel Ölçü Sac (stok dışı / fire parçası)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-adet">Kesilen Sac Adedi (0.25 / 0.5 / 1.5 olabilir)</Label>
+                    <Input id="s-adet" type="number" inputMode="decimal" step="0.01" min={0.01}
+                      max={isCustomSheet ? undefined : (selectedStock?.adet ?? undefined)} value={levha}
+                      onChange={(e) => setLevha(e.target.value)} className="tap-target" />
+                  </div>
+                </div>
+
+                {isCustomSheet && (
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <div className="space-y-1.5 sm:col-span-4">
+                      <Label className="text-xs">Sac Türü</Label>
+                      <Select value={cSacTipi} onValueChange={setCSacTipi}>
+                        <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {SAC_TIPLERI.map((t) => <SelectItem key={t.ad} value={t.ad}>{t.ad}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    {selectedStock && (
-                      <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                        <div>
-                          Ölçü: <strong className="text-foreground">{selectedStock.uzunluk_mm}×{selectedStock.genislik_mm} mm</strong> ·
-                          Kalınlık: <strong className="text-foreground">{selectedStock.kalinlik_mm} mm</strong>
-                        </div>
-                        <div>
-                          Tahmini ağırlık:{" "}
-                          <strong className="text-foreground">
-                            {(levhaKg(selectedStock) * (Number(levha) || 0)).toFixed(1)} kg
-                          </strong>{" "}
-                          · Kalan stok (iş sonrası):{" "}
-                          <strong className="text-foreground">
-                            {Math.max(0, selectedStock.adet - (Number(levha) || 0))}
-                          </strong>
-                        </div>
-                      </div>
-                    )}
-                  </>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs" htmlFor="c-u">Uzunluk (mm)</Label>
+                      <Input id="c-u" type="number" inputMode="decimal" value={cUzunluk}
+                        onChange={(e) => setCUzunluk(e.target.value)} className="tap-target" placeholder="örn. 1200" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs" htmlFor="c-g">Genişlik (mm)</Label>
+                      <Input id="c-g" type="number" inputMode="decimal" value={cGenislik}
+                        onChange={(e) => setCGenislik(e.target.value)} className="tap-target" placeholder="örn. 800" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs" htmlFor="c-k">Kalınlık (mm)</Label>
+                      <Input id="c-k" type="number" inputMode="decimal" step="0.1" value={cKalinlik}
+                        onChange={(e) => setCKalinlik(e.target.value)} className="tap-target" placeholder="örn. 6" />
+                    </div>
+                    <p className="text-xs text-muted-foreground sm:col-span-4">
+                      Özel ölçü sac stoğa eklenmez ve stok miktarlarını etkilemez; yalnızca bu iş kaydında kullanılır.
+                    </p>
+                  </div>
                 )}
+
+                {!isCustomSheet && stock && stock.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Stokta sac tanımlı değil. Yönetim → Sac Stok bölümünden sac ekleyin veya “Özel Ölçü Sac” seçin.
+                  </p>
+                )}
+
+                {selectedStock && (
+                  <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                    <div>
+                      Ölçü: <strong className="text-foreground">{selectedStock.uzunluk_mm}×{selectedStock.genislik_mm} mm</strong> ·
+                      Kalınlık: <strong className="text-foreground">{selectedStock.kalinlik_mm} mm</strong>
+                    </div>
+                    <div>
+                      Tahmini ağırlık:{" "}
+                      <strong className="text-foreground">
+                        {(levhaKg(selectedStock) * (Number(levha) || 0)).toFixed(1)} kg
+                      </strong>{" "}
+                      · Kalan stok (iş sonrası):{" "}
+                      <strong className="text-foreground">
+                        {Math.max(0, Number(selectedStock.adet) - (Number(levha) || 0))}
+                      </strong>
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
 
