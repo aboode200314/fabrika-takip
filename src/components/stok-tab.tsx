@@ -65,8 +65,8 @@ export function StokTab() {
       kalinlik_mm: k,
       uzunluk_mm: u,
       genislik_mm: g,
-      adet: Math.round(a),
-      kritik_adet: Math.round(Number(kritik) || 0),
+      adet: a,
+      kritik_adet: Number(kritik) || 0,
       yogunluk: SAC_TIPLERI.find((s) => s.ad === sacTipi)?.yogunluk ?? 7.85,
       notlar: notlar.trim() || null,
     });
@@ -85,7 +85,7 @@ export function StokTab() {
     if (!editing) return;
     const a = Number(editing.adet);
     if (!Number.isFinite(a) || a < 0) return toast.error("Geçersiz adet");
-    const { error } = await supabase.from("sheet_stock").update({ adet: Math.round(a) }).eq("id", editing.id);
+    const { error } = await supabase.from("sheet_stock").update({ adet: a }).eq("id", editing.id);
     if (error) return toast.error(error.message);
     toast.success("Stok güncellendi");
     setEditing(null);
