@@ -114,46 +114,26 @@ function PanelPage() {
     },
   });
 
-  const { data: profiles } = useQuery({
-    queryKey: ["profiles-min"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id,ad_soyad,personel_id");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
   const { data: running, isLoading } = useQuery({
     queryKey: ["running-sessions"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("production_sessions")
-        .select(
-          "id,operator_id,machine_id,product_id,vardiya,baslangic,durum,sac_tipi,uzunluk_mm,genislik_mm,kalinlik_mm,levha_adedi,yogunluk",
-        )
-        .is("bitis", null)
-        .order("baslangic");
+      const { data, error } = await supabase.rpc("live_sessions");
       if (error) throw error;
-      return (data ?? []) as SessionRow[];
+      return (data ?? []) as unknown as SessionRow[];
     },
     refetchInterval: 15000,
   });
-
-  const sessionIds = (running ?? []).map((s) => s.id);
 
   const { data: pauses } = useQuery({
-    queryKey: ["running-pauses", sessionIds.join(",")],
-    enabled: sessionIds.length > 0,
+    queryKey: ["running-pauses"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("session_pauses")
-        .select("id,session_id,neden,baslangic,bitis,sure_dakika")
-        .in("session_id", sessionIds);
+      const { data, error } = await supabase.rpc("live_pauses");
       if (error) throw error;
-      return (data ?? []) as PauseRow[];
+      return (data ?? []) as unknown as PauseRow[];
     },
     refetchInterval: 15000,
   });
+
 
   // Realtime
   useEffect(() => {
