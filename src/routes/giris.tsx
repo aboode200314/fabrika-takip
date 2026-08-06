@@ -41,7 +41,6 @@ function GirisPage() {
 function GirisForm() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState<"giris" | "kayit">("giris");
 
   async function onLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -68,41 +67,6 @@ function GirisForm() {
     navigate({ to: "/" });
   }
 
-  async function onSignup(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const parsed = signupSchema.safeParse({
-      personel_id: fd.get("personel_id"),
-      sifre: fd.get("sifre"),
-      ad_soyad: fd.get("ad_soyad"),
-      departman: fd.get("departman") || undefined,
-    });
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
-      return;
-    }
-    setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email: personelIdToEmail(parsed.data.personel_id),
-      password: parsed.data.sifre,
-      options: {
-        emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined,
-        data: {
-          personel_id: parsed.data.personel_id.trim(),
-          ad_soyad: parsed.data.ad_soyad,
-          departman: parsed.data.departman,
-        },
-      },
-    });
-    setBusy(false);
-    if (error) {
-      toast.error("Kayıt başarısız: " + error.message);
-      return;
-    }
-    toast.success("Hesap oluşturuldu, yönlendiriliyorsunuz...");
-    navigate({ to: "/" });
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
@@ -115,37 +79,18 @@ function GirisForm() {
         </div>
 
         <div className="rounded-2xl border bg-card p-6 shadow-industrial">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "giris" | "kayit")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="giris">Giriş Yap</TabsTrigger>
-              <TabsTrigger value="kayit">Yeni Hesap</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="giris">
-              <form onSubmit={onLogin} className="mt-4 space-y-4">
-                <Field name="personel_id" label="Personel ID" placeholder="örn. op001" autoFocus />
-                <Field name="sifre" label="Şifre" type="password" placeholder="••••••" />
-                <Button type="submit" disabled={busy} className="tap-target w-full text-base">
-                  {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Giriş Yap"}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="kayit">
-              <form onSubmit={onSignup} className="mt-4 space-y-4">
-                <Field name="personel_id" label="Personel ID" placeholder="örn. op001" />
-                <Field name="ad_soyad" label="Ad Soyad" placeholder="Ahmet Yılmaz" />
-                <Field name="departman" label="Departman (ops.)" placeholder="Üretim" />
-                <Field name="sifre" label="Şifre" type="password" placeholder="en az 6 karakter" />
-                <Button type="submit" disabled={busy} className="tap-target w-full text-base">
-                  {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Hesap Oluştur"}
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Yeni hesaplar varsayılan olarak <strong>Operatör</strong> yetkisine sahiptir.
-                </p>
-              </form>
-            </TabsContent>
-          </Tabs>
+          <h2 className="text-lg font-semibold">Giriş Yap</h2>
+          <form onSubmit={onLogin} className="mt-4 space-y-4">
+            <Field name="personel_id" label="Personel ID" placeholder="örn. op001" autoFocus />
+            <Field name="sifre" label="Şifre" type="password" placeholder="••••••" />
+            <Button type="submit" disabled={busy} className="tap-target w-full text-base">
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Giriş Yap"}
+            </Button>
+          </form>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Yeni hesaplar yalnızca yönetici tarafından Yönetim → Kullanıcılar bölümünden oluşturulur.
+            Hesabınız yoksa yöneticinize başvurun.
+          </p>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
@@ -155,6 +100,7 @@ function GirisForm() {
     </div>
   );
 }
+
 
 function Field({
   name,
