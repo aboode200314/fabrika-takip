@@ -7,7 +7,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { personelIdToEmail, useAuth } from "@/lib/auth";
 
@@ -20,10 +19,6 @@ const loginSchema = z.object({
   sifre: z.string().min(6, "Şifre en az 6 karakter"),
 });
 
-const signupSchema = loginSchema.extend({
-  ad_soyad: z.string().trim().min(2, "Ad Soyad gerekli").max(80),
-  departman: z.string().trim().max(80).optional(),
-});
 
 function GirisPage() {
   const { session, loading } = useAuth();
