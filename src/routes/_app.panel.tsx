@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { isPlasmaMachine, levhaKg, type StockRow } from "@/lib/sac";
+import { isPlasmaMachine, levhaKg, SAC_TIPLERI, type StockRow } from "@/lib/sac";
 
 
 export const Route = createFileRoute("/_app/panel")({
@@ -61,6 +61,7 @@ const timeFmt = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-d
 interface SessionRow {
   id: string;
   operator_id: string;
+  operator_ad: string;
   machine_id: string;
   product_id: string | null;
   vardiya: Shift;
@@ -73,6 +74,7 @@ interface SessionRow {
   levha_adedi: number | null;
   yogunluk: number | null;
 }
+
 
 
 interface PauseRow {
@@ -112,46 +114,26 @@ function PanelPage() {
     },
   });
 
-  const { data: profiles } = useQuery({
-    queryKey: ["profiles-min"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id,ad_soyad,personel_id");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
   const { data: running, isLoading } = useQuery({
     queryKey: ["running-sessions"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("production_sessions")
-        .select(
-          "id,operator_id,machine_id,product_id,vardiya,baslangic,durum,sac_tipi,uzunluk_mm,genislik_mm,kalinlik_mm,levha_adedi,yogunluk",
-        )
-        .is("bitis", null)
-        .order("baslangic");
+      const { data, error } = await supabase.rpc("live_sessions");
       if (error) throw error;
-      return (data ?? []) as SessionRow[];
+      return (data ?? []) as unknown as SessionRow[];
     },
     refetchInterval: 15000,
   });
-
-  const sessionIds = (running ?? []).map((s) => s.id);
 
   const { data: pauses } = useQuery({
-    queryKey: ["running-pauses", sessionIds.join(",")],
-    enabled: sessionIds.length > 0,
+    queryKey: ["running-pauses"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("session_pauses")
-        .select("id,session_id,neden,baslangic,bitis,sure_dakika")
-        .in("session_id", sessionIds);
+      const { data, error } = await supabase.rpc("live_pauses");
       if (error) throw error;
-      return (data ?? []) as PauseRow[];
+      return (data ?? []) as unknown as PauseRow[];
     },
     refetchInterval: 15000,
   });
+
 
   // Realtime
   useEffect(() => {
@@ -212,8 +194,14 @@ function PanelPage() {
   const [busy, setBusy] = useState(false);
 
   // CNC Plazma alanları
+  const CUSTOM = "__custom__";
   const [stokId, setStokId] = useState("");
   const [levha, setLevha] = useState("1");
+  // Özel (stok dışı) sac
+  const [cSacTipi, setCSacTipi] = useState(SAC_TIPLERI[0].ad);
+  const [cUzunluk, setCUzunluk] = useState("");
+  const [cGenislik, setCGenislik] = useState("");
+  const [cKalinlik, setCKalinlik] = useState("");
 
   const { data: stock } = useQuery({
     queryKey: ["sheet-stock"],
@@ -230,6 +218,7 @@ function PanelPage() {
 
   const selectedMachine = (machines ?? []).find((m) => m.id === machine) ?? null;
   const isPlasma = isPlasmaMachine(selectedMachine);
+  const isCustomSheet = stokId === CUSTOM;
   const selectedStock = (stock ?? []).find((s) => s.id === stokId) ?? null;
 
   async function start() {
@@ -238,20 +227,38 @@ function PanelPage() {
 
     let plasma: Record<string, unknown> = {};
     if (isPlasma) {
-      if (!selectedStock) return toast.error("Kullanılacak sacı stoktan seçiniz");
       const a = Number(levha);
-      if (!(a > 0)) return toast.error("Kesilecek sac adedi giriniz");
-      if (a > selectedStock.adet) return toast.error(`Stokta yalnızca ${selectedStock.adet} levha var`);
-      plasma = {
-        stok_id: selectedStock.id,
-        sac_tipi: selectedStock.sac_tipi,
-        uzunluk_mm: selectedStock.uzunluk_mm,
-        genislik_mm: selectedStock.genislik_mm,
-        kalinlik_mm: selectedStock.kalinlik_mm,
-        levha_adedi: Math.round(a),
-        yogunluk: selectedStock.yogunluk ?? 7.85,
-      };
+      if (!(a > 0)) return toast.error("Kesilecek sac adedi giriniz (0.25 gibi kesirli olabilir)");
+
+      if (isCustomSheet) {
+        const u = Number(cUzunluk), g = Number(cGenislik), k = Number(cKalinlik);
+        if (!(u > 0) || !(g > 0) || !(k > 0))
+          return toast.error("Özel sac için uzunluk, genişlik ve kalınlık giriniz");
+        plasma = {
+          stok_id: null,
+          sac_tipi: cSacTipi,
+          uzunluk_mm: u,
+          genislik_mm: g,
+          kalinlik_mm: k,
+          levha_adedi: a,
+          yogunluk: SAC_TIPLERI.find((t) => t.ad === cSacTipi)?.yogunluk ?? 7.85,
+        };
+      } else {
+        if (!selectedStock) return toast.error("Kullanılacak sacı stoktan seçiniz");
+        if (a > Number(selectedStock.adet))
+          return toast.error(`Stokta yalnızca ${selectedStock.adet} levha var`);
+        plasma = {
+          stok_id: selectedStock.id,
+          sac_tipi: selectedStock.sac_tipi,
+          uzunluk_mm: selectedStock.uzunluk_mm,
+          genislik_mm: selectedStock.genislik_mm,
+          kalinlik_mm: selectedStock.kalinlik_mm,
+          levha_adedi: a,
+          yogunluk: selectedStock.yogunluk ?? 7.85,
+        };
+      }
     }
+
 
     setBusy(true);
     const { error } = await supabase.from("production_sessions").insert({
@@ -380,10 +387,8 @@ function PanelPage() {
   }
 
 
-  const nameOf = (id: string) => {
-    const p = profiles?.find((x) => x.id === id);
-    return p?.ad_soyad ?? p?.personel_id ?? "—";
-  };
+  const nameOf = (s: SessionRow) => s.operator_ad || "—";
+
   const productOf = (id: string | null) => {
     if (!id) return "—";
     const p = products?.find((x) => x.id === id);
@@ -508,53 +513,86 @@ function PanelPage() {
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-primary">
                   <Flame className="h-4 w-4" /> CNC Plazma — Sac Bilgileri
                 </div>
-                {stock && stock.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Stokta sac tanımlı değil. Yönetim → Sac Stok bölümünden sac ekleyin.
-                  </p>
-                ) : (
-                  <>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs">Kullanılacak Sac (stoktan)</Label>
-                        <Select value={stokId} onValueChange={setStokId}>
-                          <SelectTrigger className="tap-target"><SelectValue placeholder="Sac seçiniz" /></SelectTrigger>
-                          <SelectContent>
-                            {(stock ?? []).map((s) => (
-                              <SelectItem key={s.id} value={s.id} disabled={s.adet <= 0}>
-                                {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} — stok: {s.adet}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs" htmlFor="s-adet">Kesilecek Sac Adedi</Label>
-                        <Input id="s-adet" type="number" inputMode="numeric" min={1}
-                          max={selectedStock?.adet ?? undefined} value={levha}
-                          onChange={(e) => setLevha(e.target.value)} className="tap-target" />
-                      </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Kullanılacak Sac</Label>
+                    <Select value={stokId} onValueChange={setStokId}>
+                      <SelectTrigger className="tap-target"><SelectValue placeholder="Sac seçiniz" /></SelectTrigger>
+                      <SelectContent>
+                        {(stock ?? []).map((s) => (
+                          <SelectItem key={s.id} value={s.id} disabled={Number(s.adet) <= 0}>
+                            {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} — stok: {s.adet}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value={CUSTOM}>Özel Ölçü Sac (stok dışı / fire parçası)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs" htmlFor="s-adet">Kesilen Sac Adedi (0.25 / 0.5 / 1.5 olabilir)</Label>
+                    <Input id="s-adet" type="number" inputMode="decimal" step="0.01" min={0.01}
+                      max={isCustomSheet ? undefined : (selectedStock?.adet ?? undefined)} value={levha}
+                      onChange={(e) => setLevha(e.target.value)} className="tap-target" />
+                  </div>
+                </div>
+
+                {isCustomSheet && (
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <div className="space-y-1.5 sm:col-span-4">
+                      <Label className="text-xs">Sac Türü</Label>
+                      <Select value={cSacTipi} onValueChange={setCSacTipi}>
+                        <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {SAC_TIPLERI.map((t) => <SelectItem key={t.ad} value={t.ad}>{t.ad}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    {selectedStock && (
-                      <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                        <div>
-                          Ölçü: <strong className="text-foreground">{selectedStock.uzunluk_mm}×{selectedStock.genislik_mm} mm</strong> ·
-                          Kalınlık: <strong className="text-foreground">{selectedStock.kalinlik_mm} mm</strong>
-                        </div>
-                        <div>
-                          Tahmini ağırlık:{" "}
-                          <strong className="text-foreground">
-                            {(levhaKg(selectedStock) * (Number(levha) || 0)).toFixed(1)} kg
-                          </strong>{" "}
-                          · Kalan stok (iş sonrası):{" "}
-                          <strong className="text-foreground">
-                            {Math.max(0, selectedStock.adet - (Number(levha) || 0))}
-                          </strong>
-                        </div>
-                      </div>
-                    )}
-                  </>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs" htmlFor="c-u">Uzunluk (mm)</Label>
+                      <Input id="c-u" type="number" inputMode="decimal" value={cUzunluk}
+                        onChange={(e) => setCUzunluk(e.target.value)} className="tap-target" placeholder="örn. 1200" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs" htmlFor="c-g">Genişlik (mm)</Label>
+                      <Input id="c-g" type="number" inputMode="decimal" value={cGenislik}
+                        onChange={(e) => setCGenislik(e.target.value)} className="tap-target" placeholder="örn. 800" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs" htmlFor="c-k">Kalınlık (mm)</Label>
+                      <Input id="c-k" type="number" inputMode="decimal" step="0.1" value={cKalinlik}
+                        onChange={(e) => setCKalinlik(e.target.value)} className="tap-target" placeholder="örn. 6" />
+                    </div>
+                    <p className="text-xs text-muted-foreground sm:col-span-4">
+                      Özel ölçü sac stoğa eklenmez ve stok miktarlarını etkilemez; yalnızca bu iş kaydında kullanılır.
+                    </p>
+                  </div>
                 )}
+
+                {!isCustomSheet && stock && stock.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Stokta sac tanımlı değil. Yönetim → Sac Stok bölümünden sac ekleyin veya “Özel Ölçü Sac” seçin.
+                  </p>
+                )}
+
+                {selectedStock && (
+                  <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                    <div>
+                      Ölçü: <strong className="text-foreground">{selectedStock.uzunluk_mm}×{selectedStock.genislik_mm} mm</strong> ·
+                      Kalınlık: <strong className="text-foreground">{selectedStock.kalinlik_mm} mm</strong>
+                    </div>
+                    <div>
+                      Tahmini ağırlık:{" "}
+                      <strong className="text-foreground">
+                        {(levhaKg(selectedStock) * (Number(levha) || 0)).toFixed(1)} kg
+                      </strong>{" "}
+                      · Kalan stok (iş sonrası):{" "}
+                      <strong className="text-foreground">
+                        {Math.max(0, Number(selectedStock.adet) - (Number(levha) || 0))}
+                      </strong>
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
 
@@ -601,7 +639,7 @@ function PanelPage() {
               {s ? (
                 <div className="mt-4 space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <UserIcon className="h-4 w-4" /> {nameOf(s.operator_id)}
+                    <UserIcon className="h-4 w-4" /> {nameOf(s)}
                   </div>
                   <div className="text-muted-foreground">{productOf(s.product_id)}</div>
                   {s.uzunluk_mm && (

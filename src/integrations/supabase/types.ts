@@ -763,6 +763,36 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      live_pauses: {
+        Args: never
+        Returns: {
+          baslangic: string
+          bitis: string
+          id: string
+          neden: string
+          session_id: string
+          sure_dakika: number
+        }[]
+      }
+      live_sessions: {
+        Args: never
+        Returns: {
+          baslangic: string
+          durum: string
+          genislik_mm: number
+          id: string
+          kalinlik_mm: number
+          levha_adedi: number
+          machine_id: string
+          operator_ad: string
+          operator_id: string
+          product_id: string
+          sac_tipi: string
+          uzunluk_mm: number
+          vardiya: Database["public"]["Enums"]["shift_type"]
+          yogunluk: number
+        }[]
+      }
     }
     Enums: {
       app_role: "operator" | "supervisor"
