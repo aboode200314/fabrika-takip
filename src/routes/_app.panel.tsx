@@ -581,7 +581,7 @@ function PanelPage() {
               {s ? (
                 <div className="mt-4 space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <UserIcon className="h-4 w-4" /> {nameOf(s.operator_id)}
+                    <UserIcon className="h-4 w-4" /> {nameOf(s)}
                   </div>
                   <div className="text-muted-foreground">{productOf(s.product_id)}</div>
                   {s.uzunluk_mm && (
