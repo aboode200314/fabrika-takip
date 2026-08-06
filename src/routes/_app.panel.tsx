@@ -61,6 +61,7 @@ const timeFmt = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-d
 interface SessionRow {
   id: string;
   operator_id: string;
+  operator_ad: string;
   machine_id: string;
   product_id: string | null;
   vardiya: Shift;
@@ -73,6 +74,7 @@ interface SessionRow {
   levha_adedi: number | null;
   yogunluk: number | null;
 }
+
 
 
 interface PauseRow {
