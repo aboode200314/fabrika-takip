@@ -74,7 +74,7 @@ export function UrunAsamalari() {
     refresh();
   }
 
-  async function patch(id: string, values: Record<string, unknown>) {
+  async function patch(id: string, values: { ad?: string; machine_id?: string | null; aciklama?: string | null }) {
     const { error } = await supabase.from("product_operations").update(values).eq("id", id);
     if (error) return toast.error(error.message);
     refresh();
