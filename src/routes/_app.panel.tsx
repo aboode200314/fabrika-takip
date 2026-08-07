@@ -513,7 +513,7 @@ function PanelPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Ürün / İş Emri</Label>
-                <Select value={product} onValueChange={setProduct}>
+                <Select value={product} onValueChange={(v) => { setProduct(v); setOperation(""); }}>
                   <SelectTrigger className="tap-target"><SelectValue placeholder="Ürün seçiniz" /></SelectTrigger>
                   <SelectContent>
                     {visibleProducts.map((p) => (
@@ -523,6 +523,22 @@ function PanelPage() {
                 </Select>
               </div>
             </div>
+
+            {product && (operations ?? []).length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Üretim Aşaması</Label>
+                <Select value={operation} onValueChange={setOperation}>
+                  <SelectTrigger className="tap-target"><SelectValue placeholder="Aşama seçiniz (opsiyonel)" /></SelectTrigger>
+                  <SelectContent>
+                    {(operations ?? [])
+                      .filter((o) => !machine || !o.machine_id || o.machine_id === machine)
+                      .map((o) => (
+                        <SelectItem key={o.id} value={o.id}>{o.sira}. {o.ad}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {isPlasma && (
               <div className="space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
