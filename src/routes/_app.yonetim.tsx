@@ -11,6 +11,7 @@ import {
 
 import { YetkilerTab } from "@/components/yetkiler-tab";
 import { StokTab } from "@/components/stok-tab";
+import { UrunAsamalari } from "@/components/urun-asamalari";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,9 +53,10 @@ function YonetimPanel() {
       </div>
 
       <Tabs defaultValue="ozet" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
           <TabsTrigger value="ozet">Özet</TabsTrigger>
           <TabsTrigger value="master">Makine & Ürün</TabsTrigger>
+          <TabsTrigger value="asamalar">Aşamalar</TabsTrigger>
           <TabsTrigger value="stok">Sac Stok</TabsTrigger>
           <TabsTrigger value="kullanicilar">Kullanıcılar</TabsTrigger>
           <TabsTrigger value="yetkiler">Yetkiler</TabsTrigger>
@@ -62,6 +64,7 @@ function YonetimPanel() {
 
         <TabsContent value="ozet"><OzetTab /></TabsContent>
         <TabsContent value="master"><MasterTab /></TabsContent>
+        <TabsContent value="asamalar"><UrunAsamalari /></TabsContent>
         <TabsContent value="stok"><StokTab /></TabsContent>
         <TabsContent value="kullanicilar"><KullanicilarTab /></TabsContent>
         <TabsContent value="yetkiler"><YetkilerTab /></TabsContent>
