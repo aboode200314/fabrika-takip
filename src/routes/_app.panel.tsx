@@ -190,6 +190,7 @@ function PanelPage() {
   // ---- start form
   const [machine, setMachine] = useState("");
   const [product, setProduct] = useState("");
+  const [operation, setOperation] = useState("");
   const [shift, setShift] = useState<Shift>(autoShift());
   const [busy, setBusy] = useState(false);
 
@@ -213,6 +214,20 @@ function PanelPage() {
         .order("kalinlik_mm");
       if (error) throw error;
       return (data ?? []) as StockRow[];
+    },
+  });
+
+  const { data: operations } = useQuery({
+    queryKey: ["product-operations", product],
+    enabled: !!product,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_operations")
+        .select("id,sira,ad,machine_id")
+        .eq("product_id", product)
+        .order("sira");
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -265,6 +280,7 @@ function PanelPage() {
       operator_id: user!.id,
       machine_id: machine,
       product_id: product || null,
+      operation_id: operation || null,
       vardiya: shift,
       baslangic: new Date().toISOString(),
       durum: "running",
@@ -497,7 +513,7 @@ function PanelPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Ürün / İş Emri</Label>
-                <Select value={product} onValueChange={setProduct}>
+                <Select value={product} onValueChange={(v) => { setProduct(v); setOperation(""); }}>
                   <SelectTrigger className="tap-target"><SelectValue placeholder="Ürün seçiniz" /></SelectTrigger>
                   <SelectContent>
                     {visibleProducts.map((p) => (
@@ -507,6 +523,22 @@ function PanelPage() {
                 </Select>
               </div>
             </div>
+
+            {product && (operations ?? []).length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Üretim Aşaması</Label>
+                <Select value={operation} onValueChange={setOperation}>
+                  <SelectTrigger className="tap-target"><SelectValue placeholder="Aşama seçiniz (opsiyonel)" /></SelectTrigger>
+                  <SelectContent>
+                    {(operations ?? [])
+                      .filter((o) => !machine || !o.machine_id || o.machine_id === machine)
+                      .map((o) => (
+                        <SelectItem key={o.id} value={o.id}>{o.sira}. {o.ad}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {isPlasma && (
               <div className="space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-4">

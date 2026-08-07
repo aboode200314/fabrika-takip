@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppYonetimRouteImport } from './routes/_app.yonetim'
 import { Route as AppRaporlarRouteImport } from './routes/_app.raporlar'
 import { Route as AppPanelRouteImport } from './routes/_app.panel'
+import { Route as AppMakinelerRouteImport } from './routes/_app.makineler'
 
 const GirisRoute = GirisRouteImport.update({
   id: '/giris',
@@ -45,10 +46,16 @@ const AppPanelRoute = AppPanelRouteImport.update({
   path: '/panel',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMakinelerRoute = AppMakinelerRouteImport.update({
+  id: '/makineler',
+  path: '/makineler',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
+  '/makineler': typeof AppMakinelerRoute
   '/panel': typeof AppPanelRoute
   '/raporlar': typeof AppRaporlarRoute
   '/yonetim': typeof AppYonetimRoute
@@ -56,6 +63,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/giris': typeof GirisRoute
+  '/makineler': typeof AppMakinelerRoute
   '/panel': typeof AppPanelRoute
   '/raporlar': typeof AppRaporlarRoute
   '/yonetim': typeof AppYonetimRoute
@@ -65,20 +73,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/giris': typeof GirisRoute
+  '/_app/makineler': typeof AppMakinelerRoute
   '/_app/panel': typeof AppPanelRoute
   '/_app/raporlar': typeof AppRaporlarRoute
   '/_app/yonetim': typeof AppYonetimRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/giris' | '/panel' | '/raporlar' | '/yonetim'
+  fullPaths: '/' | '/giris' | '/makineler' | '/panel' | '/raporlar' | '/yonetim'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/giris' | '/panel' | '/raporlar' | '/yonetim'
+  to: '/' | '/giris' | '/makineler' | '/panel' | '/raporlar' | '/yonetim'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/giris'
+    | '/_app/makineler'
     | '/_app/panel'
     | '/_app/raporlar'
     | '/_app/yonetim'
@@ -134,16 +144,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPanelRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/makineler': {
+      id: '/_app/makineler'
+      path: '/makineler'
+      fullPath: '/makineler'
+      preLoaderRoute: typeof AppMakinelerRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppMakinelerRoute: typeof AppMakinelerRoute
   AppPanelRoute: typeof AppPanelRoute
   AppRaporlarRoute: typeof AppRaporlarRoute
   AppYonetimRoute: typeof AppYonetimRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppMakinelerRoute: AppMakinelerRoute,
   AppPanelRoute: AppPanelRoute,
   AppRaporlarRoute: AppRaporlarRoute,
   AppYonetimRoute: AppYonetimRoute,

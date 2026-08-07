@@ -1,6 +1,7 @@
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Factory, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import gvnLogo from "@/assets/gvn-logo.jpg.asset.json";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -63,17 +64,16 @@ function GirisForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_60%)]" />
+      <div className="relative w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/30">
-            <Factory className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-3xl tracking-tight">FABRİKA OEE / MES</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Üretim takip ve verimlilik sistemi</p>
+          <img src={gvnLogo.url} alt="GVN Trailer logosu" className="h-16 w-auto" />
+          <h1 className="mt-4 text-2xl tracking-tight">ÜRETİM TAKİP SİSTEMİ</h1>
+          <p className="mt-1 text-sm text-muted-foreground">OEE · Makine performansı · Sac stok</p>
         </div>
 
-        <div className="rounded-2xl border bg-card p-6 shadow-industrial">
+        <div className="rounded-xl border bg-card p-6 shadow-industrial">
           <h2 className="text-lg font-semibold">Giriş Yap</h2>
           <form onSubmit={onLogin} className="mt-4 space-y-4">
             <Field name="personel_id" label="Personel ID" placeholder="örn. op001" autoFocus />
@@ -89,7 +89,7 @@ function GirisForm() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Endüstriyel tablet ve telefon için tasarlandı.
+          GVN Trailer · Endüstriyel tablet ve telefon için tasarlandı.
         </p>
       </div>
     </div>
