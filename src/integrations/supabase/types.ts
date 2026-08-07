@@ -183,27 +183,40 @@ export type Database = {
       }
       product_operations: {
         Row: {
+          aciklama: string | null
           ad: string
           created_at: string
           id: string
+          machine_id: string | null
           product_id: string
           sira: number
         }
         Insert: {
+          aciklama?: string | null
           ad: string
           created_at?: string
           id?: string
+          machine_id?: string | null
           product_id: string
           sira: number
         }
         Update: {
+          aciklama?: string | null
           ad?: string
           created_at?: string
           id?: string
+          machine_id?: string | null
           product_id?: string
           sira?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "product_operations_machine_id_fkey"
+            columns: ["machine_id"]
+            isOneToOne: false
+            referencedRelation: "machines"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "product_operations_product_id_fkey"
             columns: ["product_id"]
@@ -411,6 +424,7 @@ export type Database = {
       profiles: {
         Row: {
           ad_soyad: string
+          aktif: boolean
           created_at: string
           departman: string | null
           id: string
@@ -419,6 +433,7 @@ export type Database = {
         }
         Insert: {
           ad_soyad: string
+          aktif?: boolean
           created_at?: string
           departman?: string | null
           id: string
@@ -427,6 +442,7 @@ export type Database = {
         }
         Update: {
           ad_soyad?: string
+          aktif?: boolean
           created_at?: string
           departman?: string | null
           id?: string
