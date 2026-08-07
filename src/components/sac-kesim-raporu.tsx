@@ -24,12 +24,16 @@ function isoDay(d: Date) {
 const dateFmt = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 export function SacKesimRaporu() {
+  const qc = useQueryClient();
+  const { can } = useAuth();
   const today = isoDay(new Date());
   const weekAgo = isoDay(new Date(Date.now() - 6 * 86400000));
   const [from, setFrom] = useState(weekAgo);
   const [to, setTo] = useState(today);
   const [operator, setOperator] = useState("all");
   const [machine, setMachine] = useState("all");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ uzunluk: "", genislik: "", kalinlik: "", levha: "", tip: "" });
 
   const { data: profiles } = useQuery({
     queryKey: ["profiles-min"],
@@ -54,7 +58,7 @@ export function SacKesimRaporu() {
     queryFn: async () => {
       let q = supabase
         .from("plasma_cuts")
-        .select("id,operator_id,machine_id,sac_tipi,uzunluk_mm,genislik_mm,kalinlik_mm,levha_adedi,toplam_agirlik_kg,sure_dakika,baslangic")
+        .select("id,operator_id,machine_id,sac_tipi,uzunluk_mm,genislik_mm,kalinlik_mm,yogunluk,levha_adedi,toplam_agirlik_kg,sure_dakika,baslangic")
         .gte("baslangic", new Date(`${from}T00:00:00`).toISOString())
         .lte("baslangic", new Date(`${to}T23:59:59`).toISOString())
         .order("baslangic");
