@@ -1,6 +1,7 @@
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Factory, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import gvnLogo from "@/assets/gvn-logo.jpg.asset.json";
 import { toast } from "sonner";
 import { z } from "zod";
 
