@@ -207,6 +207,146 @@ export function SacKesimRaporu() {
           </div>
         )}
       </section>
+
+      <section className="rounded-2xl border bg-card p-5 shadow-industrial">
+        <h2 className="mb-3 font-display text-lg tracking-wide">KAYIT DETAYLARI</h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          {can("kayit.duzenle") || can("kayit.sil")
+            ? "Yanlış girilen kesim kayıtlarını buradan düzeltebilir veya silebilirsiniz. Ağırlık otomatik yeniden hesaplanır."
+            : "Kayıtları görüntüleyebilirsiniz. Düzenleme yetkisi yöneticide."}
+        </p>
+        {(rows ?? []).length === 0 ? (
+          <p className="text-sm text-muted-foreground">Seçilen filtrelerde kayıt bulunamadı.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="py-2">Zaman</th>
+                  <th className="py-2">Tip</th>
+                  <th className="py-2">Uzunluk</th>
+                  <th className="py-2">Genişlik</th>
+                  <th className="py-2">Kalınlık</th>
+                  <th className="py-2">Levha</th>
+                  <th className="py-2">kg</th>
+                  <th className="py-2 text-right">İşlem</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(rows ?? []).map((r) => {
+                  const editing = editId === r.id;
+                  return (
+                    <tr key={r.id} className="border-t border-border/60">
+                      <td className="py-2 whitespace-nowrap">{timeFmt.format(new Date(r.baslangic))}</td>
+                      <td className="py-2">
+                        {editing ? (
+                          <Input className="h-9 w-28" value={draft.tip} onChange={(e) => setDraft({ ...draft, tip: e.target.value })} />
+                        ) : (
+                          <span className="text-muted-foreground">{r.sac_tipi ?? "—"}</span>
+                        )}
+                      </td>
+                      {(["uzunluk", "genislik", "kalinlik", "levha"] as const).map((f) => (
+                        <td key={f} className="py-2">
+                          {editing ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              className="h-9 w-20"
+                              value={draft[f]}
+                              onChange={(e) => setDraft({ ...draft, [f]: e.target.value })}
+                            />
+                          ) : (
+                            Number(
+                              f === "uzunluk" ? r.uzunluk_mm
+                                : f === "genislik" ? r.genislik_mm
+                                : f === "kalinlik" ? r.kalinlik_mm
+                                : r.levha_adedi ?? 0,
+                            )
+                          )}
+                        </td>
+                      ))}
+                      <td className="py-2">{Number(r.toplam_agirlik_kg ?? 0).toFixed(1)}</td>
+                      <td className="py-2">
+                        <div className="flex justify-end gap-1">
+                          {editing ? (
+                            <>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={async () => {
+                                  const u = Number(draft.uzunluk), g = Number(draft.genislik);
+                                  const k = Number(draft.kalinlik), a = Number(draft.levha);
+                                  if (!(u > 0) || !(g > 0) || !(k > 0) || !(a > 0))
+                                    return toast.error("Tüm ölçüler 0'dan büyük olmalı");
+                                  const yog = Number(r.yogunluk ?? 7.85);
+                                  const kg = levhaKg({ uzunluk_mm: u, genislik_mm: g, kalinlik_mm: k, yogunluk: yog }) * a;
+                                  const { error } = await supabase
+                                    .from("plasma_cuts")
+                                    .update({
+                                      uzunluk_mm: u, genislik_mm: g, kalinlik_mm: k,
+                                      levha_adedi: a, sac_tipi: draft.tip.trim() || null,
+                                      toplam_agirlik_kg: kg,
+                                    })
+                                    .eq("id", r.id);
+                                  if (error) return toast.error(error.message);
+                                  toast.success("Kayıt güncellendi");
+                                  setEditId(null);
+                                  qc.invalidateQueries({ queryKey: ["sac-kesim"] });
+                                }}
+                              >
+                                <Check className="h-4 w-4 text-success" />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={() => setEditId(null)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              {can("kayit.duzenle") && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setEditId(r.id);
+                                    setDraft({
+                                      uzunluk: String(Number(r.uzunluk_mm)),
+                                      genislik: String(Number(r.genislik_mm)),
+                                      kalinlik: String(Number(r.kalinlik_mm)),
+                                      levha: String(Number(r.levha_adedi ?? 0)),
+                                      tip: r.sac_tipi ?? "",
+                                    });
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {can("kayit.sil") && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={async () => {
+                                    if (!confirm("Bu kesim kaydı silinsin mi?")) return;
+                                    const { error } = await supabase.from("plasma_cuts").delete().eq("id", r.id);
+                                    if (error) return toast.error(error.message);
+                                    toast.success("Kayıt silindi");
+                                    qc.invalidateQueries({ queryKey: ["sac-kesim"] });
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
