@@ -280,6 +280,7 @@ function PanelPage() {
       operator_id: user!.id,
       machine_id: machine,
       product_id: product || null,
+      operation_id: operation || null,
       vardiya: shift,
       baslangic: new Date().toISOString(),
       durum: "running",
