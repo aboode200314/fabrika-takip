@@ -79,25 +79,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Fabrika OEE / MES" },
-      { name: "description", content: "Operatör ve süpervizörler için üretim, duruş ve kalite takip sistemi." },
-      { name: "theme-color", content: "#1a2236" },
-      { property: "og:title", content: "Fabrika OEE / MES" },
-      { name: "twitter:title", content: "Fabrika OEE / MES" },
-      { property: "og:description", content: "Operatör ve süpervizörler için üretim, duruş ve kalite takip sistemi." },
-      { name: "twitter:description", content: "Operatör ve süpervizörler için üretim, duruş ve kalite takip sistemi." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/64949c9c-1614-4883-996c-440e31e6f5c2/id-preview-8208acc1--6e0d542a-d24a-4c94-8cf7-b94ea4d7672f.lovable.app-1785402103782.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/64949c9c-1614-4883-996c-440e31e6f5c2/id-preview-8208acc1--6e0d542a-d24a-4c94-8cf7-b94ea4d7672f.lovable.app-1785402103782.png" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { title: "GVN Trailer — Üretim Takip Sistemi" },
+      { name: "description", content: "GVN Trailer üretim takip sistemi: OEE, makine performansı, duruş, kalite ve sac stok yönetimi." },
+      { name: "theme-color", content: "#c8102e" },
+      { property: "og:title", content: "GVN Trailer — Üretim Takip Sistemi" },
+      { name: "twitter:title", content: "GVN Trailer — Üretim Takip Sistemi" },
+      { property: "og:description", content: "OEE, makine performansı, duruş, kalite ve sac stok yönetimi tek panelde." },
+      { name: "twitter:description", content: "OEE, makine performansı, duruş, kalite ve sac stok yönetimi tek panelde." },
+      { name: "twitter:card", content: "summary" },
       { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap",
       },
     ],
   }),
@@ -109,7 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="tr" className="dark">
+    <html lang="tr">
       <head>
         <HeadContent />
       </head>
