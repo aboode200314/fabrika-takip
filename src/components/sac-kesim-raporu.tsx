@@ -1,12 +1,19 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Download, Filter } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, Download, Filter, Pencil, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { levhaKg } from "@/lib/sac";
+
+const timeFmt = new Intl.DateTimeFormat("tr-TR", {
+  day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+});
 
 function isoDay(d: Date) {
   const x = new Date(d);
