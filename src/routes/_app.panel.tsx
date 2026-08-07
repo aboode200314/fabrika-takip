@@ -190,6 +190,7 @@ function PanelPage() {
   // ---- start form
   const [machine, setMachine] = useState("");
   const [product, setProduct] = useState("");
+  const [operation, setOperation] = useState("");
   const [shift, setShift] = useState<Shift>(autoShift());
   const [busy, setBusy] = useState(false);
 
@@ -213,6 +214,20 @@ function PanelPage() {
         .order("kalinlik_mm");
       if (error) throw error;
       return (data ?? []) as StockRow[];
+    },
+  });
+
+  const { data: operations } = useQuery({
+    queryKey: ["product-operations", product],
+    enabled: !!product,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("product_operations")
+        .select("id,sira,ad,machine_id")
+        .eq("product_id", product)
+        .order("sira");
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
