@@ -132,7 +132,7 @@ function RaporlarPage() {
       </div>
 
       <Tabs defaultValue="performans">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">>
           <TabsTrigger value="performans">Performans</TabsTrigger>
           <TabsTrigger value="sac">Sac Kesim</TabsTrigger>
           <TabsTrigger value="oturum">İş Oturumları</TabsTrigger>
