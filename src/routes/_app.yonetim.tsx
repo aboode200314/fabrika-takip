@@ -12,6 +12,12 @@ import {
 import { YetkilerTab } from "@/components/yetkiler-tab";
 import { StokTab } from "@/components/stok-tab";
 import { UrunAsamalari } from "@/components/urun-asamalari";
+import { StokHareketleri } from "@/components/stok-hareketleri";
+import { VardiyaAyarlari } from "@/components/vardiya-ayarlari";
+import { RollerTab } from "@/components/roller-tab";
+import { DenetimKaydi } from "@/components/denetim-kaydi";
+import { UrunYonetimi } from "@/components/urun-yonetimi";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,22 +59,31 @@ function YonetimPanel() {
       </div>
 
       <Tabs defaultValue="ozet" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-10">
           <TabsTrigger value="ozet">Özet</TabsTrigger>
           <TabsTrigger value="master">Makine & Ürün</TabsTrigger>
           <TabsTrigger value="asamalar">Aşamalar</TabsTrigger>
           <TabsTrigger value="stok">Sac Stok</TabsTrigger>
+          <TabsTrigger value="hareketler">Hareketler</TabsTrigger>
+          <TabsTrigger value="vardiya">Vardiya</TabsTrigger>
           <TabsTrigger value="kullanicilar">Kullanıcılar</TabsTrigger>
+          <TabsTrigger value="roller">Roller</TabsTrigger>
           <TabsTrigger value="yetkiler">Yetkiler</TabsTrigger>
+          <TabsTrigger value="denetim">Denetim</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ozet"><OzetTab /></TabsContent>
         <TabsContent value="master"><MasterTab /></TabsContent>
         <TabsContent value="asamalar"><UrunAsamalari /></TabsContent>
         <TabsContent value="stok"><StokTab /></TabsContent>
+        <TabsContent value="hareketler"><StokHareketleri /></TabsContent>
+        <TabsContent value="vardiya"><VardiyaAyarlari /></TabsContent>
         <TabsContent value="kullanicilar"><KullanicilarTab /></TabsContent>
+        <TabsContent value="roller"><RollerTab /></TabsContent>
         <TabsContent value="yetkiler"><YetkilerTab /></TabsContent>
+        <TabsContent value="denetim"><DenetimKaydi /></TabsContent>
       </Tabs>
+
     </div>
   );
 }
@@ -229,7 +244,7 @@ function MasterTab() {
         <TabsTrigger value="urunler">Ürünler</TabsTrigger>
       </TabsList>
       <TabsContent value="makineler"><MakinelerCrud /></TabsContent>
-      <TabsContent value="urunler"><UrunlerCrud /></TabsContent>
+      <TabsContent value="urunler"><UrunYonetimi /></TabsContent>
     </Tabs>
   );
 }
@@ -288,59 +303,6 @@ function MakinelerCrud() {
                     if (error) return toast.error(error.message);
                     qc.invalidateQueries({ queryKey: ["machines-all"] });
                     qc.invalidateQueries({ queryKey: ["machines-active"] });
-                  }}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-}
-
-function UrunlerCrud() {
-  const qc = useQueryClient();
-  const { data: products } = useQuery({
-    queryKey: ["products-all"],
-    queryFn: async () => (await supabase.from("products").select("*").order("kod")).data ?? [],
-  });
-  const [kod, setKod] = useState(""); const [ad, setAd] = useState(""); const [cs, setCs] = useState("");
-
-  return (
-    <div className="space-y-4">
-      <form className="flex flex-wrap gap-2 rounded-xl border bg-card p-4" onSubmit={async (e) => {
-        e.preventDefault();
-        if (!kod || !ad) return toast.error("Kod ve ad gerekli");
-        const { error } = await supabase.from("products").insert({ kod, ad, ideal_cevrim_saniye: cs ? Number(cs) : null });
-        if (error) return toast.error(error.message);
-        setKod(""); setAd(""); setCs(""); toast.success("Ürün eklendi");
-        qc.invalidateQueries({ queryKey: ["products-all"] });
-        qc.invalidateQueries({ queryKey: ["products"] });
-      }}>
-        <Input placeholder="Kod" value={kod} onChange={(e) => setKod(e.target.value)} className="w-28" />
-        <Input placeholder="Ad" value={ad} onChange={(e) => setAd(e.target.value)} className="flex-1 min-w-[160px]" />
-        <Input placeholder="Çevrim (sn)" type="number" value={cs} onChange={(e) => setCs(e.target.value)} className="w-32" />
-        <Button type="submit" className="gap-1"><Plus className="h-4 w-4" />Ekle</Button>
-      </form>
-      <div className="rounded-xl border bg-card">
-        <Table>
-          <TableHeader><TableRow><TableHead>Kod</TableHead><TableHead>Ad</TableHead><TableHead>Çevrim</TableHead><TableHead /></TableRow></TableHeader>
-          <TableBody>
-            {products?.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-mono">{p.kod}</TableCell>
-                <TableCell>{p.ad}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{p.ideal_cevrim_saniye ?? "—"} sn</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={async () => {
-                    if (!confirm("Silmek istediğinize emin misiniz?")) return;
-                    const { error } = await supabase.from("products").delete().eq("id", p.id);
-                    if (error) return toast.error(error.message);
-                    qc.invalidateQueries({ queryKey: ["products-all"] });
-                    qc.invalidateQueries({ queryKey: ["products"] });
                   }}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
