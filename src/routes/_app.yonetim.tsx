@@ -316,59 +316,6 @@ function MakinelerCrud() {
   );
 }
 
-function UrunlerCrud() {
-  const qc = useQueryClient();
-  const { data: products } = useQuery({
-    queryKey: ["products-all"],
-    queryFn: async () => (await supabase.from("products").select("*").order("kod")).data ?? [],
-  });
-  const [kod, setKod] = useState(""); const [ad, setAd] = useState(""); const [cs, setCs] = useState("");
-
-  return (
-    <div className="space-y-4">
-      <form className="flex flex-wrap gap-2 rounded-xl border bg-card p-4" onSubmit={async (e) => {
-        e.preventDefault();
-        if (!kod || !ad) return toast.error("Kod ve ad gerekli");
-        const { error } = await supabase.from("products").insert({ kod, ad, ideal_cevrim_saniye: cs ? Number(cs) : null });
-        if (error) return toast.error(error.message);
-        setKod(""); setAd(""); setCs(""); toast.success("Ürün eklendi");
-        qc.invalidateQueries({ queryKey: ["products-all"] });
-        qc.invalidateQueries({ queryKey: ["products"] });
-      }}>
-        <Input placeholder="Kod" value={kod} onChange={(e) => setKod(e.target.value)} className="w-28" />
-        <Input placeholder="Ad" value={ad} onChange={(e) => setAd(e.target.value)} className="flex-1 min-w-[160px]" />
-        <Input placeholder="Çevrim (sn)" type="number" value={cs} onChange={(e) => setCs(e.target.value)} className="w-32" />
-        <Button type="submit" className="gap-1"><Plus className="h-4 w-4" />Ekle</Button>
-      </form>
-      <div className="rounded-xl border bg-card">
-        <Table>
-          <TableHeader><TableRow><TableHead>Kod</TableHead><TableHead>Ad</TableHead><TableHead>Çevrim</TableHead><TableHead /></TableRow></TableHeader>
-          <TableBody>
-            {products?.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-mono">{p.kod}</TableCell>
-                <TableCell>{p.ad}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{p.ideal_cevrim_saniye ?? "—"} sn</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={async () => {
-                    if (!confirm("Silmek istediğinize emin misiniz?")) return;
-                    const { error } = await supabase.from("products").delete().eq("id", p.id);
-                    if (error) return toast.error(error.message);
-                    qc.invalidateQueries({ queryKey: ["products-all"] });
-                    qc.invalidateQueries({ queryKey: ["products"] });
-                  }}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-}
-
 /* -------------------- KULLANICILAR -------------------- */
 function KullanicilarTab() {
   const qc = useQueryClient();
