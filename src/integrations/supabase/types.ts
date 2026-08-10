@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          aciklama: string | null
+          actor_ad: string | null
+          actor_id: string | null
+          created_at: string
+          degisen_alanlar: string[] | null
+          eski_veri: Json | null
+          id: string
+          islem: string
+          kayit_id: string | null
+          tablo: string
+          yeni_veri: Json | null
+        }
+        Insert: {
+          aciklama?: string | null
+          actor_ad?: string | null
+          actor_id?: string | null
+          created_at?: string
+          degisen_alanlar?: string[] | null
+          eski_veri?: Json | null
+          id?: string
+          islem: string
+          kayit_id?: string | null
+          tablo: string
+          yeni_veri?: Json | null
+        }
+        Update: {
+          aciklama?: string | null
+          actor_ad?: string | null
+          actor_id?: string | null
+          created_at?: string
+          degisen_alanlar?: string[] | null
+          eski_veri?: Json | null
+          id?: string
+          islem?: string
+          kayit_id?: string | null
+          tablo?: string
+          yeni_veri?: Json | null
+        }
+        Relationships: []
+      }
+      departments: {
+        Row: {
+          ad: string
+          aktif: boolean
+          created_at: string
+          id: string
+          kod: string
+          updated_at: string
+        }
+        Insert: {
+          ad: string
+          aktif?: boolean
+          created_at?: string
+          id?: string
+          kod: string
+          updated_at?: string
+        }
+        Update: {
+          ad?: string
+          aktif?: boolean
+          created_at?: string
+          id?: string
+          kod?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       downtime_categories: {
         Row: {
           ad: string
@@ -91,6 +160,7 @@ export type Database = {
           ad: string
           aktif: boolean
           created_at: string
+          department_id: string | null
           id: string
           kod: string
         }
@@ -98,6 +168,7 @@ export type Database = {
           ad: string
           aktif?: boolean
           created_at?: string
+          department_id?: string | null
           id?: string
           kod: string
         }
@@ -105,10 +176,19 @@ export type Database = {
           ad?: string
           aktif?: boolean
           created_at?: string
+          department_id?: string | null
           id?: string
           kod?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "machines_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       plasma_cuts: {
         Row: {
@@ -399,25 +479,40 @@ export type Database = {
       }
       products: {
         Row: {
+          aciklama: string | null
           ad: string
+          birim_agirlik_kg: number | null
           created_at: string
           id: string
           ideal_cevrim_saniye: number | null
           kod: string
+          olcu: string | null
+          silindi_at: string | null
+          updated_at: string
         }
         Insert: {
+          aciklama?: string | null
           ad: string
+          birim_agirlik_kg?: number | null
           created_at?: string
           id?: string
           ideal_cevrim_saniye?: number | null
           kod: string
+          olcu?: string | null
+          silindi_at?: string | null
+          updated_at?: string
         }
         Update: {
+          aciklama?: string | null
           ad?: string
+          birim_agirlik_kg?: number | null
           created_at?: string
           id?: string
           ideal_cevrim_saniye?: number | null
           kod?: string
+          olcu?: string | null
+          silindi_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -427,6 +522,7 @@ export type Database = {
           aktif: boolean
           created_at: string
           departman: string | null
+          department_id: string | null
           id: string
           personel_id: string
           unvan: string | null
@@ -436,6 +532,7 @@ export type Database = {
           aktif?: boolean
           created_at?: string
           departman?: string | null
+          department_id?: string | null
           id: string
           personel_id: string
           unvan?: string | null
@@ -445,11 +542,20 @@ export type Database = {
           aktif?: boolean
           created_at?: string
           departman?: string | null
+          department_id?: string | null
           id?: string
           personel_id?: string
           unvan?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quality_logs: {
         Row: {
@@ -498,6 +604,62 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission: string
+          role_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission: string
+          role_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission?: string
+          role_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_role_key_fkey"
+            columns: ["role_key"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          aciklama: string | null
+          ad: string
+          created_at: string
+          key: string
+          sira: number
+          sistem: boolean
+        }
+        Insert: {
+          aciklama?: string | null
+          ad: string
+          created_at?: string
+          key: string
+          sira?: number
+          sistem?: boolean
+        }
+        Update: {
+          aciklama?: string | null
+          ad?: string
+          created_at?: string
+          key?: string
+          sira?: number
+          sistem?: boolean
+        }
+        Relationships: []
       }
       session_pauses: {
         Row: {
@@ -590,31 +752,52 @@ export type Database = {
       }
       sheet_stock_moves: {
         Row: {
+          bakiye_sonrasi: number | null
           created_at: string
           degisim: number
           id: string
           notlar: string | null
+          sebep: string | null
           session_id: string | null
           stock_id: string | null
+          stok_uygulandi: boolean
+          ters_kayit_id: string | null
           tip: string
+          user_ad: string | null
+          user_id: string | null
+          yon: string | null
         }
         Insert: {
+          bakiye_sonrasi?: number | null
           created_at?: string
           degisim: number
           id?: string
           notlar?: string | null
+          sebep?: string | null
           session_id?: string | null
           stock_id?: string | null
+          stok_uygulandi?: boolean
+          ters_kayit_id?: string | null
           tip: string
+          user_ad?: string | null
+          user_id?: string | null
+          yon?: string | null
         }
         Update: {
+          bakiye_sonrasi?: number | null
           created_at?: string
           degisim?: number
           id?: string
           notlar?: string | null
+          sebep?: string | null
           session_id?: string | null
           stock_id?: string | null
+          stok_uygulandi?: boolean
+          ters_kayit_id?: string | null
           tip?: string
+          user_ad?: string | null
+          user_id?: string | null
+          yon?: string | null
         }
         Relationships: [
           {
@@ -622,6 +805,13 @@ export type Database = {
             columns: ["stock_id"]
             isOneToOne: false
             referencedRelation: "sheet_stock"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sheet_stock_moves_ters_kayit_id_fkey"
+            columns: ["ters_kayit_id"]
+            isOneToOne: false
+            referencedRelation: "sheet_stock_moves"
             referencedColumns: ["id"]
           },
         ]
@@ -720,6 +910,35 @@ export type Database = {
           },
         ]
       }
+      user_role_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          role_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_role_assignments_role_key_fkey"
+            columns: ["role_key"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -762,11 +981,83 @@ export type Database = {
         }
         Relationships: []
       }
+      work_breaks: {
+        Row: {
+          ad: string
+          baslangic: string
+          bitis: string
+          created_at: string
+          id: string
+          schedule_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad: string
+          baslangic: string
+          bitis: string
+          created_at?: string
+          id?: string
+          schedule_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad?: string
+          baslangic?: string
+          bitis?: string
+          created_at?: string
+          id?: string
+          schedule_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_breaks_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "work_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_schedules: {
+        Row: {
+          baslangic: string | null
+          bitis: string | null
+          created_at: string
+          gun: number
+          id: string
+          tatil: boolean
+          updated_at: string
+        }
+        Insert: {
+          baslangic?: string | null
+          bitis?: string | null
+          created_at?: string
+          gun: number
+          id?: string
+          tatil?: boolean
+          updated_at?: string
+        }
+        Update: {
+          baslangic?: string | null
+          bitis?: string | null
+          created_at?: string
+          gun?: number
+          id?: string
+          tatil?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_app_role: {
+        Args: { _role_key: string; _user_id: string }
+        Returns: boolean
+      }
       has_permission: {
         Args: { _perm: string; _user_id: string }
         Returns: boolean
@@ -809,6 +1100,13 @@ export type Database = {
           yogunluk: number
         }[]
       }
+      my_permissions: {
+        Args: never
+        Returns: {
+          permission: string
+        }[]
+      }
+      net_work_minutes: { Args: { _gun: number }; Returns: number }
     }
     Enums: {
       app_role: "operator" | "supervisor"
