@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [permissions, setPermissions] = useState<string[]>([]);
+  const [roleKeys, setRoleKeys] = useState<string[]>([]);
   const [allowedMachineIds, setAllowedMachineIds] = useState<string[] | null>(null);
   const [allowedProductIds, setAllowedProductIds] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const r = await loadProfileAndRole(sess.user.id);
       setProfile(r.profile);
       setRole(r.role);
+      setRoleKeys(r.roleKeys);
       setIsSuperAdmin(r.isSuperAdmin);
       setPermissions(r.permissions);
       setAllowedMachineIds(r.isSuperAdmin ? null : r.allowedMachineIds);
@@ -102,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setProfile(null);
       setRole(null);
+      setRoleKeys([]);
       setIsSuperAdmin(false);
       setPermissions([]);
       setAllowedMachineIds(null);
@@ -121,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const can = (perm: string) =>
     isSuperAdmin || role === "supervisor" || permissions.includes(perm);
+  const hasRoleKey = (key: string) => isSuperAdmin || roleKeys.includes(key);
 
   return (
     <AuthContext.Provider
@@ -129,9 +133,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         role,
+        roleKeys,
         isSuperAdmin,
         permissions,
         can,
+        hasRoleKey,
+
         allowedMachineIds,
         allowedProductIds,
         loading,
