@@ -12,6 +12,12 @@ import {
 import { YetkilerTab } from "@/components/yetkiler-tab";
 import { StokTab } from "@/components/stok-tab";
 import { UrunAsamalari } from "@/components/urun-asamalari";
+import { StokHareketleri } from "@/components/stok-hareketleri";
+import { VardiyaAyarlari } from "@/components/vardiya-ayarlari";
+import { RollerTab } from "@/components/roller-tab";
+import { DenetimKaydi } from "@/components/denetim-kaydi";
+import { UrunYonetimi } from "@/components/urun-yonetimi";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
