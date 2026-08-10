@@ -244,7 +244,7 @@ function MasterTab() {
         <TabsTrigger value="urunler">Ürünler</TabsTrigger>
       </TabsList>
       <TabsContent value="makineler"><MakinelerCrud /></TabsContent>
-      <TabsContent value="urunler"><UrunlerCrud /></TabsContent>
+      <TabsContent value="urunler"><UrunYonetimi /></TabsContent>
     </Tabs>
   );
 }
