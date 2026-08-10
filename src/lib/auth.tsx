@@ -17,9 +17,12 @@ interface AuthState {
   session: Session | null;
   profile: ProfileData | null;
   role: AppRole | null;
+  /** Atanmış rol anahtarları (super_admin, admin, supervisor, worker, …) */
+  roleKeys: string[];
   isSuperAdmin: boolean;
   permissions: string[];
   can: (perm: string) => boolean;
+  hasRoleKey: (key: string) => boolean;
   /** null => tüm makineler serbest */
   allowedMachineIds: string[] | null;
   /** null => tüm ürünler serbest */
@@ -36,7 +39,7 @@ export function personelIdToEmail(personelId: string): string {
 }
 
 async function loadProfileAndRole(userId: string) {
-  const [{ data: profile }, { data: roles }, { data: sa }, { data: perms }, { data: ums }, { data: ups }] =
+  const [{ data: profile }, { data: roles }, { data: sa }, { data: perms }, { data: ums }, { data: ups }, { data: assigns }] =
     await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
@@ -44,21 +47,35 @@ async function loadProfileAndRole(userId: string) {
       supabase.from("user_permissions").select("permission").eq("user_id", userId),
       supabase.from("user_machines").select("machine_id").eq("user_id", userId),
       supabase.from("user_products").select("product_id").eq("user_id", userId),
+      supabase.from("user_role_assignments").select("role_key").eq("user_id", userId),
     ]);
+
+  const roleKeys = (assigns ?? []).map((r) => r.role_key);
+  const { data: rolePerms } = roleKeys.length
+    ? await supabase.from("role_permissions").select("permission").in("role_key", roleKeys)
+    : { data: [] as { permission: string }[] };
+
   let role: AppRole = "operator";
   if (roles?.some((r) => r.role === "supervisor")) role = "supervisor";
-  const isSuperAdmin = !!sa;
+  const isSuperAdmin = !!sa || roleKeys.includes("super_admin");
+  if (roleKeys.includes("admin") || roleKeys.includes("supervisor")) role = "supervisor";
+
   const explicit = (perms ?? []).map((p) => p.permission);
-  const permissions = explicit.length > 0 ? explicit : DEFAULT_OPERATOR_PERMISSIONS;
+  const fromRoles = (rolePerms ?? []).map((p) => p.permission);
+  const merged = Array.from(new Set([...explicit, ...fromRoles]));
+  const permissions = merged.length > 0 ? merged : DEFAULT_OPERATOR_PERMISSIONS;
+
   return {
     profile: (profile as ProfileData | null) ?? null,
     role,
+    roleKeys,
     isSuperAdmin,
     permissions,
     allowedMachineIds: (ums ?? []).length > 0 ? (ums ?? []).map((m) => m.machine_id) : null,
     allowedProductIds: (ups ?? []).length > 0 ? (ups ?? []).map((p) => p.product_id) : null,
   };
 }
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
