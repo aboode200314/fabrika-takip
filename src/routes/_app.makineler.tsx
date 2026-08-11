@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_app/makineler")({
   component: MakinelerPage,
@@ -48,15 +49,23 @@ function MakinelerPage() {
   const [from, setFrom] = useState(isoDay(new Date(Date.now() - 6 * 86400000)));
   const [to, setTo] = useState(isoDay(new Date()));
   const [machineId, setMachineId] = useState<string>("all");
+  const { isSuperAdmin, allowedDepartmentIds } = useAuth();
 
   const { start, end } = rangeFor(period, from, to);
   const startIso = start.toISOString();
   const endIso = end.toISOString();
 
-  const { data: machines } = useQuery({
+  const { data: allMachines } = useQuery({
     queryKey: ["machines-all"],
-    queryFn: async () => (await supabase.from("machines").select("id,kod,ad").order("kod")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("machines").select("id,kod,ad,department_id").order("kod")).data ?? [],
   });
+  // Departman kapsamı tanımlı kullanıcılar yalnızca kendi hatlarının makinelerini görür
+  const machines = useMemo(() => {
+    const list = allMachines ?? [];
+    if (isSuperAdmin || !allowedDepartmentIds) return list;
+    return list.filter((m) => !m.department_id || allowedDepartmentIds.includes(m.department_id));
+  }, [allMachines, allowedDepartmentIds, isSuperAdmin]);
 
   const { data: products } = useQuery({
     queryKey: ["products-all"],

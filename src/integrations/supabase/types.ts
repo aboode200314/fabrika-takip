@@ -270,6 +270,7 @@ export type Database = {
           machine_id: string | null
           product_id: string
           sira: number
+          tahmini_sure_saniye: number | null
         }
         Insert: {
           aciklama?: string | null
@@ -279,6 +280,7 @@ export type Database = {
           machine_id?: string | null
           product_id: string
           sira: number
+          tahmini_sure_saniye?: number | null
         }
         Update: {
           aciklama?: string | null
@@ -288,6 +290,7 @@ export type Database = {
           machine_id?: string | null
           product_id?: string
           sira?: number
+          tahmini_sure_saniye?: number | null
         }
         Relationships: [
           {
@@ -363,6 +366,8 @@ export type Database = {
       }
       production_sessions: {
         Row: {
+          asama_ad_snapshot: string | null
+          asama_sira_snapshot: number | null
           baslangic: string
           bitis: string | null
           created_at: string
@@ -374,6 +379,8 @@ export type Database = {
           kalinlik_mm: number | null
           levha_adedi: number | null
           machine_id: string
+          makine_ad_snapshot: string | null
+          makine_kod_snapshot: string | null
           miktar: number | null
           notlar: string | null
           operation_id: string | null
@@ -386,11 +393,15 @@ export type Database = {
           toplam_agirlik_kg: number | null
           toplam_durus_dakika: number
           updated_at: string
+          urun_ad_snapshot: string | null
+          urun_kod_snapshot: string | null
           uzunluk_mm: number | null
           vardiya: Database["public"]["Enums"]["shift_type"]
           yogunluk: number | null
         }
         Insert: {
+          asama_ad_snapshot?: string | null
+          asama_sira_snapshot?: number | null
           baslangic?: string
           bitis?: string | null
           created_at?: string
@@ -402,6 +413,8 @@ export type Database = {
           kalinlik_mm?: number | null
           levha_adedi?: number | null
           machine_id: string
+          makine_ad_snapshot?: string | null
+          makine_kod_snapshot?: string | null
           miktar?: number | null
           notlar?: string | null
           operation_id?: string | null
@@ -414,11 +427,15 @@ export type Database = {
           toplam_agirlik_kg?: number | null
           toplam_durus_dakika?: number
           updated_at?: string
+          urun_ad_snapshot?: string | null
+          urun_kod_snapshot?: string | null
           uzunluk_mm?: number | null
           vardiya: Database["public"]["Enums"]["shift_type"]
           yogunluk?: number | null
         }
         Update: {
+          asama_ad_snapshot?: string | null
+          asama_sira_snapshot?: number | null
           baslangic?: string
           bitis?: string | null
           created_at?: string
@@ -430,6 +447,8 @@ export type Database = {
           kalinlik_mm?: number | null
           levha_adedi?: number | null
           machine_id?: string
+          makine_ad_snapshot?: string | null
+          makine_kod_snapshot?: string | null
           miktar?: number | null
           notlar?: string | null
           operation_id?: string | null
@@ -442,6 +461,8 @@ export type Database = {
           toplam_agirlik_kg?: number | null
           toplam_durus_dakika?: number
           updated_at?: string
+          urun_ad_snapshot?: string | null
+          urun_kod_snapshot?: string | null
           uzunluk_mm?: number | null
           vardiya?: Database["public"]["Enums"]["shift_type"]
           yogunluk?: number | null
@@ -483,6 +504,7 @@ export type Database = {
           ad: string
           birim_agirlik_kg: number | null
           created_at: string
+          department_id: string | null
           id: string
           ideal_cevrim_saniye: number | null
           kod: string
@@ -495,6 +517,7 @@ export type Database = {
           ad: string
           birim_agirlik_kg?: number | null
           created_at?: string
+          department_id?: string | null
           id?: string
           ideal_cevrim_saniye?: number | null
           kod: string
@@ -507,6 +530,7 @@ export type Database = {
           ad?: string
           birim_agirlik_kg?: number | null
           created_at?: string
+          department_id?: string | null
           id?: string
           ideal_cevrim_saniye?: number | null
           kod?: string
@@ -514,7 +538,15 @@ export type Database = {
           silindi_at?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -753,10 +785,14 @@ export type Database = {
       sheet_stock_moves: {
         Row: {
           bakiye_sonrasi: number | null
+          birim: string
           created_at: string
           degisim: number
+          genislik_mm_snapshot: number | null
           id: string
+          kalinlik_mm_snapshot: number | null
           notlar: string | null
+          sac_tipi_snapshot: string | null
           sebep: string | null
           session_id: string | null
           stock_id: string | null
@@ -765,14 +801,19 @@ export type Database = {
           tip: string
           user_ad: string | null
           user_id: string | null
+          uzunluk_mm_snapshot: number | null
           yon: string | null
         }
         Insert: {
           bakiye_sonrasi?: number | null
+          birim?: string
           created_at?: string
           degisim: number
+          genislik_mm_snapshot?: number | null
           id?: string
+          kalinlik_mm_snapshot?: number | null
           notlar?: string | null
+          sac_tipi_snapshot?: string | null
           sebep?: string | null
           session_id?: string | null
           stock_id?: string | null
@@ -781,14 +822,19 @@ export type Database = {
           tip: string
           user_ad?: string | null
           user_id?: string | null
+          uzunluk_mm_snapshot?: number | null
           yon?: string | null
         }
         Update: {
           bakiye_sonrasi?: number | null
+          birim?: string
           created_at?: string
           degisim?: number
+          genislik_mm_snapshot?: number | null
           id?: string
+          kalinlik_mm_snapshot?: number | null
           notlar?: string | null
+          sac_tipi_snapshot?: string | null
           sebep?: string | null
           session_id?: string | null
           stock_id?: string | null
@@ -797,6 +843,7 @@ export type Database = {
           tip?: string
           user_ad?: string | null
           user_id?: string | null
+          uzunluk_mm_snapshot?: number | null
           yon?: string | null
         }
         Relationships: [
@@ -830,6 +877,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_departments: {
+        Row: {
+          created_at: string
+          department_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_departments_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_machines: {
         Row: {
@@ -1098,6 +1174,12 @@ export type Database = {
           uzunluk_mm: number
           vardiya: Database["public"]["Enums"]["shift_type"]
           yogunluk: number
+        }[]
+      }
+      my_department_ids: {
+        Args: never
+        Returns: {
+          department_id: string
         }[]
       }
       my_permissions: {

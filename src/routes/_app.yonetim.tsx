@@ -10,9 +10,11 @@ import {
 } from "@/lib/workers.functions";
 
 import { YetkilerTab } from "@/components/yetkiler-tab";
-import { StokTab } from "@/components/stok-tab";
+import { StokMerkezi } from "@/components/stok-merkezi";
+import { DepartmanKapsam } from "@/components/departman-kapsam";
 import { UrunAsamalari } from "@/components/urun-asamalari";
-import { StokHareketleri } from "@/components/stok-hareketleri";
+
+
 import { VardiyaAyarlari } from "@/components/vardiya-ayarlari";
 import { RollerTab } from "@/components/roller-tab";
 import { DenetimKaydi } from "@/components/denetim-kaydi";
@@ -59,34 +61,47 @@ function YonetimPanel() {
       </div>
 
       <Tabs defaultValue="ozet" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-10">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7">
           <TabsTrigger value="ozet">Özet</TabsTrigger>
           <TabsTrigger value="master">Makine & Ürün</TabsTrigger>
-          <TabsTrigger value="asamalar">Aşamalar</TabsTrigger>
+          <TabsTrigger value="asamalar">Üretim Akışı</TabsTrigger>
           <TabsTrigger value="stok">Sac Stok</TabsTrigger>
-          <TabsTrigger value="hareketler">Hareketler</TabsTrigger>
           <TabsTrigger value="vardiya">Vardiya</TabsTrigger>
-          <TabsTrigger value="kullanicilar">Kullanıcılar</TabsTrigger>
-          <TabsTrigger value="roller">Roller</TabsTrigger>
-          <TabsTrigger value="yetkiler">Yetkiler</TabsTrigger>
+          <TabsTrigger value="erisim">Erişim</TabsTrigger>
           <TabsTrigger value="denetim">Denetim</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ozet"><OzetTab /></TabsContent>
         <TabsContent value="master"><MasterTab /></TabsContent>
         <TabsContent value="asamalar"><UrunAsamalari /></TabsContent>
-        <TabsContent value="stok"><StokTab /></TabsContent>
-        <TabsContent value="hareketler"><StokHareketleri /></TabsContent>
+        <TabsContent value="stok"><StokMerkezi /></TabsContent>
         <TabsContent value="vardiya"><VardiyaAyarlari /></TabsContent>
-        <TabsContent value="kullanicilar"><KullanicilarTab /></TabsContent>
-        <TabsContent value="roller"><RollerTab /></TabsContent>
-        <TabsContent value="yetkiler"><YetkilerTab /></TabsContent>
+        <TabsContent value="erisim"><ErisimTab /></TabsContent>
         <TabsContent value="denetim"><DenetimKaydi /></TabsContent>
       </Tabs>
 
     </div>
   );
 }
+
+/* -------------------- ERİŞİM: Kullanıcı → Rol → Yetki → Kapsam -------------------- */
+function ErisimTab() {
+  return (
+    <Tabs defaultValue="kullanicilar" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="kullanicilar">Kullanıcılar</TabsTrigger>
+        <TabsTrigger value="roller">Roller</TabsTrigger>
+        <TabsTrigger value="yetkiler">Kişisel Yetkiler</TabsTrigger>
+        <TabsTrigger value="kapsam">Departman Kapsamı</TabsTrigger>
+      </TabsList>
+      <TabsContent value="kullanicilar"><KullanicilarTab /></TabsContent>
+      <TabsContent value="roller"><RollerTab /></TabsContent>
+      <TabsContent value="yetkiler"><YetkilerTab /></TabsContent>
+      <TabsContent value="kapsam"><DepartmanKapsam /></TabsContent>
+    </Tabs>
+  );
+}
+
 
 /* -------------------- ÖZET (canlı oturum verisinden) -------------------- */
 function OzetTab() {

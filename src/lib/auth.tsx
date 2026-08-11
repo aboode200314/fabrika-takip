@@ -27,6 +27,9 @@ interface AuthState {
   allowedMachineIds: string[] | null;
   /** null => tüm ürünler serbest */
   allowedProductIds: string[] | null;
+  /** null => tüm departmanlar serbest */
+  allowedDepartmentIds: string[] | null;
+
   loading: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -39,7 +42,7 @@ export function personelIdToEmail(personelId: string): string {
 }
 
 async function loadProfileAndRole(userId: string) {
-  const [{ data: profile }, { data: roles }, { data: sa }, { data: perms }, { data: ums }, { data: ups }, { data: assigns }] =
+  const [{ data: profile }, { data: roles }, { data: sa }, { data: perms }, { data: ums }, { data: ups }, { data: uds }, { data: assigns }] =
     await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
@@ -47,6 +50,7 @@ async function loadProfileAndRole(userId: string) {
       supabase.from("user_permissions").select("permission").eq("user_id", userId),
       supabase.from("user_machines").select("machine_id").eq("user_id", userId),
       supabase.from("user_products").select("product_id").eq("user_id", userId),
+      supabase.from("user_departments").select("department_id").eq("user_id", userId),
       supabase.from("user_role_assignments").select("role_key").eq("user_id", userId),
     ]);
 
@@ -73,6 +77,7 @@ async function loadProfileAndRole(userId: string) {
     permissions,
     allowedMachineIds: (ums ?? []).length > 0 ? (ums ?? []).map((m) => m.machine_id) : null,
     allowedProductIds: (ups ?? []).length > 0 ? (ups ?? []).map((p) => p.product_id) : null,
+    allowedDepartmentIds: (uds ?? []).length > 0 ? (uds ?? []).map((d) => d.department_id) : null,
   };
 }
 
@@ -87,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roleKeys, setRoleKeys] = useState<string[]>([]);
   const [allowedMachineIds, setAllowedMachineIds] = useState<string[] | null>(null);
   const [allowedProductIds, setAllowedProductIds] = useState<string[] | null>(null);
+  const [allowedDepartmentIds, setAllowedDepartmentIds] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   const hydrate = async (sess: Session | null) => {
@@ -101,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPermissions(r.permissions);
       setAllowedMachineIds(r.isSuperAdmin ? null : r.allowedMachineIds);
       setAllowedProductIds(r.isSuperAdmin ? null : r.allowedProductIds);
+      setAllowedDepartmentIds(r.isSuperAdmin ? null : r.allowedDepartmentIds);
     } else {
       setProfile(null);
       setRole(null);
@@ -109,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPermissions([]);
       setAllowedMachineIds(null);
       setAllowedProductIds(null);
+      setAllowedDepartmentIds(null);
     }
     setLoading(false);
   };
@@ -141,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         allowedMachineIds,
         allowedProductIds,
+        allowedDepartmentIds,
         loading,
         refresh: async () => {
           const { data } = await supabase.auth.getSession();
