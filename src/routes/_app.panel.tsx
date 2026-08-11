@@ -87,7 +87,7 @@ interface PauseRow {
 }
 
 function PanelPage() {
-  const { user, isSuperAdmin, role, allowedMachineIds, allowedProductIds } = useAuth();
+  const { user, isSuperAdmin, role, allowedMachineIds, allowedProductIds, allowedDepartmentIds } = useAuth();
   const qc = useQueryClient();
   const [now, setNow] = useState(() => Date.now());
 
@@ -99,7 +99,7 @@ function PanelPage() {
   const { data: machines } = useQuery({
     queryKey: ["machines-active"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("machines").select("id,kod,ad").eq("aktif", true).order("kod");
+      const { data, error } = await supabase.from("machines").select("id,kod,ad,department_id").eq("aktif", true).order("kod");
       if (error) throw error;
       return data ?? [];
     },
@@ -154,10 +154,14 @@ function PanelPage() {
   }, [qc]);
 
   const visibleMachines = useMemo(() => {
-    const list = machines ?? [];
+    let list = machines ?? [];
+    // Departman kapsamı: kapsam tanımlıysa yalnızca o departmanların makineleri
+    if (!isSuperAdmin && allowedDepartmentIds) {
+      list = list.filter((m) => !m.department_id || allowedDepartmentIds.includes(m.department_id));
+    }
     if (isSuperAdmin || role === "supervisor" || !allowedMachineIds) return list;
     return list.filter((m) => allowedMachineIds.includes(m.id));
-  }, [machines, allowedMachineIds, isSuperAdmin, role]);
+  }, [machines, allowedMachineIds, allowedDepartmentIds, isSuperAdmin, role]);
 
   const visibleProducts = useMemo(() => {
     const list = products ?? [];

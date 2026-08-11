@@ -53,10 +53,17 @@ function MakinelerPage() {
   const startIso = start.toISOString();
   const endIso = end.toISOString();
 
-  const { data: machines } = useQuery({
+  const { data: allMachines } = useQuery({
     queryKey: ["machines-all"],
-    queryFn: async () => (await supabase.from("machines").select("id,kod,ad").order("kod")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("machines").select("id,kod,ad,department_id").order("kod")).data ?? [],
   });
+  // Departman kapsamı tanımlı kullanıcılar yalnızca kendi hatlarının makinelerini görür
+  const machines = useMemo(() => {
+    const list = allMachines ?? [];
+    if (isSuperAdmin || !allowedDepartmentIds) return list;
+    return list.filter((m) => !m.department_id || allowedDepartmentIds.includes(m.department_id));
+  }, [allMachines, allowedDepartmentIds, isSuperAdmin]);
 
   const { data: products } = useQuery({
     queryKey: ["products-all"],
