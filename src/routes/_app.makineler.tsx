@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_app/makineler")({
   component: MakinelerPage,
@@ -48,6 +49,7 @@ function MakinelerPage() {
   const [from, setFrom] = useState(isoDay(new Date(Date.now() - 6 * 86400000)));
   const [to, setTo] = useState(isoDay(new Date()));
   const [machineId, setMachineId] = useState<string>("all");
+  const { isSuperAdmin, allowedDepartmentIds } = useAuth();
 
   const { start, end } = rangeFor(period, from, to);
   const startIso = start.toISOString();
