@@ -27,6 +27,9 @@ interface AuthState {
   allowedMachineIds: string[] | null;
   /** null => tüm ürünler serbest */
   allowedProductIds: string[] | null;
+  /** null => tüm departmanlar serbest */
+  allowedDepartmentIds: string[] | null;
+
   loading: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
