@@ -10,11 +10,10 @@ import {
 } from "@/lib/workers.functions";
 
 import { YetkilerTab } from "@/components/yetkiler-tab";
-import { StokTab } from "@/components/stok-tab";
 import { StokMerkezi } from "@/components/stok-merkezi";
 import { DepartmanKapsam } from "@/components/departman-kapsam";
 import { UrunAsamalari } from "@/components/urun-asamalari";
-import { StokHareketleri } from "@/components/stok-hareketleri";
+
 
 import { VardiyaAyarlari } from "@/components/vardiya-ayarlari";
 import { RollerTab } from "@/components/roller-tab";
