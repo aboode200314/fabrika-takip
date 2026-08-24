@@ -9,36 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as GirisRouteImport } from './routes/giris'
-import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppYonetimRouteImport } from './routes/_app.yonetim'
-import { Route as AppRaporlarRouteImport } from './routes/_app.raporlar'
-import { Route as AppPanelRouteImport } from './routes/_app.panel'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as GirisRouteImport } from './routes/giris'
 import { Route as AppMakinelerRouteImport } from './routes/_app.makineler'
+import { Route as AppPanelRouteImport } from './routes/_app.panel'
+import { Route as AppRaporlarRouteImport } from './routes/_app.raporlar'
+import { Route as AppYonetimRouteImport } from './routes/_app.yonetim'
 
-const GirisRoute = GirisRouteImport.update({
-  id: '/giris',
-  path: '/giris',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const GirisRoute = GirisRouteImport.update({
+  id: '/giris',
+  path: '/giris',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppYonetimRoute = AppYonetimRouteImport.update({
-  id: '/yonetim',
-  path: '/yonetim',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppRaporlarRoute = AppRaporlarRouteImport.update({
-  id: '/raporlar',
-  path: '/raporlar',
+const AppMakinelerRoute = AppMakinelerRouteImport.update({
+  id: '/makineler',
+  path: '/makineler',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPanelRoute = AppPanelRouteImport.update({
@@ -46,9 +41,14 @@ const AppPanelRoute = AppPanelRouteImport.update({
   path: '/panel',
   getParentRoute: () => AppRoute,
 } as any)
-const AppMakinelerRoute = AppMakinelerRouteImport.update({
-  id: '/makineler',
-  path: '/makineler',
+const AppRaporlarRoute = AppRaporlarRouteImport.update({
+  id: '/raporlar',
+  path: '/raporlar',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppYonetimRoute = AppYonetimRouteImport.update({
+  id: '/yonetim',
+  path: '/yonetim',
   getParentRoute: () => AppRoute,
 } as any)
 
@@ -102,11 +102,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/giris': {
-      id: '/giris'
-      path: '/giris'
-      fullPath: '/giris'
-      preLoaderRoute: typeof GirisRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -116,25 +116,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/giris': {
+      id: '/giris'
+      path: '/giris'
+      fullPath: '/giris'
+      preLoaderRoute: typeof GirisRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/yonetim': {
-      id: '/_app/yonetim'
-      path: '/yonetim'
-      fullPath: '/yonetim'
-      preLoaderRoute: typeof AppYonetimRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/raporlar': {
-      id: '/_app/raporlar'
-      path: '/raporlar'
-      fullPath: '/raporlar'
-      preLoaderRoute: typeof AppRaporlarRouteImport
+    '/_app/makineler': {
+      id: '/_app/makineler'
+      path: '/makineler'
+      fullPath: '/makineler'
+      preLoaderRoute: typeof AppMakinelerRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/panel': {
@@ -144,11 +137,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPanelRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/makineler': {
-      id: '/_app/makineler'
-      path: '/makineler'
-      fullPath: '/makineler'
-      preLoaderRoute: typeof AppMakinelerRouteImport
+    '/_app/raporlar': {
+      id: '/_app/raporlar'
+      path: '/raporlar'
+      fullPath: '/raporlar'
+      preLoaderRoute: typeof AppRaporlarRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/yonetim': {
+      id: '/_app/yonetim'
+      path: '/yonetim'
+      fullPath: '/yonetim'
+      preLoaderRoute: typeof AppYonetimRouteImport
       parentRoute: typeof AppRoute
     }
   }
@@ -178,3 +178,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
