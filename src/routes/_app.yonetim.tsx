@@ -539,6 +539,7 @@ function KullanicilarTab() {
 
 /* -------------------- KENDİ ŞİFREM -------------------- */
 function KendiSifreCard() {
+  const t = useT();
   const [yeni, setYeni] = useState("");
   const [tekrar, setTekrar] = useState("");
   const [busy, setBusy] = useState(false);
@@ -546,15 +547,15 @@ function KendiSifreCard() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (yeni.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
-    if (yeni !== tekrar) return toast.error("Şifreler eşleşmiyor");
+    if (yeni.length < 6) return toast.error(t("yon.pw.sifreMin"));
+    if (yeni !== tekrar) return toast.error(t("yon.pw.sifreEslesmiyor"));
     setBusy(true);
     try {
       await changePw({ data: { password: yeni } });
-      toast.success("Şifreniz güncellendi");
+      toast.success(t("yon.pw.guncellendi"));
       setYeni(""); setTekrar("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Şifre değiştirilemedi");
+      toast.error(err instanceof Error ? err.message : t("yon.pw.hata"));
     } finally {
       setBusy(false);
     }
@@ -564,19 +565,19 @@ function KendiSifreCard() {
     <form onSubmit={submit} className="space-y-3 rounded-2xl border bg-card p-5">
       <div className="flex items-center gap-2">
         <KeyRound className="h-5 w-5 text-primary" />
-        <h3 className="text-lg">Kendi Şifremi Değiştir</h3>
+        <h3 className="text-lg">{t("yon.pw.title")}</h3>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-sm">Yeni şifre</Label>
-        <Input type="password" value={yeni} onChange={(e) => setYeni(e.target.value)} placeholder="en az 6 karakter" />
+        <Label className="text-sm">{t("yon.pw.yeni")}</Label>
+        <Input type="password" value={yeni} onChange={(e) => setYeni(e.target.value)} placeholder={t("yon.kul.sifrePh")} />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-sm">Yeni şifre (tekrar)</Label>
+        <Label className="text-sm">{t("yon.pw.yeniTekrar")}</Label>
         <Input type="password" value={tekrar} onChange={(e) => setTekrar(e.target.value)} />
       </div>
       <Button type="submit" disabled={busy} className="w-full gap-2">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-        Şifreyi Güncelle
+        {t("yon.pw.guncelle")}
       </Button>
     </form>
   );
