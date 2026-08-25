@@ -3,6 +3,7 @@ import type { NamespaceDict } from "@/lib/i18n-types";
 /** yonetim modülü çevirileri. */
 export const yonetimDict: NamespaceDict = {
   tr: {
+    "yon.tab.emirler": "Üretim Emirleri",
     "yon.head.title": "Yönetim — Makine, Ürün, Sac Stok ve Kullanıcılar",
     "yon.head.desc": "Süpervizör yönetim paneli: makine ve ürün tanımları, sac stok takibi, kullanıcı hesapları ve yetkiler.",
     "yon.head.ogTitle": "Yönetim — Fabrika OEE",
@@ -371,6 +372,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.akis.hata": "Bir hata oluştu",
   },
   en: {
+    "yon.tab.emirler": "Production Orders",
     "yon.head.title": "Management — Machines, Products, Sheet Stock and Users",
     "yon.head.desc": "Supervisor management panel: machine and product definitions, sheet stock tracking, user accounts and permissions.",
     "yon.head.ogTitle": "Management — Factory OEE",
@@ -739,6 +741,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.akis.hata": "An error occurred",
   },
   ar: {
+    "yon.tab.emirler": "أوامر الإنتاج",
     "yon.head.title": "الإدارة — الماكينات والمنتجات ومخزون الصاج والمستخدمون",
     "yon.head.desc": "لوحة إدارة المشرف: تعريف الماكينات والمنتجات، متابعة مخزون الصاج، حسابات المستخدمين والصلاحيات.",
     "yon.head.ogTitle": "الإدارة — OEE المصنع",
