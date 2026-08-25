@@ -10,12 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { SAC_TIPLERI, levhaKg, type StockRow } from "@/lib/sac";
+import { useT } from "@/lib/i18n";
 
 const dtFmt = new Intl.DateTimeFormat("tr-TR", {
   day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
 });
 
 export function StokTab() {
+  const t = useT();
   const qc = useQueryClient();
   const [sacTipi, setSacTipi] = useState(SAC_TIPLERI[0].ad);
   const [kalinlik, setKalinlik] = useState("");
@@ -56,9 +58,9 @@ export function StokTab() {
   async function add(e: React.FormEvent) {
     e.preventDefault();
     const k = Number(kalinlik), u = Number(uzunluk), g = Number(genislik), a = Number(adet);
-    if (!(k > 0)) return toast.error("Kalınlık giriniz");
-    if (!(u > 0) || !(g > 0)) return toast.error("Ölçüleri giriniz");
-    if (!(a >= 0)) return toast.error("Adet giriniz");
+    if (!(k > 0)) return toast.error(t("stok.err.kalinlikGir"));
+    if (!(u > 0) || !(g > 0)) return toast.error(t("stok.err.olculeriGir"));
+    if (!(a >= 0)) return toast.error(t("stok.err.adetGir"));
     setBusy(true);
     const { error } = await supabase.from("sheet_stock").insert({
       sac_tipi: sacTipi,
@@ -73,10 +75,10 @@ export function StokTab() {
     setBusy(false);
     if (error) {
       return toast.error(
-        error.code === "23505" ? "Bu ölçüde kayıt zaten var — adedini güncelleyin." : error.message,
+        error.code === "23505" ? t("stok.err.kayitVar") : error.message,
       );
     }
-    toast.success("Stok kalemi eklendi");
+    toast.success(t("stok.success.eklendi"));
     setKalinlik(""); setAdet(""); setNotlar("");
     qc.invalidateQueries({ queryKey: ["sheet-stock"] });
   }
@@ -84,10 +86,10 @@ export function StokTab() {
   async function saveAdet() {
     if (!editing) return;
     const a = Number(editing.adet);
-    if (!Number.isFinite(a) || a < 0) return toast.error("Geçersiz adet");
+    if (!Number.isFinite(a) || a < 0) return toast.error(t("stok.err.gecersizAdet"));
     const { error } = await supabase.from("sheet_stock").update({ adet: a }).eq("id", editing.id);
     if (error) return toast.error(error.message);
-    toast.success("Stok güncellendi");
+    toast.success(t("stok.success.guncellendi"));
     setEditing(null);
     qc.invalidateQueries({ queryKey: ["sheet-stock"] });
   }
@@ -103,27 +105,27 @@ export function StokTab() {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-2xl border bg-card p-4">
-          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Stok Kalemi</div>
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("stok.kpi.kalemi")}</div>
           <div className="mt-1 font-display text-3xl">{rows?.length ?? 0}</div>
         </div>
         <div className="rounded-2xl border bg-card p-4">
-          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Toplam Levha</div>
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("stok.kpi.toplamLevha")}</div>
           <div className="mt-1 font-display text-3xl">{toplamLevha}</div>
         </div>
         <div className="rounded-2xl border bg-card p-4">
-          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Toplam Tonaj</div>
-          <div className="mt-1 font-display text-3xl">{toplamTon.toFixed(2)}<span className="ml-1 text-sm text-muted-foreground">ton</span></div>
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("stok.kpi.toplamTonaj")}</div>
+          <div className="mt-1 font-display text-3xl">{toplamTon.toFixed(2)}<span className="ms-1 text-sm text-muted-foreground">{t("stok.ton")}</span></div>
         </div>
       </div>
 
       <form onSubmit={add} className="space-y-3 rounded-2xl border bg-card p-5">
         <div className="flex items-center gap-2">
           <PackageOpen className="h-5 w-5 text-primary" />
-          <h3 className="text-lg">Yeni Sac Kalemi</h3>
+          <h3 className="text-lg">{t("stok.yeniKalem")}</h3>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           <div className="space-y-1.5 lg:col-span-2">
-            <Label className="text-xs">Sac Türü</Label>
+            <Label className="text-xs">{t("stok.sacTuru")}</Label>
             <Select value={sacTipi} onValueChange={setSacTipi}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -132,32 +134,32 @@ export function StokTab() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Kalınlık (mm)</Label>
+            <Label className="text-xs">{t("stok.kalinlik")}</Label>
             <Input type="number" step="0.1" min={0.1} value={kalinlik} onChange={(e) => setKalinlik(e.target.value)} placeholder="10" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Uzunluk (mm)</Label>
+            <Label className="text-xs">{t("stok.uzunluk")}</Label>
             <Input type="number" min={1} value={uzunluk} onChange={(e) => setUzunluk(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Genişlik (mm)</Label>
+            <Label className="text-xs">{t("stok.genislik")}</Label>
             <Input type="number" min={1} value={genislik} onChange={(e) => setGenislik(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Adet</Label>
+            <Label className="text-xs">{t("stok.adet")}</Label>
             <Input type="number" min={0} value={adet} onChange={(e) => setAdet(e.target.value)} placeholder="0" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Kritik Seviye</Label>
+            <Label className="text-xs">{t("stok.kritikSeviye")}</Label>
             <Input type="number" min={0} value={kritik} onChange={(e) => setKritik(e.target.value)} />
           </div>
           <div className="space-y-1.5 lg:col-span-4">
-            <Label className="text-xs">Not (opsiyonel)</Label>
-            <Input value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder="Tedarikçi, raf, parti no…" />
+            <Label className="text-xs">{t("stok.notOpsiyonel")}</Label>
+            <Input value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder={t("stok.notPlaceholder")} />
           </div>
           <div className="flex items-end lg:col-span-2">
             <Button type="submit" disabled={busy} className="w-full gap-1">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Ekle
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} {t("stok.ekle")}
             </Button>
           </div>
         </div>
@@ -165,7 +167,7 @@ export function StokTab() {
 
       <div className="rounded-2xl border bg-card overflow-x-auto">
         <div className="border-b p-4 text-sm text-muted-foreground">
-          Mevcut adede tıklayarak stoğu elle düzeltebilirsiniz. CNC Plazma işi bitirildiğinde kullanılan levhalar otomatik düşer.
+          {t("stok.table.duzeltmeIpucu")}
         </div>
         {isLoading ? (
           <div className="p-8 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></div>
@@ -173,13 +175,13 @@ export function StokTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sac Türü</TableHead>
-                <TableHead>Kalınlık</TableHead>
-                <TableHead>Ölçü (U×G)</TableHead>
-                <TableHead className="text-right">Levha Ağırlığı</TableHead>
-                <TableHead className="text-right">Mevcut Adet</TableHead>
-                <TableHead className="text-right">Toplam kg</TableHead>
-                <TableHead>Not</TableHead>
+                <TableHead>{t("stok.table.sacTuru")}</TableHead>
+                <TableHead>{t("stok.table.kalinlik")}</TableHead>
+                <TableHead>{t("stok.table.olcu")}</TableHead>
+                <TableHead className="text-end">{t("stok.table.levhaAgirligi")}</TableHead>
+                <TableHead className="text-end">{t("stok.table.mevcutAdet")}</TableHead>
+                <TableHead className="text-end">{t("stok.table.toplamKg")}</TableHead>
+                <TableHead>{t("stok.table.not")}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -191,11 +193,11 @@ export function StokTab() {
                     <TableCell>{r.sac_tipi}</TableCell>
                     <TableCell className="font-mono">{r.kalinlik_mm} mm</TableCell>
                     <TableCell className="font-mono">{r.uzunluk_mm}×{r.genislik_mm}</TableCell>
-                    <TableCell className="text-right">{levhaKg(r).toFixed(1)} kg</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">{levhaKg(r).toFixed(1)} kg</TableCell>
+                    <TableCell className="text-end">
                       {editing?.id === r.id ? (
                         <div className="flex items-center justify-end gap-1">
-                          <Input type="number" min={0} value={editing.adet} autoFocus className="h-8 w-20 text-right"
+                          <Input type="number" min={0} value={editing.adet} autoFocus className="h-8 w-20 text-end"
                             onChange={(e) => setEditing({ id: r.id, adet: e.target.value })} />
                           <Button size="icon" variant="ghost" className="h-7 w-7" onClick={saveAdet}>
                             <Save className="h-3.5 w-3.5 text-success" />
@@ -210,14 +212,14 @@ export function StokTab() {
                         </button>
                       )}
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground">{(levhaKg(r) * r.adet).toFixed(0)}</TableCell>
+                    <TableCell className="text-end text-muted-foreground">{(levhaKg(r) * r.adet).toFixed(0)}</TableCell>
                     <TableCell className="max-w-[180px] truncate text-xs text-muted-foreground">{r.notlar ?? "—"}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       <Button variant="ghost" size="icon" onClick={async () => {
-                        if (!confirm("Bu stok kalemini silmek istediğinize emin misiniz?")) return;
+                        if (!confirm(t("stok.confirm.sil"))) return;
                         const { error } = await supabase.from("sheet_stock").delete().eq("id", r.id);
                         if (error) return toast.error(error.message);
-                        toast.success("Silindi");
+                        toast.success(t("stok.success.silindi"));
                         qc.invalidateQueries({ queryKey: ["sheet-stock"] });
                       }}>
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -229,7 +231,7 @@ export function StokTab() {
               {rows?.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
-                    Henüz stok kalemi yok.
+                    {t("stok.table.bosKalem")}
                   </TableCell>
                 </TableRow>
               )}
@@ -241,10 +243,10 @@ export function StokTab() {
       <div className="rounded-2xl border bg-card p-5">
         <div className="mb-3 flex items-center gap-2">
           <ArrowDownUp className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-lg">Son Stok Hareketleri</h3>
+          <h3 className="text-lg">{t("stok.sonHareketler")}</h3>
         </div>
         {!moves?.length ? (
-          <p className="text-sm text-muted-foreground">Henüz hareket yok.</p>
+          <p className="text-sm text-muted-foreground">{t("stok.henuzHareketYok")}</p>
         ) : (
           <ul className="space-y-2 text-sm">
             {moves.map((m: any) => (
@@ -252,7 +254,7 @@ export function StokTab() {
                 <span className="text-muted-foreground">{dtFmt.format(new Date(m.created_at))}</span>
                 <span>{stokAdi(m.stock_id)}</span>
                 <span className={m.degisim < 0 ? "font-display text-destructive" : "font-display text-success"}>
-                  {m.degisim > 0 ? "+" : ""}{m.degisim} levha
+                  {m.degisim > 0 ? "+" : ""}{m.degisim} {t("stok.levha")}
                 </span>
                 <span className="text-xs text-muted-foreground">{m.notlar ?? m.tip}</span>
               </li>

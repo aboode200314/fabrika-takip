@@ -10,6 +10,7 @@ import { KullaniciRaporu } from "@/components/kullanici-raporu";
 import { VeriYonetimi } from "@/components/veri-yonetimi";
 
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/raporlar")({
   component: RaporlarPage,
@@ -43,6 +44,7 @@ function rangeFor(p: Period) {
 const dayFmt = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit" });
 
 function RaporlarPage() {
+  const t = useT();
   const [period, setPeriod] = useState<Period>("gunluk");
   const { start } = rangeFor(period);
   const startIso = start.toISOString();
@@ -113,7 +115,7 @@ function RaporlarPage() {
   const durusSebep = useMemo(() => {
     const map = new Map<string, { dk: number; adet: number }>();
     for (const d of downtimes ?? []) {
-      const ad = (d as { downtime_categories?: { ad?: string } }).downtime_categories?.ad ?? "Diğer";
+      const ad = (d as { downtime_categories?: { ad?: string } }).downtime_categories?.ad ?? t("rap.durusSebep.diger");
       const e = map.get(ad) ?? { dk: 0, adet: 0 };
       e.dk += Number(d.sure_dakika ?? 0);
       e.adet += 1;
@@ -125,19 +127,19 @@ function RaporlarPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl tracking-tight">Raporlar</h1>
+        <h1 className="text-3xl tracking-tight">{t("rap.title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          CNC Plazma üretim, tonaj ve duruş performans raporları.
+          {t("rap.subtitle")}
         </p>
       </div>
 
       <Tabs defaultValue="performans">
         <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">
-          <TabsTrigger value="performans">Performans</TabsTrigger>
-          <TabsTrigger value="sac">Sac Kesim</TabsTrigger>
-          <TabsTrigger value="oturum">İş Oturumları</TabsTrigger>
-          <TabsTrigger value="kullanici">Kullanıcılar</TabsTrigger>
-          <TabsTrigger value="veri">Veri Yönetimi</TabsTrigger>
+          <TabsTrigger value="performans">{t("rap.tab.performans")}</TabsTrigger>
+          <TabsTrigger value="sac">{t("rap.tab.sac")}</TabsTrigger>
+          <TabsTrigger value="oturum">{t("rap.tab.oturum")}</TabsTrigger>
+          <TabsTrigger value="kullanici">{t("rap.tab.kullanici")}</TabsTrigger>
+          <TabsTrigger value="veri">{t("rap.tab.veri")}</TabsTrigger>
         </TabsList>
         <TabsContent value="sac" className="pt-4"><SacKesimRaporu /></TabsContent>
         <TabsContent value="oturum" className="pt-4"><OturumRaporu /></TabsContent>
@@ -148,39 +150,39 @@ function RaporlarPage() {
 
       <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="gunluk">Günlük</TabsTrigger>
-          <TabsTrigger value="haftalik">Haftalık</TabsTrigger>
-          <TabsTrigger value="aylik">Aylık</TabsTrigger>
+          <TabsTrigger value="gunluk">{t("rap.period.gunluk")}</TabsTrigger>
+          <TabsTrigger value="haftalik">{t("rap.period.haftalik")}</TabsTrigger>
+          <TabsTrigger value="aylik">{t("rap.period.aylik")}</TabsTrigger>
         </TabsList>
 
 
         <TabsContent value={period} className="space-y-6 pt-4">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Kpi icon={Layers} label="Kesilen Levha" value={String(ozet.levha)} suffix="adet" />
-            <Kpi icon={Package} label="Toplam Tonaj" value={ozet.ton.toFixed(3)} suffix="ton" />
-            <Kpi icon={Clock} label="Çalışma Süresi" value={ozet.calismaSaat.toFixed(1)} suffix="saat" />
-            <Kpi icon={AlertTriangle} label="Duruş Süresi" value={ozet.durusSaat.toFixed(1)} suffix="saat" />
-            <Kpi icon={TrendingUp} label="Ort. Levha Süresi" value={ozet.ortalamaDk.toFixed(1)} suffix="dk/levha" />
-            <Kpi icon={TrendingUp} label="Verimlilik" value={ozet.tonSaat.toFixed(2)} suffix="ton/saat" />
-            <Kpi icon={BarChart3} label="Makine Kullanımı" value={ozet.kullanim.toFixed(1)} suffix="%" />
-            <Kpi icon={BarChart3} label="Kayıt Sayısı" value={String(cuts?.length ?? 0)} suffix="kesim" />
+            <Kpi icon={Layers} label={t("rap.kpi.levha")} value={String(ozet.levha)} suffix={t("rap.kpi.levha.suffix")} />
+            <Kpi icon={Package} label={t("rap.kpi.tonaj")} value={ozet.ton.toFixed(3)} suffix={t("rap.kpi.tonaj.suffix")} />
+            <Kpi icon={Clock} label={t("rap.kpi.calisma")} value={ozet.calismaSaat.toFixed(1)} suffix={t("rap.kpi.calisma.suffix")} />
+            <Kpi icon={AlertTriangle} label={t("rap.kpi.durus")} value={ozet.durusSaat.toFixed(1)} suffix={t("rap.kpi.durus.suffix")} />
+            <Kpi icon={TrendingUp} label={t("rap.kpi.ortLevha")} value={ozet.ortalamaDk.toFixed(1)} suffix={t("rap.kpi.ortLevha.suffix")} />
+            <Kpi icon={TrendingUp} label={t("rap.kpi.verimlilik")} value={ozet.tonSaat.toFixed(2)} suffix={t("rap.kpi.verimlilik.suffix")} />
+            <Kpi icon={BarChart3} label={t("rap.kpi.kullanim")} value={ozet.kullanim.toFixed(1)} suffix="%" />
+            <Kpi icon={BarChart3} label={t("rap.kpi.kayitSayisi")} value={String(cuts?.length ?? 0)} suffix={t("rap.kpi.kayitSayisi.suffix")} />
           </div>
 
           <section className="rounded-2xl border bg-card p-5 shadow-industrial">
-            <h2 className="mb-3 font-display text-lg tracking-wide">GÜN BAZLI KARŞILAŞTIRMA</h2>
+            <h2 className="mb-3 font-display text-lg tracking-wide">{t("rap.gunBazli.title")}</h2>
             {gunler.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Bu dönemde kayıt bulunmuyor.</p>
+              <p className="text-sm text-muted-foreground">{t("rap.gunBazli.empty")}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
-                      <th className="py-2">Gün</th>
-                      <th className="py-2">Levha</th>
-                      <th className="py-2">Ton</th>
-                      <th className="py-2">Çalışma (s)</th>
-                      <th className="py-2">Duruş (s)</th>
-                      <th className="py-2">Kullanım</th>
+                      <th className="py-2">{t("rap.gunBazli.gun")}</th>
+                      <th className="py-2">{t("rap.gunBazli.levha")}</th>
+                      <th className="py-2">{t("rap.gunBazli.ton")}</th>
+                      <th className="py-2">{t("rap.gunBazli.calisma")}</th>
+                      <th className="py-2">{t("rap.gunBazli.durus")}</th>
+                      <th className="py-2">{t("rap.gunBazli.kullanim")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -204,9 +206,9 @@ function RaporlarPage() {
           </section>
 
           <section className="rounded-2xl border bg-card p-5 shadow-industrial">
-            <h2 className="mb-3 font-display text-lg tracking-wide">DURUŞ SEBEPLERİ</h2>
+            <h2 className="mb-3 font-display text-lg tracking-wide">{t("rap.durusSebep.title")}</h2>
             {durusSebep.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Bu dönemde duruş kaydı yok.</p>
+              <p className="text-sm text-muted-foreground">{t("rap.durusSebep.empty")}</p>
             ) : (
               <ul className="space-y-2">
                 {durusSebep.map(([ad, v]) => {
@@ -216,7 +218,7 @@ function RaporlarPage() {
                       <div className="flex justify-between text-sm">
                         <span>{ad}</span>
                         <span className="text-muted-foreground">
-                          {(v.dk / 60).toFixed(1)} saat · {v.adet} kez
+                          {t("rap.durusSebep.saatKez").replace("{h}", (v.dk / 60).toFixed(1)).replace("{n}", String(v.adet))}
                         </span>
                       </div>
                       <div className="mt-1 h-2 rounded-full bg-muted">

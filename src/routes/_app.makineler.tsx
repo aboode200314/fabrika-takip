@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/makineler")({
   component: MakinelerPage,
@@ -45,6 +46,7 @@ function rangeFor(p: Period, from: string, to: string) {
 }
 
 function MakinelerPage() {
+  const t = useT();
   const [period, setPeriod] = useState<Period>("gun");
   const [from, setFrom] = useState(isoDay(new Date(Date.now() - 6 * 86400000)));
   const [to, setTo] = useState(isoDay(new Date()));
@@ -141,7 +143,7 @@ function MakinelerPage() {
 
       const sebepMap = new Map<string, { dk: number; adet: number }>();
       for (const d of dts) {
-        const ad = (d as { downtime_categories?: { ad?: string } }).downtime_categories?.ad ?? "Diğer";
+        const ad = (d as { downtime_categories?: { ad?: string } }).downtime_categories?.ad ?? t("mak.other");
         const e = sebepMap.get(ad) ?? { dk: 0, adet: 0 };
         e.dk += Number(d.sure_dakika ?? 0);
         e.adet += 1;
@@ -160,31 +162,31 @@ function MakinelerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl tracking-tight">Makine Performansı (OEE)</h1>
+        <h1 className="text-3xl tracking-tight">{t("mak.heading")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Her makine için Kullanılabilirlik × Performans × Kalite hesabı ve duruş analizi.
+          {t("mak.subheading")}
         </p>
       </div>
 
       <section className="grid gap-3 rounded-xl border bg-card p-5 shadow-industrial sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1.5">
-          <Label className="text-xs">Dönem</Label>
+          <Label className="text-xs">{t("mak.period")}</Label>
           <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
             <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="gun">Bugün</SelectItem>
-              <SelectItem value="hafta">Bu hafta</SelectItem>
-              <SelectItem value="ay">Bu ay</SelectItem>
-              <SelectItem value="ozel">Özel aralık</SelectItem>
+              <SelectItem value="gun">{t("mak.period.today")}</SelectItem>
+              <SelectItem value="hafta">{t("mak.period.thisWeek")}</SelectItem>
+              <SelectItem value="ay">{t("mak.period.thisMonth")}</SelectItem>
+              <SelectItem value="ozel">{t("mak.period.custom")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Makine</Label>
+          <Label className="text-xs">{t("mak.machine")}</Label>
           <Select value={machineId} onValueChange={setMachineId}>
             <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tüm makineler</SelectItem>
+              <SelectItem value="all">{t("mak.machine.all")}</SelectItem>
               {machines?.map((m) => (
                 <SelectItem key={m.id} value={m.id}>{m.kod} — {m.ad}</SelectItem>
               ))}
@@ -194,11 +196,11 @@ function MakinelerPage() {
         {period === "ozel" && (
           <>
             <div className="space-y-1.5">
-              <Label className="text-xs">Başlangıç</Label>
+              <Label className="text-xs">{t("mak.start")}</Label>
               <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="tap-target" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Bitiş</Label>
+              <Label className="text-xs">{t("mak.end")}</Label>
               <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="tap-target" />
             </div>
           </>
@@ -206,7 +208,7 @@ function MakinelerPage() {
       </section>
 
       {stats.length === 0 && (
-        <p className="text-sm text-muted-foreground">Makine tanımı bulunamadı.</p>
+        <p className="text-sm text-muted-foreground">{t("mak.noMachines")}</p>
       )}
 
       {stats.map((s) => (
@@ -214,7 +216,7 @@ function MakinelerPage() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="font-display text-xl">{s.machine.ad}</h2>
-              <p className="font-mono text-xs text-muted-foreground">{s.machine.kod} · {s.kayit} kayıt</p>
+              <p className="font-mono text-xs text-muted-foreground">{s.machine.kod} · {s.kayit} {t("mak.records")}</p>
             </div>
             <div className="text-right">
               <div className="text-[11px] uppercase tracking-widest text-muted-foreground">OEE</div>
@@ -223,31 +225,31 @@ function MakinelerPage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <Metric label="Kullanılabilirlik" value={s.availability} tone="info" />
-            <Metric label="Performans" value={s.performance} tone="success" hint={s.performance === null ? "Ürün çevrim süresi tanımlı değil" : undefined} />
-            <Metric label="Kalite" value={s.quality} tone="warning" hint={s.quality === null ? "Üretim adedi girilmemiş" : undefined} />
+            <Metric label={t("mak.availability")} value={s.availability} tone="info" />
+            <Metric label={t("mak.performance")} value={s.performance} tone="success" hint={s.performance === null ? t("mak.performance.hint") : undefined} />
+            <Metric label={t("mak.quality")} value={s.quality} tone="warning" hint={s.quality === null ? t("mak.quality.hint") : undefined} />
           </div>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-            <Kpi icon={Package} label="Üretilen" value={String(s.uretim)} unit="adet" tone="text-primary" />
-            <Kpi icon={XCircle} label="Hurda" value={String(s.hurda)} unit="adet" tone="text-destructive" />
-            <Kpi icon={Activity} label="Kesilen Levha" value={s.levha.toFixed(2)} unit="levha" tone="text-foreground" />
-            <Kpi icon={Clock} label="Çalışma" value={(s.calisma / 60).toFixed(1)} unit="saat" tone="text-success" />
-            <Kpi icon={AlertTriangle} label="Duruş" value={(s.durus / 60).toFixed(1)} unit="saat" tone="text-warning" />
-            <Kpi icon={Gauge} label="Duruş Oranı" value={(100 - s.availability).toFixed(1)} unit="%" tone="text-muted-foreground" />
+            <Kpi icon={Package} label={t("mak.kpi.produced")} value={String(s.uretim)} unit={t("mak.unit.piece")} tone="text-primary" />
+            <Kpi icon={XCircle} label={t("mak.kpi.scrap")} value={String(s.hurda)} unit={t("mak.unit.piece")} tone="text-destructive" />
+            <Kpi icon={Activity} label={t("mak.kpi.cutSheet")} value={s.levha.toFixed(2)} unit={t("mak.unit.sheet")} tone="text-foreground" />
+            <Kpi icon={Clock} label={t("mak.kpi.running")} value={(s.calisma / 60).toFixed(1)} unit={t("mak.unit.hour")} tone="text-success" />
+            <Kpi icon={AlertTriangle} label={t("mak.kpi.downtime")} value={(s.durus / 60).toFixed(1)} unit={t("mak.unit.hour")} tone="text-warning" />
+            <Kpi icon={Gauge} label={t("mak.kpi.downtimeRatio")} value={(100 - s.availability).toFixed(1)} unit="%" tone="text-muted-foreground" />
           </div>
 
           <div>
-            <h3 className="mb-2 text-sm font-semibold">En Sık Duruş Sebepleri</h3>
+            <h3 className="mb-2 text-sm font-semibold">{t("mak.topDowntimeReasons")}</h3>
             {s.sebepler.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Bu dönemde duruş kaydı yok.</p>
+              <p className="text-sm text-muted-foreground">{t("mak.noDowntime")}</p>
             ) : (
               <ul className="space-y-2">
                 {s.sebepler.map(([ad, v]) => (
                   <li key={ad}>
                     <div className="flex justify-between text-sm">
                       <span>{ad}</span>
-                      <span className="text-muted-foreground">{(v.dk / 60).toFixed(1)} saat · {v.adet} kez</span>
+                      <span className="text-muted-foreground">{`${(v.dk / 60).toFixed(1)} ${t("mak.hoursTimes").replace("{n}", String(v.adet))}`}</span>
                     </div>
                     <div className="mt-1 h-2 rounded-full bg-muted">
                       <div

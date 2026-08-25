@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 
 function isoDay(d: Date) {
   const x = new Date(d);
@@ -40,6 +41,7 @@ interface Row {
 }
 
 export function OturumRaporu() {
+  const t = useT();
   const { isSuperAdmin, role } = useAuth();
   const canEdit = isSuperAdmin || role === "supervisor";
   const qc = useQueryClient();
@@ -126,21 +128,21 @@ export function OturumRaporu() {
         notlar: editing.notlar,
       })
       .eq("id", editing.id);
-    if (error) return toast.error("Güncellenemedi: " + error.message);
-    toast.success("Kayıt güncellendi");
+    if (error) return toast.error(t("rap.oturum.updateFail").replace("{msg}", error.message));
+    toast.success(t("rap.oturum.updateOk"));
     setEditing(null);
     qc.invalidateQueries({ queryKey: ["session-history"] });
   }
 
   async function remove(id: string) {
     const { error } = await supabase.from("production_sessions").delete().eq("id", id);
-    if (error) return toast.error("Silinemedi: " + error.message);
-    toast.success("Kayıt silindi");
+    if (error) return toast.error(t("rap.oturum.deleteFail").replace("{msg}", error.message));
+    toast.success(t("rap.oturum.deleteOk"));
     qc.invalidateQueries({ queryKey: ["session-history"] });
   }
 
   function exportCsv() {
-    const head = ["Başlangıç", "Bitiş", "Süre (dk)", "Operatör", "Makine", "Ürün", "Vardiya", "Miktar", "Hurda"];
+    const head = [t("rap.oturum.csvBaslangic"), t("rap.oturum.csvBitis"), t("rap.oturum.csvSure"), t("rap.oturum.csvOperator"), t("rap.oturum.csvMakine"), t("rap.oturum.csvUrun"), t("rap.oturum.csvVardiya"), t("rap.oturum.csvMiktar"), t("rap.oturum.csvHurda")];
     const lines = (rows ?? []).map((r) =>
       [
         r.baslangic, r.bitis ?? "", (r.sure_dakika ?? 0).toString(), nameOf(r.operator_id),
@@ -161,29 +163,29 @@ export function OturumRaporu() {
       <section className="rounded-2xl border bg-card p-5 shadow-industrial">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-1.5">
-            <Label className="text-xs">Başlangıç</Label>
+            <Label className="text-xs">{t("rap.baslangic")}</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="tap-target" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Bitiş</Label>
+            <Label className="text-xs">{t("rap.bitis")}</Label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="tap-target" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Operatör</Label>
+            <Label className="text-xs">{t("rap.operator")}</Label>
             <Select value={operator} onValueChange={setOperator}>
               <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="all">{t("rap.tumu")}</SelectItem>
                 {profiles?.map((p) => <SelectItem key={p.id} value={p.id}>{p.ad_soyad ?? p.personel_id}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Makine</Label>
+            <Label className="text-xs">{t("rap.makine")}</Label>
             <Select value={machine} onValueChange={setMachine}>
               <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="all">{t("rap.tumu")}</SelectItem>
                 {machines?.map((m) => <SelectItem key={m.id} value={m.id}>{m.kod} — {m.ad}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -193,9 +195,9 @@ export function OturumRaporu() {
 
       <section className="rounded-2xl border bg-card p-5 shadow-industrial">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg tracking-wide">İŞ OTURUMLARI</h2>
+          <h2 className="font-display text-lg tracking-wide">{t("rap.oturum.title")}</h2>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span>Toplam: {totals.miktar} adet · {totals.hurda} hurda · {totals.saat.toFixed(1)} saat</span>
+            <span>{t("rap.oturum.toplam").replace("{miktar}", String(totals.miktar)).replace("{hurda}", String(totals.hurda)).replace("{saat}", totals.saat.toFixed(1))}</span>
             <Button variant="outline" size="sm" className="gap-2" onClick={exportCsv} disabled={!rows?.length}>
               <Download className="h-4 w-4" /> CSV
             </Button>
@@ -203,20 +205,20 @@ export function OturumRaporu() {
         </div>
 
         {!rows?.length ? (
-          <p className="text-sm text-muted-foreground">Kayıt bulunamadı.</p>
+          <p className="text-sm text-muted-foreground">{t("rap.oturum.empty")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="py-2">Başlangıç</th>
-                  <th className="py-2">Bitiş</th>
-                  <th className="py-2">Süre</th>
-                  <th className="py-2">Operatör</th>
-                  <th className="py-2">Makine</th>
-                  <th className="py-2">Ürün</th>
-                  <th className="py-2">Miktar</th>
-                  <th className="py-2">Hurda</th>
+                  <th className="py-2">{t("rap.baslangic")}</th>
+                  <th className="py-2">{t("rap.bitis")}</th>
+                  <th className="py-2">{t("rap.oturum.sure")}</th>
+                  <th className="py-2">{t("rap.operator")}</th>
+                  <th className="py-2">{t("rap.makine")}</th>
+                  <th className="py-2">{t("rap.urun")}</th>
+                  <th className="py-2">{t("rap.oturum.miktar")}</th>
+                  <th className="py-2">{t("rap.oturum.hurda")}</th>
                   {canEdit && <th className="py-2" />}
                 </tr>
               </thead>
@@ -224,8 +226,8 @@ export function OturumRaporu() {
                 {rows.map((r) => (
                   <tr key={r.id} className="border-t border-border/60">
                     <td className="py-2">{dtFmt.format(new Date(r.baslangic))}</td>
-                    <td className="py-2">{r.bitis ? dtFmt.format(new Date(r.bitis)) : <span className="text-success">Devam ediyor</span>}</td>
-                    <td className="py-2">{r.sure_dakika ? `${Number(r.sure_dakika).toFixed(0)} dk` : "—"}</td>
+                    <td className="py-2">{r.bitis ? dtFmt.format(new Date(r.bitis)) : <span className="text-success">{t("rap.oturum.devamEdiyor")}</span>}</td>
+                    <td className="py-2">{r.sure_dakika ? t("rap.oturum.dkKisaltma").replace("{n}", Number(r.sure_dakika).toFixed(0)) : "—"}</td>
                     <td className="py-2">{nameOf(r.operator_id)}</td>
                     <td className="py-2">{machineOf(r.machine_id)}</td>
                     <td className="py-2">{productOf(r.product_id)}</td>
@@ -253,10 +255,10 @@ export function OturumRaporu() {
 
       {editing && (
         <section className="rounded-2xl border-2 border-primary/40 bg-card p-5 shadow-industrial">
-          <h3 className="mb-3 font-display text-lg tracking-wide">KAYIT DÜZENLE</h3>
+          <h3 className="mb-3 font-display text-lg tracking-wide">{t("rap.oturum.duzenle.title")}</h3>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Makine</Label>
+              <Label className="text-xs">{t("rap.makine")}</Label>
               <Select value={editing.machine_id} onValueChange={(v) => setEditing({ ...editing, machine_id: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -265,34 +267,34 @@ export function OturumRaporu() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Ürün</Label>
+              <Label className="text-xs">{t("rap.urun")}</Label>
               <Select value={editing.product_id ?? ""} onValueChange={(v) => setEditing({ ...editing, product_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Ürün" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("rap.oturum.urunPlaceholder")} /></SelectTrigger>
                 <SelectContent>
                   {products?.map((p) => <SelectItem key={p.id} value={p.id}>{p.kod} — {p.ad}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Başlangıç</Label>
+              <Label className="text-xs">{t("rap.baslangic")}</Label>
               <Input type="datetime-local" value={editing.baslangic} onChange={(e) => setEditing({ ...editing, baslangic: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Bitiş</Label>
+              <Label className="text-xs">{t("rap.bitis")}</Label>
               <Input type="datetime-local" value={editing.bitis ?? ""} onChange={(e) => setEditing({ ...editing, bitis: e.target.value || null })} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Miktar</Label>
+              <Label className="text-xs">{t("rap.oturum.miktar")}</Label>
               <Input type="number" value={editing.miktar ?? ""} onChange={(e) => setEditing({ ...editing, miktar: e.target.value === "" ? null : Number(e.target.value) })} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Hurda</Label>
+              <Label className="text-xs">{t("rap.oturum.hurda")}</Label>
               <Input type="number" value={editing.hurda ?? 0} onChange={(e) => setEditing({ ...editing, hurda: Number(e.target.value) })} />
             </div>
           </div>
           <div className="mt-4 flex gap-2">
-            <Button className="gap-2" onClick={saveEdit}><Check className="h-4 w-4" /> Kaydet</Button>
-            <Button variant="outline" className="gap-2" onClick={() => setEditing(null)}><X className="h-4 w-4" /> Vazgeç</Button>
+            <Button className="gap-2" onClick={saveEdit}><Check className="h-4 w-4" /> {t("rap.oturum.kaydet")}</Button>
+            <Button variant="outline" className="gap-2" onClick={() => setEditing(null)}><X className="h-4 w-4" /> {t("rap.oturum.vazgec")}</Button>
           </div>
         </section>
       )}
