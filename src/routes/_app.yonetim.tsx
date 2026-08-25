@@ -334,6 +334,7 @@ function MakinelerCrud() {
 
 /* -------------------- KULLANICILAR -------------------- */
 function KullanicilarTab() {
+  const t = useT();
   const qc = useQueryClient();
   const listFn = useServerFn(listWorkers);
   const createFn = useServerFn(createWorkerAccount);
@@ -358,7 +359,7 @@ function KullanicilarTab() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!personelId || !adSoyad || password.length < 6) {
-      return toast.error("Personel ID, Ad Soyad ve en az 6 karakterli şifre gerekli");
+      return toast.error(t("yon.kul.hataGerekli"));
     }
     setSubmitting(true);
     try {
@@ -372,11 +373,11 @@ function KullanicilarTab() {
           role: makeSup ? "supervisor" : "operator",
         },
       });
-      toast.success("Hesap oluşturuldu");
+      toast.success(t("yon.kul.hesapOlusturuldu"));
       setPersonelId(""); setAdSoyad(""); setDepartman(""); setUnvan(""); setPassword(""); setMakeSup(false);
       qc.invalidateQueries({ queryKey: ["workers"] });
     } catch (err: any) {
-      toast.error(err?.message ?? "Hata oluştu");
+      toast.error(err?.message ?? t("yon.kul.hataOlustu"));
     } finally {
       setSubmitting(false);
     }
@@ -389,45 +390,45 @@ function KullanicilarTab() {
         <form onSubmit={handleCreate} className="space-y-3 rounded-2xl border bg-card p-5">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            <h3 className="text-lg">Yeni Çalışan Hesabı</h3>
+            <h3 className="text-lg">{t("yon.kul.yeniHesap")}</h3>
           </div>
           <p className="text-xs text-muted-foreground">
-            Oluşturduğunuz hesabı çalışana verirsiniz. Giriş ekranında Personel ID ve şifre ile giriş yapar.
+            {t("yon.kul.aciklama")}
           </p>
           <div className="space-y-1.5">
-            <Label className="text-sm">Personel ID</Label>
-            <Input value={personelId} onChange={(e) => setPersonelId(e.target.value)} placeholder="örn: 1042" />
+            <Label className="text-sm">{t("yon.kul.personelId")}</Label>
+            <Input value={personelId} onChange={(e) => setPersonelId(e.target.value)} placeholder={t("yon.kul.personelIdPh")} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Ad Soyad</Label>
-            <Input value={adSoyad} onChange={(e) => setAdSoyad(e.target.value)} placeholder="Ahmet Yılmaz" />
+            <Label className="text-sm">{t("yon.kul.adSoyad")}</Label>
+            <Input value={adSoyad} onChange={(e) => setAdSoyad(e.target.value)} placeholder={t("yon.kul.adSoyadPh")} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Departman <span className="text-muted-foreground">(opsiyonel)</span></Label>
-            <Input value={departman} onChange={(e) => setDepartman(e.target.value)} placeholder="Üretim" />
+            <Label className="text-sm">{t("yon.kul.departman")} <span className="text-muted-foreground">{t("yon.kul.opsiyonel")}</span></Label>
+            <Input value={departman} onChange={(e) => setDepartman(e.target.value)} placeholder={t("yon.kul.departmanPh")} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Ünvan / Görev <span className="text-muted-foreground">(opsiyonel)</span></Label>
-            <Input value={unvan} onChange={(e) => setUnvan(e.target.value)} placeholder="Örn: Üretim Sorumlusu, Operatör" />
+            <Label className="text-sm">{t("yon.kul.unvan")} <span className="text-muted-foreground">{t("yon.kul.opsiyonel")}</span></Label>
+            <Input value={unvan} onChange={(e) => setUnvan(e.target.value)} placeholder={t("yon.kul.unvanPh")} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Şifre</Label>
-            <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="en az 6 karakter" />
+            <Label className="text-sm">{t("yon.kul.sifre")}</Label>
+            <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("yon.kul.sifrePh")} />
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Switch checked={makeSup} onCheckedChange={setMakeSup} />
-            Süpervizör yetkisi ver
+            {t("yon.kul.supervisorYetki")}
           </label>
           <Button type="submit" disabled={submitting} className="w-full gap-2">
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Hesap Oluştur
+            {t("yon.kul.hesapOlustur")}
           </Button>
         </form>
       </div>
 
       <div className="rounded-2xl border bg-card overflow-x-auto">
         <div className="border-b p-4">
-          <h3 className="text-lg">Çalışanlar ({workers?.length ?? 0})</h3>
+          <h3 className="text-lg">{t("yon.kul.calisanlar").replace("{n}", String(workers?.length ?? 0))}</h3>
         </div>
         {isLoading ? (
           <div className="p-8 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></div>
@@ -435,11 +436,11 @@ function KullanicilarTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Personel ID</TableHead>
-                <TableHead>Ad Soyad</TableHead>
-                <TableHead>Ünvan</TableHead>
-                <TableHead>Departman</TableHead>
-                <TableHead>Süpervizör</TableHead>
+                <TableHead>{t("yon.th.personelId")}</TableHead>
+                <TableHead>{t("yon.th.adSoyad")}</TableHead>
+                <TableHead>{t("yon.th.unvan")}</TableHead>
+                <TableHead>{t("yon.th.departman")}</TableHead>
+                <TableHead>{t("yon.th.supervisor")}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -454,18 +455,18 @@ function KullanicilarTab() {
                       <button
                         className="underline decoration-dotted underline-offset-4"
                         onClick={async () => {
-                          const yeni = prompt(`${w.ad_soyad} ünvanı:`, w.unvan ?? "");
+                          const yeni = prompt(t("yon.kul.unvanPrompt").replace("{ad}", w.ad_soyad), w.unvan ?? "");
                           if (yeni === null) return;
                           try {
                             await titleFn({ data: { user_id: w.id, unvan: yeni } });
-                            toast.success("Ünvan güncellendi");
+                            toast.success(t("yon.kul.unvanGuncellendi"));
                             qc.invalidateQueries({ queryKey: ["workers"] });
                           } catch (err: any) {
-                            toast.error(err?.message ?? "Hata");
+                            toast.error(err?.message ?? t("yon.kul.hata"));
                           }
                         }}
                       >
-                        {w.unvan ?? "— ekle"}
+                        {w.unvan ?? t("yon.kul.ekle")}
                       </button>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{w.departman ?? "—"}</TableCell>
@@ -486,16 +487,16 @@ function KullanicilarTab() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Şifreyi değiştir"
+                        title={t("yon.kul.sifreDegistirTitle")}
                         onClick={async () => {
-                          const yeni = prompt(`${w.ad_soyad} için yeni şifre (en az 6 karakter):`);
+                          const yeni = prompt(t("yon.kul.sifrePrompt").replace("{ad}", w.ad_soyad));
                           if (!yeni) return;
-                          if (yeni.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
+                          if (yeni.length < 6) return toast.error(t("yon.kul.sifreMin"));
                           try {
                             await pwFn({ data: { user_id: w.id, password: yeni } });
-                            toast.success("Şifre güncellendi");
+                            toast.success(t("yon.kul.sifreGuncellendi"));
                           } catch (err: any) {
-                            toast.error(err?.message ?? "Hata");
+                            toast.error(err?.message ?? t("yon.kul.hata"));
                           }
                         }}
                       >
@@ -505,13 +506,13 @@ function KullanicilarTab() {
                         variant="ghost"
                         size="icon"
                         onClick={async () => {
-                          if (!confirm(`${w.ad_soyad} hesabını silmek istediğinize emin misiniz?`)) return;
+                          if (!confirm(t("yon.kul.silConfirm").replace("{ad}", w.ad_soyad))) return;
                           try {
                             await deleteFn({ data: { user_id: w.id } });
-                            toast.success("Hesap silindi");
+                            toast.success(t("yon.kul.hesapSilindi"));
                             qc.invalidateQueries({ queryKey: ["workers"] });
                           } catch (err: any) {
-                            toast.error(err?.message ?? "Hata");
+                            toast.error(err?.message ?? t("yon.kul.hata"));
                           }
                         }}
                       >
@@ -524,7 +525,7 @@ function KullanicilarTab() {
               {workers?.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
-                    Henüz çalışan yok.
+                    {t("yon.kul.henuzYok")}
                   </TableCell>
                 </TableRow>
               )}
