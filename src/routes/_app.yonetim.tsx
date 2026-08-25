@@ -1,6 +1,7 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
 import { Activity, Clock, Layers, TrendingUp, Trash2, Plus, Loader2, Save, Users, KeyRound } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/_app/yonetim")({
   component: YonetimGate,
   head: () => ({
     meta: [
-      { title: "Yönetim — Makine, Ürün, Sac Stok ve Kullanıcılar" },
+      { title: "Yönetim — Makine, Ürün, Sac Stok ve Kullanıcılar" }, // handled dynamically below
       { name: "description", content: "Süpervizör yönetim paneli: makine ve ürün tanımları, sac stok takibi, kullanıcı hesapları ve yetkiler." },
       { property: "og:title", content: "Yönetim — Fabrika OEE" },
       { property: "og:description", content: "Makine, ürün, sac stoğu ve kullanıcı yönetimi tek panelde." },

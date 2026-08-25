@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 import { levhaKg } from "@/lib/sac";
 
 const timeFmt = new Intl.DateTimeFormat("tr-TR", {
@@ -24,6 +25,7 @@ function isoDay(d: Date) {
 const dateFmt = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 export function SacKesimRaporu() {
+  const t = useT();
   const qc = useQueryClient();
   const { can } = useAuth();
   const today = isoDay(new Date());
@@ -102,7 +104,10 @@ export function SacKesimRaporu() {
   );
 
   function exportCsv() {
-    const head = ["Tarih", "Kalınlık", "Ölçü (mm)", "Sac Tipi", "Kesim Sayısı", "Levha Adedi", "Toplam kg", "Süre (dk)"];
+    const head = [
+      t("rap.sac.tarih"), t("rap.sac.kalinlik"), t("rap.sac.olcu"), t("rap.sac.csvSacTipi"),
+      t("rap.sac.csvKesimSayisi"), t("rap.sac.levhaAdedi"), t("rap.sac.toplamKg"), t("rap.oturum.csvSure"),
+    ];
     const lines = grouped.map((g) =>
       [g.gun, g.kalinlik, g.olcu, g.tip, g.kesim, g.levha, g.kg.toFixed(1), g.dk.toFixed(1)].join(";"),
     );
@@ -121,23 +126,23 @@ export function SacKesimRaporu() {
       <section className="rounded-2xl border bg-card p-5 shadow-industrial">
         <div className="mb-3 flex items-center gap-2 text-muted-foreground">
           <Filter className="h-4 w-4" />
-          <span className="text-[11px] uppercase tracking-widest">Filtreler</span>
+          <span className="text-[11px] uppercase tracking-widest">{t("rap.filtreler")}</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-1.5">
-            <Label className="text-xs">Başlangıç</Label>
+            <Label className="text-xs">{t("rap.baslangic")}</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="tap-target" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Bitiş</Label>
+            <Label className="text-xs">{t("rap.bitis")}</Label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="tap-target" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Operatör</Label>
+            <Label className="text-xs">{t("rap.operator")}</Label>
             <Select value={operator} onValueChange={setOperator}>
               <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="all">{t("rap.tumu")}</SelectItem>
                 {profiles?.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.ad_soyad ?? p.personel_id}</SelectItem>
                 ))}
@@ -145,11 +150,11 @@ export function SacKesimRaporu() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Makine</Label>
+            <Label className="text-xs">{t("rap.makine")}</Label>
             <Select value={machine} onValueChange={setMachine}>
               <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="all">{t("rap.tumu")}</SelectItem>
                 {machines?.map((m) => (
                   <SelectItem key={m.id} value={m.id}>{m.kod} — {m.ad}</SelectItem>
                 ))}
@@ -161,26 +166,26 @@ export function SacKesimRaporu() {
 
       <section className="rounded-2xl border bg-card p-5 shadow-industrial">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg tracking-wide">SAC KESİM RAPORU</h2>
+          <h2 className="font-display text-lg tracking-wide">{t("rap.sac.title")}</h2>
           <Button variant="outline" size="sm" className="gap-2" onClick={exportCsv} disabled={grouped.length === 0}>
             <Download className="h-4 w-4" /> CSV
           </Button>
         </div>
 
         {grouped.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Seçilen filtrelerde kayıt bulunamadı.</p>
+          <p className="text-sm text-muted-foreground">{t("rap.sac.empty")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <thead className="text-start text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="py-2">Tarih</th>
-                  <th className="py-2">Kalınlık</th>
-                  <th className="py-2">Ölçü (mm)</th>
-                  <th className="py-2">Tip</th>
-                  <th className="py-2">Kesim Sayısı</th>
-                  <th className="py-2">Levha Adedi</th>
-                  <th className="py-2">Toplam kg</th>
+                  <th className="py-2">{t("rap.sac.tarih")}</th>
+                  <th className="py-2">{t("rap.sac.kalinlik")}</th>
+                  <th className="py-2">{t("rap.sac.olcu")}</th>
+                  <th className="py-2">{t("rap.sac.tip")}</th>
+                  <th className="py-2">{t("rap.sac.kesimSayisi")}</th>
+                  <th className="py-2">{t("rap.sac.levhaAdedi")}</th>
+                  <th className="py-2">{t("rap.sac.toplamKg")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -196,7 +201,7 @@ export function SacKesimRaporu() {
                   </tr>
                 ))}
                 <tr className="border-t-2 border-border font-semibold">
-                  <td className="py-2" colSpan={4}>TOPLAM</td>
+                  <td className="py-2" colSpan={4}>{t("rap.sac.toplamSatiri")}</td>
                   <td className="py-2">{totals.kesim}</td>
                   <td className="py-2">{totals.levha}</td>
                   <td className="py-2">{totals.kg.toFixed(1)}</td>
@@ -209,27 +214,27 @@ export function SacKesimRaporu() {
       </section>
 
       <section className="rounded-2xl border bg-card p-5 shadow-industrial">
-        <h2 className="mb-3 font-display text-lg tracking-wide">KAYIT DETAYLARI</h2>
+        <h2 className="mb-3 font-display text-lg tracking-wide">{t("rap.sac.detay.title")}</h2>
         <p className="mb-3 text-xs text-muted-foreground">
           {can("kayit.duzenle") || can("kayit.sil")
-            ? "Yanlış girilen kesim kayıtlarını buradan düzeltebilir veya silebilirsiniz. Ağırlık otomatik yeniden hesaplanır."
-            : "Kayıtları görüntüleyebilirsiniz. Düzenleme yetkisi yöneticide."}
+            ? t("rap.sac.detay.editable")
+            : t("rap.sac.detay.readonly")}
         </p>
         {(rows ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground">Seçilen filtrelerde kayıt bulunamadı.</p>
+          <p className="text-sm text-muted-foreground">{t("rap.sac.empty")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <thead className="text-start text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="py-2">Zaman</th>
-                  <th className="py-2">Tip</th>
-                  <th className="py-2">Uzunluk</th>
-                  <th className="py-2">Genişlik</th>
-                  <th className="py-2">Kalınlık</th>
-                  <th className="py-2">Levha</th>
-                  <th className="py-2">kg</th>
-                  <th className="py-2 text-right">İşlem</th>
+                  <th className="py-2">{t("rap.sac.zaman")}</th>
+                  <th className="py-2">{t("rap.sac.tip")}</th>
+                  <th className="py-2">{t("rap.sac.uzunluk")}</th>
+                  <th className="py-2">{t("rap.sac.genislik")}</th>
+                  <th className="py-2">{t("rap.sac.kalinlik")}</th>
+                  <th className="py-2">{t("rap.sac.levha")}</th>
+                  <th className="py-2">{t("rap.sac.toplamKg")}</th>
+                  <th className="py-2 text-end">{t("rap.oturum.islem")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -277,7 +282,7 @@ export function SacKesimRaporu() {
                                   const u = Number(draft.uzunluk), g = Number(draft.genislik);
                                   const k = Number(draft.kalinlik), a = Number(draft.levha);
                                   if (!(u > 0) || !(g > 0) || !(k > 0) || !(a > 0))
-                                    return toast.error("Tüm ölçüler 0'dan büyük olmalı");
+                                    return toast.error(t("rap.sac.olcuHata"));
                                   const yog = Number(r.yogunluk ?? 7.85);
                                   const kg = levhaKg({ uzunluk_mm: u, genislik_mm: g, kalinlik_mm: k, yogunluk: yog }) * a;
                                   const { error } = await supabase
@@ -289,7 +294,7 @@ export function SacKesimRaporu() {
                                     })
                                     .eq("id", r.id);
                                   if (error) return toast.error(error.message);
-                                  toast.success("Kayıt güncellendi");
+                                  toast.success(t("rap.sac.guncellendi"));
                                   setEditId(null);
                                   qc.invalidateQueries({ queryKey: ["sac-kesim"] });
                                 }}
@@ -325,10 +330,10 @@ export function SacKesimRaporu() {
                                   size="icon"
                                   variant="ghost"
                                   onClick={async () => {
-                                    if (!confirm("Bu kesim kaydı silinsin mi?")) return;
+                                    if (!confirm(t("rap.sac.silmeOnay"))) return;
                                     const { error } = await supabase.from("plasma_cuts").delete().eq("id", r.id);
                                     if (error) return toast.error(error.message);
-                                    toast.success("Kayıt silindi");
+                                    toast.success(t("rap.sac.silindi"));
                                     qc.invalidateQueries({ queryKey: ["sac-kesim"] });
                                   }}
                                 >
