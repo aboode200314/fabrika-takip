@@ -157,3 +157,15 @@
     color-mix(in oklab, var(--color-warning) 18%, transparent) 16px
   );
 }
+
+/* ---- RTL (Arapça) düzenlemeleri ---- */
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+[dir="rtl"] table {
+  text-align: right;
+}
+[dir="rtl"] th,
+[dir="rtl"] td {
+  text-align: inherit;
+}

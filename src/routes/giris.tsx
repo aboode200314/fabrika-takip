@@ -10,15 +10,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { personelIdToEmail, useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export const Route = createFileRoute("/giris")({
   component: GirisPage,
 });
 
-const loginSchema = z.object({
-  personel_id: z.string().trim().min(2, "Personel ID gerekli").max(40),
-  sifre: z.string().min(6, "Şifre en az 6 karakter"),
-});
+const makeLoginSchema = (t: (k: string) => string) =>
+  z.object({
+    personel_id: z.string().trim().min(2, t("auth.personelIdRequired")).max(40),
+    sifre: z.string().min(6, t("auth.passwordMin")),
+  });
 
 
 function GirisPage() {
@@ -36,12 +39,13 @@ function GirisPage() {
 
 function GirisForm() {
   const navigate = useNavigate();
+  const t = useT();
   const [busy, setBusy] = useState(false);
 
   async function onLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const parsed = loginSchema.safeParse({
+    const parsed = makeLoginSchema(t).safeParse({
       personel_id: fd.get("personel_id"),
       sifre: fd.get("sifre"),
     });
@@ -56,40 +60,42 @@ function GirisForm() {
     });
     setBusy(false);
     if (error) {
-      toast.error("Giriş başarısız: " + error.message);
+      toast.error(t("auth.loginFailed") + ": " + error.message);
       return;
     }
-    toast.success("Giriş başarılı");
+    toast.success(t("auth.loginSuccess"));
     navigate({ to: "/" });
   }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_60%)]" />
+      <div className="absolute end-4 top-4 z-10">
+        <LanguageSwitcher />
+      </div>
       <div className="relative w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           <img src={gvnLogo.url} alt="GVN Trailer logosu" className="h-16 w-auto" />
-          <h1 className="mt-4 text-2xl tracking-tight">ÜRETİM TAKİP SİSTEMİ</h1>
-          <p className="mt-1 text-sm text-muted-foreground">OEE · Makine performansı · Sac stok</p>
+          <h1 className="mt-4 text-2xl tracking-tight">{t("app.title")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("app.subtitle")}</p>
         </div>
 
         <div className="rounded-xl border bg-card p-6 shadow-industrial">
-          <h2 className="text-lg font-semibold">Giriş Yap</h2>
+          <h2 className="text-lg font-semibold">{t("auth.signIn")}</h2>
           <form onSubmit={onLogin} className="mt-4 space-y-4">
-            <Field name="personel_id" label="Personel ID" placeholder="örn. op001" autoFocus />
-            <Field name="sifre" label="Şifre" type="password" placeholder="••••••" />
+            <Field name="personel_id" label={t("auth.personelId")} placeholder={t("auth.personelIdPlaceholder")} autoFocus />
+            <Field name="sifre" label={t("auth.password")} type="password" placeholder="••••••" />
             <Button type="submit" disabled={busy} className="tap-target w-full text-base">
-              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Giriş Yap"}
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : t("auth.signIn")}
             </Button>
           </form>
           <p className="mt-4 text-xs text-muted-foreground">
-            Yeni hesaplar yalnızca yönetici tarafından Yönetim → Kullanıcılar bölümünden oluşturulur.
-            Hesabınız yoksa yöneticinize başvurun.
+            {t("auth.noAccountNote")}
           </p>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          GVN Trailer · Endüstriyel tablet ve telefon için tasarlandı.
+          {t("auth.footer")}
         </p>
       </div>
     </div>
