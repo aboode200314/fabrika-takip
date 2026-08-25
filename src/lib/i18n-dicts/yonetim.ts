@@ -3,6 +3,7 @@ import type { NamespaceDict } from "@/lib/i18n-types";
 /** yonetim modülü çevirileri. */
 export const yonetimDict: NamespaceDict = {
   tr: {
+    "yon.tab.emirler": "Üretim Emirleri",
     "yon.head.title": "Yönetim — Makine, Ürün, Sac Stok ve Kullanıcılar",
     "yon.head.desc": "Süpervizör yönetim paneli: makine ve ürün tanımları, sac stok takibi, kullanıcı hesapları ve yetkiler.",
     "yon.head.ogTitle": "Yönetim — Fabrika OEE",
@@ -334,6 +335,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.akis.sira": "Sıra",
     "yon.akis.sure": "Çevrim Süresi (sn)",
     "yon.akis.hazirlik": "Hazırlık (dk)",
+    "yon.akis.hazirlikKisa": "Hazırlık",
     "yon.akis.hedefAdet": "Hedef Adet",
     "yon.akis.yetkinlik": "Gereken Yetkinlik",
     "yon.akis.yetkinlikPh": "Örn: Kaynakçı Sertifikası",
@@ -371,6 +373,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.akis.hata": "Bir hata oluştu",
   },
   en: {
+    "yon.tab.emirler": "Production Orders",
     "yon.head.title": "Management — Machines, Products, Sheet Stock and Users",
     "yon.head.desc": "Supervisor management panel: machine and product definitions, sheet stock tracking, user accounts and permissions.",
     "yon.head.ogTitle": "Management — Factory OEE",
@@ -702,6 +705,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.akis.sira": "Order",
     "yon.akis.sure": "Cycle Time (sec)",
     "yon.akis.hazirlik": "Setup (min)",
+    "yon.akis.hazirlikKisa": "Setup",
     "yon.akis.hedefAdet": "Target Qty",
     "yon.akis.yetkinlik": "Required Skill",
     "yon.akis.yetkinlikPh": "e.g. Welder Certificate",
@@ -739,6 +743,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.akis.hata": "An error occurred",
   },
   ar: {
+    "yon.tab.emirler": "أوامر الإنتاج",
     "yon.head.title": "الإدارة — الماكينات والمنتجات ومخزون الصاج والمستخدمون",
     "yon.head.desc": "لوحة إدارة المشرف: تعريف الماكينات والمنتجات، متابعة مخزون الصاج، حسابات المستخدمين والصلاحيات.",
     "yon.head.ogTitle": "الإدارة — OEE المصنع",
@@ -1070,6 +1075,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.akis.sira": "الترتيب",
     "yon.akis.sure": "زمن الدورة (ثانية)",
     "yon.akis.hazirlik": "الإعداد (دقيقة)",
+    "yon.akis.hazirlikKisa": "الإعداد",
     "yon.akis.hedefAdet": "الكمية المستهدفة",
     "yon.akis.yetkinlik": "المهارة المطلوبة",
     "yon.akis.yetkinlikPh": "مثال: شهادة لحام",
