@@ -1,26 +1,21 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Crown, Loader2, Plus, Shield, Trash2, UserCog } from "lucide-react";
+import { Loader2, UserCog } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { ALL_PERMISSIONS, PAGE_PERMISSIONS, ACTION_PERMISSIONS } from "@/lib/permissions";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
+import { YetkiMatrisi, RolYonetimi } from "@/components/yetki-matrisi";
 
 interface Role { key: string; ad: string; aciklama: string | null; sira: number; sistem: boolean }
 
 export function RollerTab() {
   const t = useT();
   const qc = useQueryClient();
-  const { isSuperAdmin, refresh } = useAuth();
-  const [yeniKod, setYeniKod] = useState("");
-  const [yeniAd, setYeniAd] = useState("");
+  const { refresh } = useAuth();
   const [seciliUser, setSeciliUser] = useState("");
 
   const { data: roles, isLoading } = useQuery({
@@ -29,15 +24,6 @@ export function RollerTab() {
       const { data, error } = await supabase.from("roles").select("key,ad,aciklama,sira,sistem").order("sira");
       if (error) throw error;
       return (data ?? []) as Role[];
-    },
-  });
-
-  const { data: rolePerms } = useQuery({
-    queryKey: ["role-permissions"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("role_permissions").select("role_key,permission");
-      if (error) throw error;
-      return data ?? [];
     },
   });
 
@@ -58,32 +44,6 @@ export function RollerTab() {
       return data ?? [];
     },
   });
-
-  const hasPerm = (roleKey: string, perm: string) =>
-    (rolePerms ?? []).some((r) => r.role_key === roleKey && r.permission === perm);
-
-  async function togglePerm(roleKey: string, perm: string, on: boolean) {
-    if (!isSuperAdmin) return toast.error(t("yon.rol.onlyAdmin"));
-    if (on) {
-      const { error } = await supabase.from("role_permissions").insert({ role_key: roleKey, permission: perm });
-      if (error && !error.message.includes("duplicate")) return toast.error(error.message);
-    } else {
-      const { error } = await supabase.from("role_permissions").delete()
-        .eq("role_key", roleKey).eq("permission", perm);
-      if (error) return toast.error(error.message);
-    }
-    qc.invalidateQueries({ queryKey: ["role-permissions"] });
-  }
-
-  async function rolEkle(e: React.FormEvent) {
-    e.preventDefault();
-    const key = yeniKod.trim().toLowerCase().replace(/\s+/g, "_");
-    if (!key || !yeniAd.trim()) return toast.error(t("yon.rol.kodAdGerekli"));
-    const { error } = await supabase.from("roles").insert({ key, ad: yeniAd.trim(), sira: 200 });
-    if (error) return toast.error(error.message);
-    setYeniKod(""); setYeniAd(""); toast.success(t("yon.rol.eklendi"));
-    qc.invalidateQueries({ queryKey: ["roles"] });
-  }
 
   async function toggleAssign(userId: string, roleKey: string, on: boolean) {
     if (on) {
@@ -106,12 +66,6 @@ export function RollerTab() {
 
   return (
     <div className="space-y-5 pt-4">
-      {!isSuperAdmin && (
-        <div className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
-          <Crown className="h-4 w-4" /> {t("yon.rol.onlyAdminBanner")}
-        </div>
-      )}
-
       <section className="rounded-2xl border bg-card p-5">
         <div className="mb-3 flex items-center gap-2">
           <UserCog className="h-5 w-5 text-primary" />
@@ -130,11 +84,10 @@ export function RollerTab() {
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {roles?.map((r) => {
               const atali = userRoles(seciliUser).includes(r.key);
-              const kilitli = r.key === "super_admin" && !isSuperAdmin;
               return (
                 <label
                   key={r.key}
-                  className={`flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2.5 ${kilitli ? "opacity-50" : ""}`}
+                  className="flex items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2.5"
                 >
                   <span className="text-sm">
                     {r.ad}
@@ -142,7 +95,6 @@ export function RollerTab() {
                   </span>
                   <Switch
                     checked={atali}
-                    disabled={kilitli}
                     onCheckedChange={(v) => toggleAssign(seciliUser, r.key, v)}
                   />
                 </label>
@@ -152,109 +104,9 @@ export function RollerTab() {
         )}
       </section>
 
-      <section className="rounded-2xl border bg-card p-5">
-        <div className="mb-1 flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" />
-          <h3 className="font-display text-lg tracking-wide">{t("yon.rol.matrisTitle")}</h3>
-        </div>
-        <p className="mb-4 text-xs text-muted-foreground">
-          {t("yon.rol.matrisDesc")}
-        </p>
+      <YetkiMatrisi />
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="py-2 pr-4 font-medium">{t("yon.rol.yetkiHeader")}</th>
-                {roles?.map((r) => (
-                  <th key={r.key} className="px-2 py-2 text-center text-xs font-medium">{r.ad}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td colSpan={(roles?.length ?? 0) + 1} className="pt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("yon.rol.sayfalar")}</td></tr>
-              {PAGE_PERMISSIONS.map((p) => (
-                <PermRow key={p.key} perm={p} roles={roles ?? []} hasPerm={hasPerm} onToggle={togglePerm} disabled={!isSuperAdmin} />
-              ))}
-              <tr><td colSpan={(roles?.length ?? 0) + 1} className="pt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("yon.rol.islemler")}</td></tr>
-              {ACTION_PERMISSIONS.map((p) => (
-                <PermRow key={p.key} perm={p} roles={roles ?? []} hasPerm={hasPerm} onToggle={togglePerm} disabled={!isSuperAdmin} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          {t("yon.rol.adminAllPerms").replace("{n}", String(ALL_PERMISSIONS.length))}
-        </p>
-      </section>
-
-      {isSuperAdmin && (
-        <section className="rounded-2xl border bg-card p-5">
-          <h3 className="mb-3 font-display text-lg tracking-wide">{t("yon.rol.yeniRol")}</h3>
-          <form onSubmit={rolEkle} className="flex flex-wrap items-end gap-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t("yon.rol.rolKodu")}</Label>
-              <Input value={yeniKod} onChange={(e) => setYeniKod(e.target.value)} placeholder={t("yon.rol.kodPh")} className="w-44" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t("yon.rol.rolAdi")}</Label>
-              <Input value={yeniAd} onChange={(e) => setYeniAd(e.target.value)} placeholder={t("yon.rol.adPh")} className="w-56" />
-            </div>
-            <Button type="submit" className="gap-1"><Plus className="h-4 w-4" /> {t("yon.mk.ekle")}</Button>
-          </form>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {roles?.filter((r) => !r.sistem).map((r) => (
-              <div key={r.key} className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm">
-                {r.ad}
-                <button
-                  aria-label={t("yon.rol.rolSil").replace("{ad}", r.ad)}
-                  onClick={async () => {
-                    if (!confirm(t("yon.rol.rolSilConfirm").replace("{ad}", r.ad))) return;
-                    const { error } = await supabase.from("roles").delete().eq("key", r.key);
-                    if (error) return toast.error(error.message);
-                    qc.invalidateQueries({ queryKey: ["roles"] });
-                    qc.invalidateQueries({ queryKey: ["role-assignments"] });
-                  }}
-                >
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      <RolYonetimi />
     </div>
-  );
-}
-
-function PermRow({
-  perm, roles, hasPerm, onToggle, disabled,
-}: {
-  perm: { key: string; label: string };
-  roles: Role[];
-  hasPerm: (roleKey: string, perm: string) => boolean;
-  onToggle: (roleKey: string, perm: string, on: boolean) => void;
-  disabled: boolean;
-}) {
-  const t = useT();
-  const label = t(`yon.perm.${perm.key}`, perm.label);
-  return (
-    <tr className="border-b last:border-0">
-      <td className="py-2 pr-4">{label}</td>
-      {roles.map((r) => {
-        const sabit = r.key === "super_admin";
-        return (
-          <td key={r.key} className="px-2 py-2 text-center">
-            <Switch
-              checked={sabit || hasPerm(r.key, perm.key)}
-              disabled={disabled || sabit}
-              onCheckedChange={(v) => onToggle(r.key, perm.key, v)}
-              aria-label={`${r.ad} — ${label}`}
-            />
-          </td>
-        );
-      })}
-    </tr>
   );
 }
