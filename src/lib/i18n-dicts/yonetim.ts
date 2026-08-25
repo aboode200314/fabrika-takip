@@ -43,6 +43,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.status.calisiyor": "Çalışıyor",
     "yon.status.duraklatildi": "Duraklatıldı",
     "yon.status.bosta": "Boşta",
+    "yon.status.pasif": "Pasif",
 
     "yon.th.kod": "Kod",
     "yon.th.ad": "Ad",
@@ -321,6 +322,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.status.calisiyor": "Running",
     "yon.status.duraklatildi": "Paused",
     "yon.status.bosta": "Idle",
+    "yon.status.pasif": "Inactive",
 
     "yon.th.kod": "Code",
     "yon.th.ad": "Name",
@@ -599,6 +601,7 @@ export const yonetimDict: NamespaceDict = {
     "yon.status.calisiyor": "تعمل",
     "yon.status.duraklatildi": "متوقفة مؤقتاً",
     "yon.status.bosta": "خامل",
+    "yon.status.pasif": "غير نشط",
 
     "yon.th.kod": "الرمز",
     "yon.th.ad": "الاسم",

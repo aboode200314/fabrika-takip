@@ -54,22 +54,23 @@ function YonetimGate() {
 }
 
 function YonetimPanel() {
+  const t = useT();
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm uppercase tracking-widest text-muted-foreground">Süpervizör</p>
-        <h1 className="mt-1 text-3xl tracking-tight">Yönetim Paneli</h1>
+        <p className="text-sm uppercase tracking-widest text-muted-foreground">{t("yon.supervisorLabel")}</p>
+        <h1 className="mt-1 text-3xl tracking-tight">{t("yon.panelTitle")}</h1>
       </div>
 
       <Tabs defaultValue="ozet" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7">
-          <TabsTrigger value="ozet">Özet</TabsTrigger>
-          <TabsTrigger value="master">Makine & Ürün</TabsTrigger>
-          <TabsTrigger value="asamalar">Üretim Akışı</TabsTrigger>
-          <TabsTrigger value="stok">Sac Stok</TabsTrigger>
-          <TabsTrigger value="vardiya">Vardiya</TabsTrigger>
-          <TabsTrigger value="erisim">Erişim</TabsTrigger>
-          <TabsTrigger value="denetim">Denetim</TabsTrigger>
+          <TabsTrigger value="ozet">{t("yon.tab.ozet")}</TabsTrigger>
+          <TabsTrigger value="master">{t("yon.tab.master")}</TabsTrigger>
+          <TabsTrigger value="asamalar">{t("yon.tab.asamalar")}</TabsTrigger>
+          <TabsTrigger value="stok">{t("yon.tab.stok")}</TabsTrigger>
+          <TabsTrigger value="vardiya">{t("yon.tab.vardiya")}</TabsTrigger>
+          <TabsTrigger value="erisim">{t("yon.tab.erisim")}</TabsTrigger>
+          <TabsTrigger value="denetim">{t("yon.tab.denetim")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ozet"><OzetTab /></TabsContent>
@@ -87,13 +88,14 @@ function YonetimPanel() {
 
 /* -------------------- ERİŞİM: Kullanıcı → Rol → Yetki → Kapsam -------------------- */
 function ErisimTab() {
+  const t = useT();
   return (
     <Tabs defaultValue="kullanicilar" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="kullanicilar">Kullanıcılar</TabsTrigger>
-        <TabsTrigger value="roller">Roller</TabsTrigger>
-        <TabsTrigger value="yetkiler">Kişisel Yetkiler</TabsTrigger>
-        <TabsTrigger value="kapsam">Departman Kapsamı</TabsTrigger>
+        <TabsTrigger value="kullanicilar">{t("yon.tab.kullanicilar")}</TabsTrigger>
+        <TabsTrigger value="roller">{t("yon.tab.roller")}</TabsTrigger>
+        <TabsTrigger value="yetkiler">{t("yon.tab.yetkiler")}</TabsTrigger>
+        <TabsTrigger value="kapsam">{t("yon.tab.kapsam")}</TabsTrigger>
       </TabsList>
       <TabsContent value="kullanicilar"><KullanicilarTab /></TabsContent>
       <TabsContent value="roller"><RollerTab /></TabsContent>
@@ -106,6 +108,7 @@ function ErisimTab() {
 
 /* -------------------- ÖZET (canlı oturum verisinden) -------------------- */
 function OzetTab() {
+  const t = useT();
   const { data } = useQuery({
     queryKey: ["yonetim-ozet"],
     queryFn: async () => {
@@ -153,41 +156,41 @@ function OzetTab() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KPI icon={TrendingUp} label="Üretim (bugün)" value={data?.toplamUretim ?? 0} unit="adet" tone="primary" />
-        <KPI icon={Clock} label="Duruş (bugün)" value={Math.round(data?.toplamDurus ?? 0)} unit="dk" tone="warning" />
-        <KPI icon={Activity} label="Çalışma (bugün)" value={Math.round((data?.calisma ?? 0) / 60)} unit="saat" tone="success" />
-        <KPI icon={Layers} label="Sac Stoğu" value={data?.stokLevha ?? 0} unit={`levha · ${(data?.stokTon ?? 0).toFixed(1)} ton`} tone="primary" />
+        <KPI icon={TrendingUp} label={t("yon.ozet.uretimBugun")} value={data?.toplamUretim ?? 0} unit={t("yon.unit.adet")} tone="primary" />
+        <KPI icon={Clock} label={t("yon.ozet.durusBugun")} value={Math.round(data?.toplamDurus ?? 0)} unit={t("yon.unit.dk")} tone="warning" />
+        <KPI icon={Activity} label={t("yon.ozet.calismaBugun")} value={Math.round((data?.calisma ?? 0) / 60)} unit={t("yon.unit.saat")} tone="success" />
+        <KPI icon={Layers} label={t("yon.ozet.sacStogu")} value={data?.stokLevha ?? 0} unit={t("yon.unit.levhaTon").replace("{t}", (data?.stokTon ?? 0).toFixed(1))} tone="primary" />
       </div>
 
       {!!data?.kritik.length && (
         <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
-          <strong className="text-destructive">Kritik stok:</strong>{" "}
+          <strong className="text-destructive">{t("yon.ozet.kritikStok")}</strong>{" "}
           {data.kritik.map((r) => `${r.sac_tipi} ${r.kalinlik_mm}mm (${r.adet})`).join(", ")}
         </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="Vardiya Bazlı Üretim (bugün)">
+        <Card title={t("yon.ozet.vardiyaUretim")}>
           {(["Sabah", "Akşam", "Gece"] as const).map((s) => (
-            <Row key={s} label={s} value={`${data?.uretimVardiya[s] ?? 0} adet`} pct={pct(data?.uretimVardiya[s] ?? 0, data?.toplamUretim ?? 0)} />
+            <Row key={s} label={shiftLabel(t, s)} value={`${data?.uretimVardiya[s] ?? 0} ${t("yon.unit.adet")}`} pct={pct(data?.uretimVardiya[s] ?? 0, data?.toplamUretim ?? 0)} />
           ))}
         </Card>
-        <Card title="Vardiya Bazlı Duruş (bugün)">
+        <Card title={t("yon.ozet.vardiyaDurus")}>
           {(["Sabah", "Akşam", "Gece"] as const).map((s) => (
-            <Row key={s} label={s} value={`${Math.round(data?.durusVardiya[s] ?? 0)} dk`} pct={pct(data?.durusVardiya[s] ?? 0, data?.toplamDurus ?? 0)} tone="warning" />
+            <Row key={s} label={shiftLabel(t, s)} value={`${Math.round(data?.durusVardiya[s] ?? 0)} ${t("yon.unit.dk")}`} pct={pct(data?.durusVardiya[s] ?? 0, data?.toplamDurus ?? 0)} tone="warning" />
           ))}
         </Card>
       </div>
 
-      <Card title="Makine Durumu">
+      <Card title={t("yon.ozet.makineDurumu")}>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Kod</TableHead>
-              <TableHead>Ad</TableHead>
-              <TableHead>Tanım</TableHead>
-              <TableHead>Canlı</TableHead>
-              <TableHead className="text-right">Bugün Duruş</TableHead>
+              <TableHead>{t("yon.th.kod")}</TableHead>
+              <TableHead>{t("yon.th.ad")}</TableHead>
+              <TableHead>{t("yon.th.tanim")}</TableHead>
+              <TableHead>{t("yon.th.canli")}</TableHead>
+              <TableHead className="text-right">{t("yon.th.bugunDurus")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -195,12 +198,12 @@ function OzetTab() {
               <TableRow key={m.id}>
                 <TableCell className="font-mono">{m.kod}</TableCell>
                 <TableCell>{m.ad}</TableCell>
-                <TableCell className="text-xs">{m.aktif ? "Aktif" : "Pasif"}</TableCell>
+                <TableCell className="text-xs">{m.aktif ? t("yon.th.aktif") : t("yon.status.pasif")}</TableCell>
                 <TableCell>
                   <span className={`inline-flex h-2.5 w-2.5 rounded-full ${m.canli === "running" ? "bg-success" : m.canli === "paused" ? "bg-warning" : "bg-muted-foreground/40"}`} />
-                  <span className="ml-2 text-xs">{m.canli === "running" ? "Çalışıyor" : m.canli === "paused" ? "Duraklatıldı" : "Boşta"}</span>
+                  <span className="ml-2 text-xs">{m.canli === "running" ? t("yon.status.calisiyor") : m.canli === "paused" ? t("yon.status.duraklatildi") : t("yon.status.bosta")}</span>
                 </TableCell>
-                <TableCell className="text-right">{m.durus} dk</TableCell>
+                <TableCell className="text-right">{m.durus} {t("yon.unit.dk")}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -208,6 +211,10 @@ function OzetTab() {
       </Card>
     </div>
   );
+}
+
+function shiftLabel(t: ReturnType<typeof useT>, s: "Sabah" | "Akşam" | "Gece") {
+  return s === "Sabah" ? t("yon.shift.sabah") : s === "Akşam" ? t("yon.shift.aksam") : t("yon.shift.gece");
 }
 
 function pct(part: number, total: number) {
@@ -253,11 +260,12 @@ function Row({ label, value, pct, tone = "primary" }: { label: string; value: st
 
 /* -------------------- MAKİNE & ÜRÜN -------------------- */
 function MasterTab() {
+  const t = useT();
   return (
     <Tabs defaultValue="makineler" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="makineler">Makineler</TabsTrigger>
-        <TabsTrigger value="urunler">Ürünler</TabsTrigger>
+        <TabsTrigger value="makineler">{t("yon.tab.makineler")}</TabsTrigger>
+        <TabsTrigger value="urunler">{t("yon.tab.urunler")}</TabsTrigger>
       </TabsList>
       <TabsContent value="makineler"><MakinelerCrud /></TabsContent>
       <TabsContent value="urunler"><UrunYonetimi /></TabsContent>
@@ -266,6 +274,7 @@ function MasterTab() {
 }
 
 function MakinelerCrud() {
+  const t = useT();
   const qc = useQueryClient();
   const { data } = useQuery({
     queryKey: ["machines-all"],
@@ -279,24 +288,24 @@ function MakinelerCrud() {
         className="flex flex-wrap gap-2 rounded-xl border bg-card p-4"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (!kod || !ad) return toast.error("Kod ve ad gerekli");
+          if (!kod || !ad) return toast.error(t("yon.mk.kodAdGerekli"));
           const { error } = await supabase.from("machines").insert({ kod, ad });
           if (error) return toast.error(error.message);
-          setKod(""); setAd(""); toast.success("Makine eklendi");
+          setKod(""); setAd(""); toast.success(t("yon.mk.eklendi"));
           qc.invalidateQueries({ queryKey: ["machines-all"] });
           qc.invalidateQueries({ queryKey: ["machines-active"] });
         }}
       >
-        <Input placeholder="Kod" value={kod} onChange={(e) => setKod(e.target.value)} className="w-32" />
-        <Input placeholder="Ad" value={ad} onChange={(e) => setAd(e.target.value)} className="flex-1 min-w-[200px]" />
-        <Button type="submit" className="gap-1"><Plus className="h-4 w-4" />Ekle</Button>
+        <Input placeholder={t("yon.mk.kodPh")} value={kod} onChange={(e) => setKod(e.target.value)} className="w-32" />
+        <Input placeholder={t("yon.mk.adPh")} value={ad} onChange={(e) => setAd(e.target.value)} className="flex-1 min-w-[200px]" />
+        <Button type="submit" className="gap-1"><Plus className="h-4 w-4" />{t("yon.mk.ekle")}</Button>
       </form>
       <p className="text-xs text-muted-foreground">
-        Makine adında "CNC Plazma" geçen makineler Panel'de otomatik olarak sac stok alanlarını açar.
+        {t("yon.mk.note")}
       </p>
       <div className="rounded-xl border bg-card">
         <Table>
-          <TableHeader><TableRow><TableHead>Kod</TableHead><TableHead>Ad</TableHead><TableHead>Aktif</TableHead><TableHead /></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>{t("yon.th.kod")}</TableHead><TableHead>{t("yon.th.ad")}</TableHead><TableHead>{t("yon.th.aktif")}</TableHead><TableHead /></TableRow></TableHeader>
           <TableBody>
             {data?.map((m) => (
               <TableRow key={m.id}>
@@ -314,7 +323,7 @@ function MakinelerCrud() {
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={async () => {
-                    if (!confirm("Silmek istediğinize emin misiniz?")) return;
+                    if (!confirm(t("yon.mk.silConfirm"))) return;
                     const { error } = await supabase.from("machines").delete().eq("id", m.id);
                     if (error) return toast.error(error.message);
                     qc.invalidateQueries({ queryKey: ["machines-all"] });
@@ -334,6 +343,7 @@ function MakinelerCrud() {
 
 /* -------------------- KULLANICILAR -------------------- */
 function KullanicilarTab() {
+  const t = useT();
   const qc = useQueryClient();
   const listFn = useServerFn(listWorkers);
   const createFn = useServerFn(createWorkerAccount);
@@ -358,7 +368,7 @@ function KullanicilarTab() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!personelId || !adSoyad || password.length < 6) {
-      return toast.error("Personel ID, Ad Soyad ve en az 6 karakterli şifre gerekli");
+      return toast.error(t("yon.kul.hataGerekli"));
     }
     setSubmitting(true);
     try {
@@ -372,11 +382,11 @@ function KullanicilarTab() {
           role: makeSup ? "supervisor" : "operator",
         },
       });
-      toast.success("Hesap oluşturuldu");
+      toast.success(t("yon.kul.hesapOlusturuldu"));
       setPersonelId(""); setAdSoyad(""); setDepartman(""); setUnvan(""); setPassword(""); setMakeSup(false);
       qc.invalidateQueries({ queryKey: ["workers"] });
     } catch (err: any) {
-      toast.error(err?.message ?? "Hata oluştu");
+      toast.error(err?.message ?? t("yon.kul.hataOlustu"));
     } finally {
       setSubmitting(false);
     }
@@ -389,45 +399,45 @@ function KullanicilarTab() {
         <form onSubmit={handleCreate} className="space-y-3 rounded-2xl border bg-card p-5">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            <h3 className="text-lg">Yeni Çalışan Hesabı</h3>
+            <h3 className="text-lg">{t("yon.kul.yeniHesap")}</h3>
           </div>
           <p className="text-xs text-muted-foreground">
-            Oluşturduğunuz hesabı çalışana verirsiniz. Giriş ekranında Personel ID ve şifre ile giriş yapar.
+            {t("yon.kul.aciklama")}
           </p>
           <div className="space-y-1.5">
-            <Label className="text-sm">Personel ID</Label>
-            <Input value={personelId} onChange={(e) => setPersonelId(e.target.value)} placeholder="örn: 1042" />
+            <Label className="text-sm">{t("yon.kul.personelId")}</Label>
+            <Input value={personelId} onChange={(e) => setPersonelId(e.target.value)} placeholder={t("yon.kul.personelIdPh")} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Ad Soyad</Label>
-            <Input value={adSoyad} onChange={(e) => setAdSoyad(e.target.value)} placeholder="Ahmet Yılmaz" />
+            <Label className="text-sm">{t("yon.kul.adSoyad")}</Label>
+            <Input value={adSoyad} onChange={(e) => setAdSoyad(e.target.value)} placeholder={t("yon.kul.adSoyadPh")} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Departman <span className="text-muted-foreground">(opsiyonel)</span></Label>
-            <Input value={departman} onChange={(e) => setDepartman(e.target.value)} placeholder="Üretim" />
+            <Label className="text-sm">{t("yon.kul.departman")} <span className="text-muted-foreground">{t("yon.kul.opsiyonel")}</span></Label>
+            <Input value={departman} onChange={(e) => setDepartman(e.target.value)} placeholder={t("yon.kul.departmanPh")} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Ünvan / Görev <span className="text-muted-foreground">(opsiyonel)</span></Label>
-            <Input value={unvan} onChange={(e) => setUnvan(e.target.value)} placeholder="Örn: Üretim Sorumlusu, Operatör" />
+            <Label className="text-sm">{t("yon.kul.unvan")} <span className="text-muted-foreground">{t("yon.kul.opsiyonel")}</span></Label>
+            <Input value={unvan} onChange={(e) => setUnvan(e.target.value)} placeholder={t("yon.kul.unvanPh")} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Şifre</Label>
-            <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="en az 6 karakter" />
+            <Label className="text-sm">{t("yon.kul.sifre")}</Label>
+            <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("yon.kul.sifrePh")} />
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Switch checked={makeSup} onCheckedChange={setMakeSup} />
-            Süpervizör yetkisi ver
+            {t("yon.kul.supervisorYetki")}
           </label>
           <Button type="submit" disabled={submitting} className="w-full gap-2">
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Hesap Oluştur
+            {t("yon.kul.hesapOlustur")}
           </Button>
         </form>
       </div>
 
       <div className="rounded-2xl border bg-card overflow-x-auto">
         <div className="border-b p-4">
-          <h3 className="text-lg">Çalışanlar ({workers?.length ?? 0})</h3>
+          <h3 className="text-lg">{t("yon.kul.calisanlar").replace("{n}", String(workers?.length ?? 0))}</h3>
         </div>
         {isLoading ? (
           <div className="p-8 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></div>
@@ -435,11 +445,11 @@ function KullanicilarTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Personel ID</TableHead>
-                <TableHead>Ad Soyad</TableHead>
-                <TableHead>Ünvan</TableHead>
-                <TableHead>Departman</TableHead>
-                <TableHead>Süpervizör</TableHead>
+                <TableHead>{t("yon.th.personelId")}</TableHead>
+                <TableHead>{t("yon.th.adSoyad")}</TableHead>
+                <TableHead>{t("yon.th.unvan")}</TableHead>
+                <TableHead>{t("yon.th.departman")}</TableHead>
+                <TableHead>{t("yon.th.supervisor")}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -454,18 +464,18 @@ function KullanicilarTab() {
                       <button
                         className="underline decoration-dotted underline-offset-4"
                         onClick={async () => {
-                          const yeni = prompt(`${w.ad_soyad} ünvanı:`, w.unvan ?? "");
+                          const yeni = prompt(t("yon.kul.unvanPrompt").replace("{ad}", w.ad_soyad), w.unvan ?? "");
                           if (yeni === null) return;
                           try {
                             await titleFn({ data: { user_id: w.id, unvan: yeni } });
-                            toast.success("Ünvan güncellendi");
+                            toast.success(t("yon.kul.unvanGuncellendi"));
                             qc.invalidateQueries({ queryKey: ["workers"] });
                           } catch (err: any) {
-                            toast.error(err?.message ?? "Hata");
+                            toast.error(err?.message ?? t("yon.kul.hata"));
                           }
                         }}
                       >
-                        {w.unvan ?? "— ekle"}
+                        {w.unvan ?? t("yon.kul.ekle")}
                       </button>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{w.departman ?? "—"}</TableCell>
@@ -477,7 +487,7 @@ function KullanicilarTab() {
                             await roleFn({ data: { user_id: w.id, supervisor: v } });
                             qc.invalidateQueries({ queryKey: ["workers"] });
                           } catch (err: any) {
-                            toast.error(err?.message ?? "Hata");
+                            toast.error(err?.message ?? t("yon.kul.hata"));
                           }
                         }}
                       />
@@ -486,16 +496,16 @@ function KullanicilarTab() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Şifreyi değiştir"
+                        title={t("yon.kul.sifreDegistirTitle")}
                         onClick={async () => {
-                          const yeni = prompt(`${w.ad_soyad} için yeni şifre (en az 6 karakter):`);
+                          const yeni = prompt(t("yon.kul.sifrePrompt").replace("{ad}", w.ad_soyad));
                           if (!yeni) return;
-                          if (yeni.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
+                          if (yeni.length < 6) return toast.error(t("yon.kul.sifreMin"));
                           try {
                             await pwFn({ data: { user_id: w.id, password: yeni } });
-                            toast.success("Şifre güncellendi");
+                            toast.success(t("yon.kul.sifreGuncellendi"));
                           } catch (err: any) {
-                            toast.error(err?.message ?? "Hata");
+                            toast.error(err?.message ?? t("yon.kul.hata"));
                           }
                         }}
                       >
@@ -505,13 +515,13 @@ function KullanicilarTab() {
                         variant="ghost"
                         size="icon"
                         onClick={async () => {
-                          if (!confirm(`${w.ad_soyad} hesabını silmek istediğinize emin misiniz?`)) return;
+                          if (!confirm(t("yon.kul.silConfirm").replace("{ad}", w.ad_soyad))) return;
                           try {
                             await deleteFn({ data: { user_id: w.id } });
-                            toast.success("Hesap silindi");
+                            toast.success(t("yon.kul.hesapSilindi"));
                             qc.invalidateQueries({ queryKey: ["workers"] });
                           } catch (err: any) {
-                            toast.error(err?.message ?? "Hata");
+                            toast.error(err?.message ?? t("yon.kul.hata"));
                           }
                         }}
                       >
@@ -524,7 +534,7 @@ function KullanicilarTab() {
               {workers?.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
-                    Henüz çalışan yok.
+                    {t("yon.kul.henuzYok")}
                   </TableCell>
                 </TableRow>
               )}
@@ -538,6 +548,7 @@ function KullanicilarTab() {
 
 /* -------------------- KENDİ ŞİFREM -------------------- */
 function KendiSifreCard() {
+  const t = useT();
   const [yeni, setYeni] = useState("");
   const [tekrar, setTekrar] = useState("");
   const [busy, setBusy] = useState(false);
@@ -545,15 +556,15 @@ function KendiSifreCard() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (yeni.length < 6) return toast.error("Şifre en az 6 karakter olmalı");
-    if (yeni !== tekrar) return toast.error("Şifreler eşleşmiyor");
+    if (yeni.length < 6) return toast.error(t("yon.pw.sifreMin"));
+    if (yeni !== tekrar) return toast.error(t("yon.pw.sifreEslesmiyor"));
     setBusy(true);
     try {
       await changePw({ data: { password: yeni } });
-      toast.success("Şifreniz güncellendi");
+      toast.success(t("yon.pw.guncellendi"));
       setYeni(""); setTekrar("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Şifre değiştirilemedi");
+      toast.error(err instanceof Error ? err.message : t("yon.pw.hata"));
     } finally {
       setBusy(false);
     }
@@ -563,19 +574,19 @@ function KendiSifreCard() {
     <form onSubmit={submit} className="space-y-3 rounded-2xl border bg-card p-5">
       <div className="flex items-center gap-2">
         <KeyRound className="h-5 w-5 text-primary" />
-        <h3 className="text-lg">Kendi Şifremi Değiştir</h3>
+        <h3 className="text-lg">{t("yon.pw.title")}</h3>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-sm">Yeni şifre</Label>
-        <Input type="password" value={yeni} onChange={(e) => setYeni(e.target.value)} placeholder="en az 6 karakter" />
+        <Label className="text-sm">{t("yon.pw.yeni")}</Label>
+        <Input type="password" value={yeni} onChange={(e) => setYeni(e.target.value)} placeholder={t("yon.kul.sifrePh")} />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-sm">Yeni şifre (tekrar)</Label>
+        <Label className="text-sm">{t("yon.pw.yeniTekrar")}</Label>
         <Input type="password" value={tekrar} onChange={(e) => setTekrar(e.target.value)} />
       </div>
       <Button type="submit" disabled={busy} className="w-full gap-2">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-        Şifreyi Güncelle
+        {t("yon.pw.guncelle")}
       </Button>
     </form>
   );
