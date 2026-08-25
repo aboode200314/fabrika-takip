@@ -11,10 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { ALL_PERMISSIONS, PAGE_PERMISSIONS, ACTION_PERMISSIONS } from "@/lib/permissions";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 
 interface Role { key: string; ad: string; aciklama: string | null; sira: number; sistem: boolean }
 
 export function RollerTab() {
+  const t = useT();
   const qc = useQueryClient();
   const { isSuperAdmin, refresh } = useAuth();
   const [yeniKod, setYeniKod] = useState("");
@@ -61,7 +63,7 @@ export function RollerTab() {
     (rolePerms ?? []).some((r) => r.role_key === roleKey && r.permission === perm);
 
   async function togglePerm(roleKey: string, perm: string, on: boolean) {
-    if (!isSuperAdmin) return toast.error("Rol yetkilerini yalnızca Ana Yönetici değiştirebilir");
+    if (!isSuperAdmin) return toast.error(t("yon.rol.onlyAdmin"));
     if (on) {
       const { error } = await supabase.from("role_permissions").insert({ role_key: roleKey, permission: perm });
       if (error && !error.message.includes("duplicate")) return toast.error(error.message);
@@ -76,10 +78,10 @@ export function RollerTab() {
   async function rolEkle(e: React.FormEvent) {
     e.preventDefault();
     const key = yeniKod.trim().toLowerCase().replace(/\s+/g, "_");
-    if (!key || !yeniAd.trim()) return toast.error("Rol kodu ve adı gerekli");
+    if (!key || !yeniAd.trim()) return toast.error(t("yon.rol.kodAdGerekli"));
     const { error } = await supabase.from("roles").insert({ key, ad: yeniAd.trim(), sira: 200 });
     if (error) return toast.error(error.message);
-    setYeniKod(""); setYeniAd(""); toast.success("Rol eklendi");
+    setYeniKod(""); setYeniAd(""); toast.success(t("yon.rol.eklendi"));
     qc.invalidateQueries({ queryKey: ["roles"] });
   }
 
@@ -106,17 +108,17 @@ export function RollerTab() {
     <div className="space-y-5 pt-4">
       {!isSuperAdmin && (
         <div className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
-          <Crown className="h-4 w-4" /> Rol yetki matrisini yalnızca Ana Yönetici düzenleyebilir.
+          <Crown className="h-4 w-4" /> {t("yon.rol.onlyAdminBanner")}
         </div>
       )}
 
       <section className="rounded-2xl border bg-card p-5">
         <div className="mb-3 flex items-center gap-2">
           <UserCog className="h-5 w-5 text-primary" />
-          <h3 className="font-display text-lg tracking-wide">KULLANICI ROLLERİ</h3>
+          <h3 className="font-display text-lg tracking-wide">{t("yon.rol.kullaniciRolleri")}</h3>
         </div>
         <Select value={seciliUser} onValueChange={setSeciliUser}>
-          <SelectTrigger className="tap-target max-w-md"><SelectValue placeholder="Kullanıcı seçiniz" /></SelectTrigger>
+          <SelectTrigger className="tap-target max-w-md"><SelectValue placeholder={t("yon.rol.kullaniciSec")} /></SelectTrigger>
           <SelectContent>
             {profiles?.map((p) => (
               <SelectItem key={p.id} value={p.id}>{p.ad_soyad ?? p.personel_id} ({p.personel_id})</SelectItem>
@@ -153,29 +155,28 @@ export function RollerTab() {
       <section className="rounded-2xl border bg-card p-5">
         <div className="mb-1 flex items-center gap-2">
           <Shield className="h-5 w-5 text-primary" />
-          <h3 className="font-display text-lg tracking-wide">ROL YETKİ MATRİSİ</h3>
+          <h3 className="font-display text-lg tracking-wide">{t("yon.rol.matrisTitle")}</h3>
         </div>
         <p className="mb-4 text-xs text-muted-foreground">
-          Yetkiler role bağlanır; kullanıcı bir rol aldığında o rolün tüm yetkilerini kazanır.
-          Kişiye özel ek yetkiler "Yetkiler" sekmesinden verilir.
+          {t("yon.rol.matrisDesc")}
         </p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left">
-                <th className="py-2 pr-4 font-medium">Yetki</th>
+                <th className="py-2 pr-4 font-medium">{t("yon.rol.yetkiHeader")}</th>
                 {roles?.map((r) => (
                   <th key={r.key} className="px-2 py-2 text-center text-xs font-medium">{r.ad}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              <tr><td colSpan={(roles?.length ?? 0) + 1} className="pt-3 text-[11px] uppercase tracking-widest text-muted-foreground">Sayfalar</td></tr>
+              <tr><td colSpan={(roles?.length ?? 0) + 1} className="pt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("yon.rol.sayfalar")}</td></tr>
               {PAGE_PERMISSIONS.map((p) => (
                 <PermRow key={p.key} perm={p} roles={roles ?? []} hasPerm={hasPerm} onToggle={togglePerm} disabled={!isSuperAdmin} />
               ))}
-              <tr><td colSpan={(roles?.length ?? 0) + 1} className="pt-3 text-[11px] uppercase tracking-widest text-muted-foreground">İşlemler</td></tr>
+              <tr><td colSpan={(roles?.length ?? 0) + 1} className="pt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("yon.rol.islemler")}</td></tr>
               {ACTION_PERMISSIONS.map((p) => (
                 <PermRow key={p.key} perm={p} roles={roles ?? []} hasPerm={hasPerm} onToggle={togglePerm} disabled={!isSuperAdmin} />
               ))}
@@ -183,23 +184,23 @@ export function RollerTab() {
           </table>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Ana Yönetici rolü her zaman tüm yetkilere sahiptir ({ALL_PERMISSIONS.length} yetki).
+          {t("yon.rol.adminAllPerms").replace("{n}", String(ALL_PERMISSIONS.length))}
         </p>
       </section>
 
       {isSuperAdmin && (
         <section className="rounded-2xl border bg-card p-5">
-          <h3 className="mb-3 font-display text-lg tracking-wide">YENİ ROL</h3>
+          <h3 className="mb-3 font-display text-lg tracking-wide">{t("yon.rol.yeniRol")}</h3>
           <form onSubmit={rolEkle} className="flex flex-wrap items-end gap-2">
             <div className="space-y-1.5">
-              <Label className="text-xs">Rol Kodu</Label>
-              <Input value={yeniKod} onChange={(e) => setYeniKod(e.target.value)} placeholder="kalite_sefi" className="w-44" />
+              <Label className="text-xs">{t("yon.rol.rolKodu")}</Label>
+              <Input value={yeniKod} onChange={(e) => setYeniKod(e.target.value)} placeholder={t("yon.rol.kodPh")} className="w-44" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Rol Adı</Label>
-              <Input value={yeniAd} onChange={(e) => setYeniAd(e.target.value)} placeholder="Kalite Şefi" className="w-56" />
+              <Label className="text-xs">{t("yon.rol.rolAdi")}</Label>
+              <Input value={yeniAd} onChange={(e) => setYeniAd(e.target.value)} placeholder={t("yon.rol.adPh")} className="w-56" />
             </div>
-            <Button type="submit" className="gap-1"><Plus className="h-4 w-4" /> Ekle</Button>
+            <Button type="submit" className="gap-1"><Plus className="h-4 w-4" /> {t("yon.mk.ekle")}</Button>
           </form>
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -207,9 +208,9 @@ export function RollerTab() {
               <div key={r.key} className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm">
                 {r.ad}
                 <button
-                  aria-label={`${r.ad} rolünü sil`}
+                  aria-label={t("yon.rol.rolSil").replace("{ad}", r.ad)}
                   onClick={async () => {
-                    if (!confirm(`${r.ad} rolü silinsin mi?`)) return;
+                    if (!confirm(t("yon.rol.rolSilConfirm").replace("{ad}", r.ad))) return;
                     const { error } = await supabase.from("roles").delete().eq("key", r.key);
                     if (error) return toast.error(error.message);
                     qc.invalidateQueries({ queryKey: ["roles"] });
@@ -236,9 +237,11 @@ function PermRow({
   onToggle: (roleKey: string, perm: string, on: boolean) => void;
   disabled: boolean;
 }) {
+  const t = useT();
+  const label = t(`yon.perm.${perm.key}`, perm.label);
   return (
     <tr className="border-b last:border-0">
-      <td className="py-2 pr-4">{perm.label}</td>
+      <td className="py-2 pr-4">{label}</td>
       {roles.map((r) => {
         const sabit = r.key === "super_admin";
         return (
@@ -247,7 +250,7 @@ function PermRow({
               checked={sabit || hasPerm(r.key, perm.key)}
               disabled={disabled || sabit}
               onCheckedChange={(v) => onToggle(r.key, perm.key, v)}
-              aria-label={`${r.ad} — ${perm.label}`}
+              aria-label={`${r.ad} — ${label}`}
             />
           </td>
         );
