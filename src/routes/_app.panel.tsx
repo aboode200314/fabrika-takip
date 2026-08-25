@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { isPlasmaMachine, levhaKg, SAC_TIPLERI, type StockRow } from "@/lib/sac";
+import { useT } from "@/lib/i18n";
 
 
 export const Route = createFileRoute("/_app/panel")({
@@ -40,6 +41,23 @@ export const PAUSE_REASONS = [
   "Mola",
   "Diğer",
 ] as const;
+
+function shiftKey(s: Shift): string {
+  if (s === "Sabah") return "panel.shift.sabah";
+  if (s === "Akşam") return "panel.shift.aksam";
+  return "panel.shift.gece";
+}
+
+function reasonKey(r: string): string {
+  switch (r) {
+    case "Arıza": return "panel.reason.ariza";
+    case "Bakım": return "panel.reason.bakim";
+    case "Ürün Değişimi": return "panel.reason.urunDegisimi";
+    case "Malzeme Bekleme": return "panel.reason.malzemeBekleme";
+    case "Mola": return "panel.reason.mola";
+    default: return "panel.reason.diger";
+  }
+}
 
 function autoShift(): Shift {
   const h = new Date().getHours();
@@ -87,6 +105,7 @@ interface PauseRow {
 }
 
 function PanelPage() {
+  const t = useT();
   const { user, isSuperAdmin, role, allowedMachineIds, allowedProductIds, allowedDepartmentIds } = useAuth();
   const qc = useQueryClient();
   const [now, setNow] = useState(() => Date.now());
@@ -241,18 +260,18 @@ function PanelPage() {
   const selectedStock = (stock ?? []).find((s) => s.id === stokId) ?? null;
 
   async function start() {
-    if (!machine) return toast.error("Makine seçiniz");
-    if (byMachine.has(machine)) return toast.error("Bu makine şu anda çalışıyor");
+    if (!machine) return toast.error(t("panel.toast.selectMachine"));
+    if (byMachine.has(machine)) return toast.error(t("panel.toast.machineBusy"));
 
     let plasma: Record<string, unknown> = {};
     if (isPlasma) {
       const a = Number(levha);
-      if (!(a > 0)) return toast.error("Kesilecek sac adedi giriniz (0.25 gibi kesirli olabilir)");
+      if (!(a > 0)) return toast.error(t("panel.toast.enterSheetQty"));
 
       if (isCustomSheet) {
         const u = Number(cUzunluk), g = Number(cGenislik), k = Number(cKalinlik);
         if (!(u > 0) || !(g > 0) || !(k > 0))
-          return toast.error("Özel sac için uzunluk, genişlik ve kalınlık giriniz");
+          return toast.error(t("panel.toast.enterCustomDims"));
         plasma = {
           stok_id: null,
           sac_tipi: cSacTipi,
@@ -263,9 +282,9 @@ function PanelPage() {
           yogunluk: SAC_TIPLERI.find((t) => t.ad === cSacTipi)?.yogunluk ?? 7.85,
         };
       } else {
-        if (!selectedStock) return toast.error("Kullanılacak sacı stoktan seçiniz");
+        if (!selectedStock) return toast.error(t("panel.toast.selectStockSheet"));
         if (a > Number(selectedStock.adet))
-          return toast.error(`Stokta yalnızca ${selectedStock.adet} levha var`);
+          return toast.error(t("panel.toast.onlySheetsInStock").replace("{n}", String(selectedStock.adet)));
         plasma = {
           stok_id: selectedStock.id,
           sac_tipi: selectedStock.sac_tipi,
@@ -291,8 +310,8 @@ function PanelPage() {
       ...plasma,
     });
     setBusy(false);
-    if (error) return toast.error("Başlatılamadı: " + error.message);
-    toast.success("İş başlatıldı");
+    if (error) return toast.error(t("panel.toast.startFailed") + error.message);
+    toast.success(t("panel.toast.jobStarted"));
     setStokId(""); setLevha("1");
     qc.invalidateQueries({ queryKey: ["running-sessions"] });
   }
@@ -318,8 +337,8 @@ function PanelPage() {
       await supabase.from("production_sessions").update({ durum: "paused" }).eq("id", pauseFor.id);
     }
     setBusy(false);
-    if (error) return toast.error("Duraklatılamadı: " + error.message);
-    toast.success("Makine duraklatıldı");
+    if (error) return toast.error(t("panel.toast.pauseFailed") + error.message);
+    toast.success(t("panel.toast.machinePaused"));
     setPauseFor(null);
     setPauseNote("");
     setReason(PAUSE_REASONS[0]);
@@ -337,12 +356,12 @@ function PanelPage() {
         .eq("id", open.id);
       if (error) {
         setBusy(false);
-        return toast.error("Devam edilemedi: " + error.message);
+        return toast.error(t("panel.toast.resumeFailed") + error.message);
       }
     }
     await supabase.from("production_sessions").update({ durum: "running" }).eq("id", s.id);
     setBusy(false);
-    toast.success("Çalışmaya devam ediliyor");
+    toast.success(t("panel.toast.resuming"));
     qc.invalidateQueries({ queryKey: ["running-pauses"] });
     qc.invalidateQueries({ queryKey: ["running-sessions"] });
   }
@@ -356,7 +375,7 @@ function PanelPage() {
   async function finish() {
     if (!finishFor) return;
     const n = Number(qty);
-    if (!Number.isFinite(n) || n < 0) return toast.error("Geçerli bir miktar giriniz");
+    if (!Number.isFinite(n) || n < 0) return toast.error(t("panel.toast.validQty"));
     const bitisTs = new Date().toISOString();
     setBusy(true);
     const open = openPauseOf(finishFor.id);
@@ -374,7 +393,7 @@ function PanelPage() {
       .eq("id", finishFor.id);
     if (error) {
       setBusy(false);
-      return toast.error("Kaydedilemedi: " + error.message);
+      return toast.error(t("panel.toast.saveFailed") + error.message);
     }
 
     // CNC Plazma işi ise kesim kaydı da oluştur (raporlar için)
@@ -396,7 +415,7 @@ function PanelPage() {
     }
 
     setBusy(false);
-    toast.success("İş tamamlandı ve kaydedildi");
+    toast.success(t("panel.toast.jobFinished"));
     setFinishFor(null);
     setQty("");
     setScrap("");
@@ -425,20 +444,20 @@ function PanelPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl tracking-tight">Ana Panel</h1>
+          <h1 className="text-3xl tracking-tight">{t("panel.title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Makinelerin anlık durumu — sayfa yenilemeden güncellenir.
+            {t("panel.subtitle")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
           <span className="flex items-center gap-2 rounded-full border border-success/40 bg-success/10 px-3 py-1.5 text-success">
-            <Radio className="h-3.5 w-3.5 animate-pulse" /> {runningCount} çalışıyor
+            <Radio className="h-3.5 w-3.5 animate-pulse" /> {t("panel.running").replace("{n}", String(runningCount))}
           </span>
           <span className="flex items-center gap-2 rounded-full border border-warning/40 bg-warning/10 px-3 py-1.5 text-warning">
-            <Pause className="h-3.5 w-3.5" /> {pausedCount} duraklatıldı
+            <Pause className="h-3.5 w-3.5" /> {t("panel.paused").replace("{n}", String(pausedCount))}
           </span>
           <span className="rounded-full border bg-muted px-3 py-1.5 text-muted-foreground">
-            {visibleMachines.length} makine
+            {t("panel.machineCount").replace("{n}", String(visibleMachines.length))}
           </span>
         </div>
       </div>
@@ -448,10 +467,10 @@ function PanelPage() {
         {mySession ? (
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Devam eden işin</div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("panel.myJob.title")}</div>
               <div className="mt-1 font-display text-xl">
                 {machines?.find((m) => m.id === mySession.machine_id)?.kod ?? "—"} ·{" "}
-                {productOf(mySession.product_id)} · {mySession.vardiya}
+                {productOf(mySession.product_id)} · {t(shiftKey(mySession.vardiya))}
               </div>
               {mySession.durum === "paused" ? (
                 <div className="mt-1 font-display text-3xl text-warning tabular-nums">
@@ -459,8 +478,8 @@ function PanelPage() {
                     const op = openPauseOf(mySession.id);
                     return op ? fmtDur(now - new Date(op.baslangic).getTime()) : "00:00:00";
                   })()}
-                  <span className="ml-2 text-sm">
-                    duraklatıldı · {openPauseOf(mySession.id)?.neden ?? "—"}
+                  <span className="ms-2 text-sm">
+                    {t("panel.myJob.pausedSuffix")} · {(() => { const r = openPauseOf(mySession.id)?.neden; return r ? t(reasonKey(r)) : "—"; })()}
                   </span>
                 </div>
               ) : (
@@ -472,7 +491,7 @@ function PanelPage() {
             <div className="flex flex-wrap gap-2">
               {mySession.durum === "paused" ? (
                 <Button size="lg" className="tap-target gap-2" onClick={() => resume(mySession)} disabled={busy}>
-                  <PlayCircle className="h-5 w-5" /> Devam Et
+                  <PlayCircle className="h-5 w-5" /> {t("panel.myJob.resume")}
                 </Button>
               ) : (
                 <Button
@@ -481,44 +500,44 @@ function PanelPage() {
                   className="tap-target gap-2 border-warning/50 text-warning"
                   onClick={() => setPauseFor(mySession)}
                 >
-                  <Pause className="h-5 w-5" /> Duraklat
+                  <Pause className="h-5 w-5" /> {t("panel.myJob.pause")}
                 </Button>
               )}
               <Button size="lg" variant="destructive" className="tap-target gap-2" onClick={() => setFinishFor(mySession)}>
-                <Square className="h-5 w-5" /> Bitir
+                <Square className="h-5 w-5" /> {t("panel.myJob.finish")}
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Yeni iş başlat</div>
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("panel.myJob.newJobTitle")}</div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">
-                <Label className="text-xs">Vardiya</Label>
+                <Label className="text-xs">{t("panel.form.shift")}</Label>
                 <Select value={shift} onValueChange={(v) => setShift(v as Shift)}>
                   <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {SHIFTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    {SHIFTS.map((s) => <SelectItem key={s} value={s}>{t(shiftKey(s))}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Makine</Label>
+                <Label className="text-xs">{t("panel.form.machine")}</Label>
                 <Select value={machine} onValueChange={setMachine}>
-                  <SelectTrigger className="tap-target"><SelectValue placeholder="Makine seçiniz" /></SelectTrigger>
+                  <SelectTrigger className="tap-target"><SelectValue placeholder={t("panel.form.machinePlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {visibleMachines.map((m) => (
                       <SelectItem key={m.id} value={m.id} disabled={byMachine.has(m.id)}>
-                        {m.kod} — {m.ad} {byMachine.has(m.id) ? "(meşgul)" : ""}
+                        {m.kod} — {m.ad} {byMachine.has(m.id) ? t("panel.form.machineBusy") : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Ürün / İş Emri</Label>
+                <Label className="text-xs">{t("panel.form.product")}</Label>
                 <Select value={product} onValueChange={(v) => { setProduct(v); setOperation(""); }}>
-                  <SelectTrigger className="tap-target"><SelectValue placeholder="Ürün seçiniz" /></SelectTrigger>
+                  <SelectTrigger className="tap-target"><SelectValue placeholder={t("panel.form.productPlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {visibleProducts.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.kod} — {p.ad}</SelectItem>
@@ -530,9 +549,9 @@ function PanelPage() {
 
             {product && (operations ?? []).length > 0 && (
               <div className="space-y-1.5">
-                <Label className="text-xs">Üretim Aşaması</Label>
+                <Label className="text-xs">{t("panel.form.operation")}</Label>
                 <Select value={operation} onValueChange={setOperation}>
-                  <SelectTrigger className="tap-target"><SelectValue placeholder="Aşama seçiniz (opsiyonel)" /></SelectTrigger>
+                  <SelectTrigger className="tap-target"><SelectValue placeholder={t("panel.form.operationPlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {(operations ?? [])
                       .filter((o) => !machine || !o.machine_id || o.machine_id === machine)
@@ -547,25 +566,25 @@ function PanelPage() {
             {isPlasma && (
               <div className="space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-primary">
-                  <Flame className="h-4 w-4" /> CNC Plazma — Sac Bilgileri
+                  <Flame className="h-4 w-4" /> {t("panel.plasma.title")}
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Kullanılacak Sac</Label>
+                    <Label className="text-xs">{t("panel.plasma.sheetToUse")}</Label>
                     <Select value={stokId} onValueChange={setStokId}>
-                      <SelectTrigger className="tap-target"><SelectValue placeholder="Sac seçiniz" /></SelectTrigger>
+                      <SelectTrigger className="tap-target"><SelectValue placeholder={t("panel.plasma.sheetPlaceholder")} /></SelectTrigger>
                       <SelectContent>
                         {(stock ?? []).map((s) => (
                           <SelectItem key={s.id} value={s.id} disabled={Number(s.adet) <= 0}>
-                            {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} — stok: {s.adet}
+                            {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} — {t("panel.plasma.stockLabel")}: {s.adet}
                           </SelectItem>
                         ))}
-                        <SelectItem value={CUSTOM}>Özel Ölçü Sac (stok dışı / fire parçası)</SelectItem>
+                        <SelectItem value={CUSTOM}>{t("panel.plasma.customOption")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs" htmlFor="s-adet">Kesilen Sac Adedi (0.25 / 0.5 / 1.5 olabilir)</Label>
+                    <Label className="text-xs" htmlFor="s-adet">{t("panel.plasma.cutQty")}</Label>
                     <Input id="s-adet" type="number" inputMode="decimal" step="0.01" min={0.01}
                       max={isCustomSheet ? undefined : (selectedStock?.adet ?? undefined)} value={levha}
                       onChange={(e) => setLevha(e.target.value)} className="tap-target" />
@@ -575,7 +594,7 @@ function PanelPage() {
                 {isCustomSheet && (
                   <div className="grid gap-3 sm:grid-cols-4">
                     <div className="space-y-1.5 sm:col-span-4">
-                      <Label className="text-xs">Sac Türü</Label>
+                      <Label className="text-xs">{t("panel.plasma.sheetType")}</Label>
                       <Select value={cSacTipi} onValueChange={setCSacTipi}>
                         <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -584,44 +603,44 @@ function PanelPage() {
                       </Select>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs" htmlFor="c-u">Uzunluk (mm)</Label>
+                      <Label className="text-xs" htmlFor="c-u">{t("panel.plasma.length")}</Label>
                       <Input id="c-u" type="number" inputMode="decimal" value={cUzunluk}
-                        onChange={(e) => setCUzunluk(e.target.value)} className="tap-target" placeholder="örn. 1200" />
+                        onChange={(e) => setCUzunluk(e.target.value)} className="tap-target" placeholder={t("panel.plasma.lengthPlaceholder")} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs" htmlFor="c-g">Genişlik (mm)</Label>
+                      <Label className="text-xs" htmlFor="c-g">{t("panel.plasma.width")}</Label>
                       <Input id="c-g" type="number" inputMode="decimal" value={cGenislik}
-                        onChange={(e) => setCGenislik(e.target.value)} className="tap-target" placeholder="örn. 800" />
+                        onChange={(e) => setCGenislik(e.target.value)} className="tap-target" placeholder={t("panel.plasma.widthPlaceholder")} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs" htmlFor="c-k">Kalınlık (mm)</Label>
+                      <Label className="text-xs" htmlFor="c-k">{t("panel.plasma.thickness")}</Label>
                       <Input id="c-k" type="number" inputMode="decimal" step="0.1" value={cKalinlik}
-                        onChange={(e) => setCKalinlik(e.target.value)} className="tap-target" placeholder="örn. 6" />
+                        onChange={(e) => setCKalinlik(e.target.value)} className="tap-target" placeholder={t("panel.plasma.thicknessPlaceholder")} />
                     </div>
                     <p className="text-xs text-muted-foreground sm:col-span-4">
-                      Özel ölçü sac stoğa eklenmez ve stok miktarlarını etkilemez; yalnızca bu iş kaydında kullanılır.
+                      {t("panel.plasma.customNote")}
                     </p>
                   </div>
                 )}
 
                 {!isCustomSheet && stock && stock.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    Stokta sac tanımlı değil. Yönetim → Sac Stok bölümünden sac ekleyin veya “Özel Ölçü Sac” seçin.
+                    {t("panel.plasma.noStock")}
                   </p>
                 )}
 
                 {selectedStock && (
                   <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
                     <div>
-                      Ölçü: <strong className="text-foreground">{selectedStock.uzunluk_mm}×{selectedStock.genislik_mm} mm</strong> ·
-                      Kalınlık: <strong className="text-foreground">{selectedStock.kalinlik_mm} mm</strong>
+                      {t("panel.plasma.dimension")} <strong className="text-foreground">{selectedStock.uzunluk_mm}×{selectedStock.genislik_mm} mm</strong> ·
+                      {t("panel.plasma.thicknessLabel")} <strong className="text-foreground">{selectedStock.kalinlik_mm} mm</strong>
                     </div>
                     <div>
-                      Tahmini ağırlık:{" "}
+                      {t("panel.plasma.estWeight")}{" "}
                       <strong className="text-foreground">
                         {(levhaKg(selectedStock) * (Number(levha) || 0)).toFixed(1)} kg
                       </strong>{" "}
-                      · Kalan stok (iş sonrası):{" "}
+                      · {t("panel.plasma.remainingStock")}{" "}
                       <strong className="text-foreground">
                         {Math.max(0, Number(selectedStock.adet) - (Number(levha) || 0))}
                       </strong>
@@ -634,7 +653,7 @@ function PanelPage() {
 
 
             <Button size="lg" onClick={start} disabled={busy} className="tap-target w-full gap-2 sm:w-auto">
-              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />} Başlat
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Play className="h-5 w-5" />} {t("panel.start")}
             </Button>
           </div>
         )}
@@ -642,7 +661,7 @@ function PanelPage() {
 
       {/* Makine kartları */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {isLoading && <div className="text-sm text-muted-foreground">Yükleniyor…</div>}
+        {isLoading && <div className="text-sm text-muted-foreground">{t("panel.card.loading")}</div>}
         {visibleMachines.map((m) => {
           const s = byMachine.get(m.id) ?? null;
           const paused = s?.durum === "paused";
@@ -668,7 +687,7 @@ function PanelPage() {
                         : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {paused ? "Duraklatıldı" : s ? "Çalışıyor" : "Durdu"}
+                  {paused ? t("panel.card.paused") : s ? t("panel.card.running") : t("panel.card.stopped")}
                 </span>
               </div>
 
@@ -681,24 +700,24 @@ function PanelPage() {
                   {s.uzunluk_mm && (
                     <div className="flex items-center gap-2 text-xs text-primary">
                       <Flame className="h-3.5 w-3.5" />
-                      {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} · {s.levha_adedi} levha
+                      {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} · {s.levha_adedi} {t("panel.plasma.sheetsUnit")}
                     </div>
                   )}
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Timer className="h-4 w-4" /> Başlangıç: {timeFmt.format(new Date(s.baslangic))} · {s.vardiya}
+                    <Timer className="h-4 w-4" /> {t("panel.card.start")} {timeFmt.format(new Date(s.baslangic))} · {t(shiftKey(s.vardiya))}
                   </div>
                   <div className="font-display text-2xl text-success tabular-nums">
                     {fmtDur(now - new Date(s.baslangic).getTime() - pausedMsOf(s.id))}
-                    <span className="ml-1 text-xs font-sans text-muted-foreground">çalışma</span>
+                    <span className="ms-1 text-xs font-sans text-muted-foreground">{t("panel.card.working")}</span>
                   </div>
 
                   {paused && op && (
                     <div className="rounded-lg border border-warning/40 bg-warning/10 p-2.5">
                       <div className="text-xs text-warning">
-                        Duruş sebebi: <strong>{op.neden}</strong>
+                        {t("panel.card.pauseReason")} <strong>{t(reasonKey(op.neden))}</strong>
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        Başlangıç: {timeFmt.format(new Date(op.baslangic))}
+                        {t("panel.card.start")} {timeFmt.format(new Date(op.baslangic))}
                       </div>
                       <div className="font-display text-xl text-warning tabular-nums">
                         {fmtDur(now - new Date(op.baslangic).getTime())}
@@ -710,21 +729,21 @@ function PanelPage() {
                     <div className="flex flex-wrap gap-2 pt-1">
                       {paused ? (
                         <Button size="sm" className="gap-2" onClick={() => resume(s)} disabled={busy}>
-                          <PlayCircle className="h-4 w-4" /> Devam
+                          <PlayCircle className="h-4 w-4" /> {t("panel.card.resume")}
                         </Button>
                       ) : (
                         <Button size="sm" variant="outline" className="gap-2" onClick={() => setPauseFor(s)}>
-                          <Pause className="h-4 w-4" /> Duraklat
+                          <Pause className="h-4 w-4" /> {t("panel.card.pause")}
                         </Button>
                       )}
                       <Button size="sm" variant="outline" className="gap-2" onClick={() => setFinishFor(s)}>
-                        <Square className="h-4 w-4" /> Bitir
+                        <Square className="h-4 w-4" /> {t("panel.card.finish")}
                       </Button>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="mt-4 text-sm text-muted-foreground">Şu anda çalışan operatör yok.</div>
+                <div className="mt-4 text-sm text-muted-foreground">{t("panel.card.noOperator")}</div>
               )}
             </div>
           );
@@ -734,26 +753,26 @@ function PanelPage() {
       {/* Duraklatma diyaloğu */}
       <Dialog open={!!pauseFor} onOpenChange={(o) => !o && setPauseFor(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Duruş Sebebi</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("panel.dialog.pauseTitle")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Sebep</Label>
+              <Label>{t("panel.dialog.reason")}</Label>
               <Select value={reason} onValueChange={setReason}>
                 <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {PAUSE_REASONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                  {PAUSE_REASONS.map((r) => <SelectItem key={r} value={r}>{t(reasonKey(r))}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="p-note">Açıklama</Label>
-              <Textarea id="p-note" value={pauseNote} onChange={(e) => setPauseNote(e.target.value)} placeholder="İsteğe bağlı" />
+              <Label htmlFor="p-note">{t("panel.dialog.description")}</Label>
+              <Textarea id="p-note" value={pauseNote} onChange={(e) => setPauseNote(e.target.value)} placeholder={t("panel.dialog.optional")} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPauseFor(null)}>Vazgeç</Button>
+            <Button variant="outline" onClick={() => setPauseFor(null)}>{t("panel.dialog.giveUp")}</Button>
             <Button onClick={doPause} disabled={busy} className="gap-2">
-              {busy && <Loader2 className="h-4 w-4 animate-spin" />} Duraklat
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("panel.dialog.pause")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -761,27 +780,27 @@ function PanelPage() {
 
       <Dialog open={!!finishFor} onOpenChange={(o) => !o && setFinishFor(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>İşi Bitir</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("panel.dialog.finishTitle")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="f-qty">Üretilen Miktar (adet)</Label>
+              <Label htmlFor="f-qty">{t("panel.dialog.qty")}</Label>
               <Input id="f-qty" type="number" min={0} inputMode="numeric" value={qty}
                 onChange={(e) => setQty(e.target.value)} className="tap-target font-display text-2xl" placeholder="0" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="f-scrap">Hurda / Fire (adet)</Label>
+              <Label htmlFor="f-scrap">{t("panel.dialog.scrap")}</Label>
               <Input id="f-scrap" type="number" min={0} inputMode="numeric" value={scrap}
                 onChange={(e) => setScrap(e.target.value)} className="tap-target" placeholder="0" />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="f-note">Notlar</Label>
-              <Textarea id="f-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="İsteğe bağlı" />
+              <Label htmlFor="f-note">{t("panel.dialog.notes")}</Label>
+              <Textarea id="f-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("panel.dialog.optional")} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFinishFor(null)}>Vazgeç</Button>
+            <Button variant="outline" onClick={() => setFinishFor(null)}>{t("panel.dialog.giveUp")}</Button>
             <Button onClick={finish} disabled={busy} className="gap-2">
-              {busy && <Loader2 className="h-4 w-4 animate-spin" />} Kaydet ve Bitir
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />} {t("panel.dialog.saveFinish")}
             </Button>
           </DialogFooter>
         </DialogContent>

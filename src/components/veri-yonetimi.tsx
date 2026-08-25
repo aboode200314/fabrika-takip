@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n";
 
 function isoDay(d: Date) {
   const x = new Date(d);
@@ -17,6 +18,7 @@ function isoDay(d: Date) {
 
 /** Yönetici veri bakım paneli: dönem sıfırlama ve tam sıfırlama. */
 export function VeriYonetimi() {
+  const t = useT();
   const { isSuperAdmin, role } = useAuth();
   const canManage = isSuperAdmin || role === "supervisor";
   const qc = useQueryClient();
@@ -57,7 +59,7 @@ export function VeriYonetimi() {
   if (!canManage) {
     return (
       <p className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">
-        Bu bölüm yalnızca yöneticiler tarafından kullanılabilir.
+        {t("rap.veri.onlyManager")}
       </p>
     );
   }
@@ -67,68 +69,75 @@ export function VeriYonetimi() {
   }
 
   async function deleteRange() {
-    if (!confirm(`${from} — ${to} aralığındaki ${counts?.oturum ?? 0} iş oturumu ve ${counts?.kesim ?? 0} kesim kaydı silinecek. Devam edilsin mi?`)) return;
-    if (!confirm("Bu işlem geri alınamaz. Onaylıyor musunuz?")) return;
+    if (!confirm(
+      t("rap.veri.confirmRange")
+        .replace("{from}", from)
+        .replace("{to}", to)
+        .replace("{oturum}", String(counts?.oturum ?? 0))
+        .replace("{kesim}", String(counts?.kesim ?? 0)),
+    )) return;
+    if (!confirm(t("rap.veri.confirmIrreversible"))) return;
     setBusy(true);
     const a = await supabase.from("production_sessions").delete().gte("baslangic", fromIso).lte("baslangic", toIso);
     const b = await supabase.from("plasma_cuts").delete().gte("baslangic", fromIso).lte("baslangic", toIso);
     setBusy(false);
     if (a.error || b.error) return toast.error((a.error ?? b.error)!.message);
-    toast.success("Seçilen dönem sıfırlandı");
+    toast.success(t("rap.veri.rangeCleared"));
     refresh();
   }
 
   async function deleteAll() {
-    if (!confirm("TÜM üretim ve OEE verileri (iş oturumları, duruşlar, kesim kayıtları) kalıcı olarak silinecek. Devam edilsin mi?")) return;
-    if (!confirm("Bu işlem geri alınamaz. Sıfırdan başlamak istediğinizden emin misiniz?")) return;
+    if (!confirm(t("rap.veri.confirmAll"))) return;
+    if (!confirm(t("rap.veri.confirmAllIrreversible"))) return;
     setBusy(true);
     const never = "1970-01-01T00:00:00.000Z";
     const a = await supabase.from("production_sessions").delete().gte("baslangic", never);
     const b = await supabase.from("plasma_cuts").delete().gte("baslangic", never);
     setBusy(false);
     if (a.error || b.error) return toast.error((a.error ?? b.error)!.message);
-    toast.success("Tüm üretim verileri sıfırlandı");
+    toast.success(t("rap.veri.allCleared"));
     refresh();
   }
 
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border bg-card p-5 shadow-industrial">
-        <h2 className="font-display text-lg tracking-wide">VERİ ÖZETİ</h2>
+        <h2 className="font-display text-lg tracking-wide">{t("rap.veri.ozet.title")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Sistemde toplam <strong className="text-foreground">{totals?.oturum ?? 0}</strong> iş oturumu ve{" "}
-          <strong className="text-foreground">{totals?.kesim ?? 0}</strong> kesim kaydı var.
+          {t("rap.veri.ozet.body")
+            .replace("{oturum}", String(totals?.oturum ?? 0))
+            .replace("{kesim}", String(totals?.kesim ?? 0))}
         </p>
       </section>
 
       <section className="space-y-4 rounded-2xl border border-destructive/40 bg-destructive/5 p-5">
         <div className="flex items-center gap-2 text-destructive">
           <AlertTriangle className="h-5 w-5" />
-          <h2 className="font-display text-lg tracking-wide">TEHLİKELİ BÖLGE</h2>
+          <h2 className="font-display text-lg tracking-wide">{t("rap.veri.tehlikeliBolge")}</h2>
         </div>
         <p className="text-xs text-muted-foreground">
-          Silinen bir plazma oturumunun düşülmüş sac stoğu otomatik olarak stoğa geri iade edilir.
+          {t("rap.veri.iadeNotu")}
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Başlangıç</Label>
+            <Label className="text-xs">{t("rap.baslangic")}</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Bitiş</Label>
+            <Label className="text-xs">{t("rap.bitis")}</Label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
           <div className="flex items-end">
             <Button variant="outline" className="w-full gap-2" disabled={busy} onClick={deleteRange}>
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              Dönemi Sıfırla ({counts?.oturum ?? 0})
+              {t("rap.veri.donemiSifirla").replace("{n}", String(counts?.oturum ?? 0))}
             </Button>
           </div>
         </div>
 
         <Button variant="destructive" className="gap-2" disabled={busy} onClick={deleteAll}>
-          <Trash2 className="h-4 w-4" /> Tüm Üretim / OEE Verilerini Sıfırla
+          <Trash2 className="h-4 w-4" /> {t("rap.veri.tumunuSifirla")}
         </Button>
       </section>
     </div>

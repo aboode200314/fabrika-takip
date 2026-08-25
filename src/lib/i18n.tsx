@@ -8,6 +8,12 @@ import {
   type ReactNode,
 } from "react";
 
+import { panelDict } from "@/lib/i18n-dicts/panel";
+import { makinelerDict } from "@/lib/i18n-dicts/makineler";
+import { raporlarDict } from "@/lib/i18n-dicts/raporlar";
+import { yonetimDict } from "@/lib/i18n-dicts/yonetim";
+import { stokDict } from "@/lib/i18n-dicts/stok";
+
 export type Lang = "tr" | "en" | "ar";
 
 export const LANGUAGES: { code: Lang; label: string; flag: string; dir: "ltr" | "rtl" }[] = [
@@ -179,7 +185,13 @@ const ar: Dict = {
   "error.pageBody": "حدث خطأ ما. جرّب التحديث أو العودة إلى الصفحة الرئيسية.",
 };
 
-const DICTS: Record<Lang, Dict> = { tr, en, ar };
+const NAMESPACES = [panelDict, makinelerDict, raporlarDict, yonetimDict, stokDict];
+
+const DICTS: Record<Lang, Dict> = {
+  tr: Object.assign({}, tr, ...NAMESPACES.map((n) => n.tr)),
+  en: Object.assign({}, en, ...NAMESPACES.map((n) => n.en)),
+  ar: Object.assign({}, ar, ...NAMESPACES.map((n) => n.ar)),
+};
 
 interface I18nState {
   lang: Lang;

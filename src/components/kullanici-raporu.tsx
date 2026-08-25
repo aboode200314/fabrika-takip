@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/lib/i18n";
 
 function isoDay(d: Date) {
   const x = new Date(d);
@@ -35,6 +36,7 @@ interface Sess {
 }
 
 export function KullaniciRaporu() {
+  const t = useT();
   const today = isoDay(new Date());
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(today);
@@ -121,7 +123,13 @@ export function KullaniciRaporu() {
   }, [sessions, pauses]);
 
   function exportCsv() {
-    const head = ["Tarih", "Personel", "Makine", "Ürün", "Vardiya", "Başlangıç", "Bitiş", "Çalışma (dk)", "Duruş (dk)", "Duruş Sayısı", "Duruş Sebepleri", "Miktar", "Hurda"];
+    const head = [
+      t("rap.kullanici.csvTarih"), t("rap.kullanici.csvPersonel"), t("rap.kullanici.csvMakine"),
+      t("rap.kullanici.csvUrun"), t("rap.kullanici.csvVardiya"), t("rap.kullanici.csvBaslangic"),
+      t("rap.kullanici.csvBitis"), t("rap.kullanici.csvCalisma"), t("rap.kullanici.csvDurus"),
+      t("rap.kullanici.csvDurusSayisi"), t("rap.kullanici.csvDurusSebepleri"), t("rap.kullanici.csvMiktar"),
+      t("rap.kullanici.csvHurda"),
+    ];
     const lines = (sessions ?? []).map((s) =>
       [
         s.baslangic.slice(0, 10),
@@ -130,7 +138,7 @@ export function KullaniciRaporu() {
         productOf(s.product_id),
         s.vardiya,
         dtFmt.format(new Date(s.baslangic)),
-        s.bitis ? dtFmt.format(new Date(s.bitis)) : "devam ediyor",
+        s.bitis ? dtFmt.format(new Date(s.bitis)) : t("rap.kullanici.devamEdiyor"),
         Number(s.sure_dakika ?? 0).toFixed(1),
         pauseMinutes(s.id).toFixed(1),
         pausesOf(s.id).length,
@@ -155,23 +163,23 @@ export function KullaniciRaporu() {
       <section className="rounded-2xl border bg-card p-5 shadow-industrial">
         <div className="mb-3 flex items-center gap-2 text-muted-foreground">
           <Filter className="h-4 w-4" />
-          <span className="text-[11px] uppercase tracking-widest">Filtreler</span>
+          <span className="text-[11px] uppercase tracking-widest">{t("rap.filtreler")}</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Başlangıç Tarihi</Label>
+            <Label className="text-xs">{t("rap.baslangicTarihi")}</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="tap-target" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Bitiş Tarihi</Label>
+            <Label className="text-xs">{t("rap.bitisTarihi")}</Label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="tap-target" />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Kullanıcı</Label>
+            <Label className="text-xs">{t("rap.kullanici")}</Label>
             <Select value={operator} onValueChange={setOperator}>
               <SelectTrigger className="tap-target"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
+                <SelectItem value="all">{t("rap.tumu")}</SelectItem>
                 {profiles?.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.ad_soyad ?? p.personel_id}{p.unvan ? ` — ${p.unvan}` : ""}
@@ -184,42 +192,42 @@ export function KullaniciRaporu() {
         {seciliProfil && (
           <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
             <UserSearch className="h-4 w-4" />
-            {seciliProfil.ad_soyad} · {seciliProfil.unvan ?? "Ünvan yok"} · Personel ID: {seciliProfil.personel_id}
+            {seciliProfil.ad_soyad} · {seciliProfil.unvan ?? t("rap.kullanici.unvanYok")} · {t("rap.kullanici.personelId").replace("{id}", seciliProfil.personel_id ?? "")}
           </div>
         )}
       </section>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label="Oturum" value={String(totals.oturum)} suffix="iş" />
-        <Kpi label="Üretim" value={String(totals.miktar)} suffix="adet" />
-        <Kpi label="Çalışma" value={(totals.calisma / 60).toFixed(1)} suffix="saat" />
-        <Kpi label="Duruş" value={(totals.durus / 60).toFixed(1)} suffix="saat" />
+        <Kpi label={t("rap.kullanici.kpi.oturum")} value={String(totals.oturum)} suffix={t("rap.kullanici.kpi.oturum.suffix")} />
+        <Kpi label={t("rap.kullanici.kpi.uretim")} value={String(totals.miktar)} suffix={t("rap.kullanici.kpi.uretim.suffix")} />
+        <Kpi label={t("rap.kullanici.kpi.calisma")} value={(totals.calisma / 60).toFixed(1)} suffix={t("rap.kullanici.kpi.calisma.suffix")} />
+        <Kpi label={t("rap.kullanici.kpi.durus")} value={(totals.durus / 60).toFixed(1)} suffix={t("rap.kullanici.kpi.durus.suffix")} />
       </div>
 
       <section className="rounded-2xl border bg-card p-5 shadow-industrial">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg tracking-wide">KULLANICI HAREKETLERİ</h2>
+          <h2 className="font-display text-lg tracking-wide">{t("rap.kullanici.title")}</h2>
           <Button variant="outline" size="sm" className="gap-2" onClick={exportCsv} disabled={(sessions ?? []).length === 0}>
             <Download className="h-4 w-4" /> CSV
           </Button>
         </div>
         {(sessions ?? []).length === 0 ? (
-          <p className="text-sm text-muted-foreground">Seçilen filtrelerde kayıt bulunamadı.</p>
+          <p className="text-sm text-muted-foreground">{t("rap.kullanici.empty")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <thead className="text-start text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="py-2">Personel</th>
-                  <th className="py-2">Makine</th>
-                  <th className="py-2">Ürün</th>
-                  <th className="py-2">Vardiya</th>
-                  <th className="py-2">Başlangıç</th>
-                  <th className="py-2">Bitiş</th>
-                  <th className="py-2">Çalışma (dk)</th>
-                  <th className="py-2">Duruş (dk)</th>
-                  <th className="py-2">Duruş Sebepleri</th>
-                  <th className="py-2">Miktar</th>
+                  <th className="py-2">{t("rap.kullanici.personel")}</th>
+                  <th className="py-2">{t("rap.makine")}</th>
+                  <th className="py-2">{t("rap.urun")}</th>
+                  <th className="py-2">{t("rap.kullanici.vardiya")}</th>
+                  <th className="py-2">{t("rap.baslangic")}</th>
+                  <th className="py-2">{t("rap.bitis")}</th>
+                  <th className="py-2">{t("rap.kullanici.calismaDk")}</th>
+                  <th className="py-2">{t("rap.kullanici.durusDk")}</th>
+                  <th className="py-2">{t("rap.kullanici.durusSebepleri")}</th>
+                  <th className="py-2">{t("rap.oturum.miktar")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -231,14 +239,14 @@ export function KullaniciRaporu() {
                     <td className="py-2">{s.vardiya}</td>
                     <td className="py-2 whitespace-nowrap">{dtFmt.format(new Date(s.baslangic))}</td>
                     <td className="py-2 whitespace-nowrap">
-                      {s.bitis ? dtFmt.format(new Date(s.bitis)) : <span className="text-success">devam ediyor</span>}
+                      {s.bitis ? dtFmt.format(new Date(s.bitis)) : <span className="text-success">{t("rap.kullanici.devamEdiyor")}</span>}
                     </td>
                     <td className="py-2">{Number(s.sure_dakika ?? 0).toFixed(0)}</td>
                     <td className="py-2 text-warning">{pauseMinutes(s.id).toFixed(0)}</td>
                     <td className="py-2 text-xs text-muted-foreground">
                       {pausesOf(s.id).length === 0
                         ? "—"
-                        : pausesOf(s.id).map((p) => `${p.neden} (${Number(p.sure_dakika ?? 0).toFixed(0)} dk)`).join(", ")}
+                        : pausesOf(s.id).map((p) => `${p.neden} (${t("rap.kullanici.dkKisaltma").replace("{n}", Number(p.sure_dakika ?? 0).toFixed(0))})`).join(", ")}
                     </td>
                     <td className="py-2 font-display">{s.miktar ?? "—"}</td>
                   </tr>
