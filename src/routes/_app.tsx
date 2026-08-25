@@ -2,6 +2,8 @@ import { createFileRoute, Link, Outlet, Navigate, useRouterState, useNavigate } 
 import { Gauge, LogOut, Loader2, BarChart3, Settings, Cpu } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useT } from "@/lib/i18n";
 import gvnLogo from "@/assets/gvn-logo.jpg.asset.json";
 
 export const Route = createFileRoute("/_app")({
@@ -12,6 +14,7 @@ function AppLayout() {
   const { session, loading, role, profile, signOut, can, isSuperAdmin } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const t = useT();
 
   if (loading) {
     return (
@@ -25,11 +28,11 @@ function AppLayout() {
   const isSupervisor = role === "supervisor" || isSuperAdmin;
 
   const allNav = [
-    { to: "/panel" as const, label: "Panel", icon: Gauge, perm: "page.panel" },
-    { to: "/makineler" as const, label: "Makineler", icon: Cpu, perm: "page.raporlar" },
-    { to: "/raporlar" as const, label: "Raporlar", icon: BarChart3, perm: "page.raporlar" },
+    { to: "/panel" as const, label: t("nav.panel"), icon: Gauge, perm: "page.panel" },
+    { to: "/makineler" as const, label: t("nav.machines"), icon: Cpu, perm: "page.raporlar" },
+    { to: "/raporlar" as const, label: t("nav.reports"), icon: BarChart3, perm: "page.raporlar" },
     ...(isSupervisor
-      ? [{ to: "/yonetim" as const, label: "Yönetim", icon: Settings, perm: "page.yonetim" }]
+      ? [{ to: "/yonetim" as const, label: t("nav.management"), icon: Settings, perm: "page.yonetim" }]
       : []),
   ];
   const nav = allNav.filter((n) => can(n.perm));
@@ -40,7 +43,7 @@ function AppLayout() {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <Link to="/" className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
           <img src={gvnLogo.url} alt="GVN Trailer logosu" className="h-9 w-auto rounded bg-white p-1" />
-          <span className="text-xs uppercase tracking-[0.2em] opacity-70">Üretim</span>
+          <span className="text-xs uppercase tracking-[0.2em] opacity-70">{t("app.section")}</span>
         </Link>
 
         <nav className="flex-1 space-y-1 p-3">
@@ -62,10 +65,13 @@ function AppLayout() {
         </nav>
 
         <div className="border-t border-white/10 p-3 text-xs">
+          <div className="pb-2">
+            <LanguageSwitcher variant="sidebar" />
+          </div>
           <div className="px-2 pb-2 opacity-70">
             {profile?.ad_soyad ?? profile?.personel_id ?? ""}
             <div className="uppercase tracking-widest opacity-70">
-              {isSupervisor ? "Süpervizör" : "Operatör"}
+              {isSupervisor ? t("role.supervisor") : t("role.operator")}
             </div>
           </div>
           <button
@@ -75,7 +81,7 @@ function AppLayout() {
             }}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm opacity-80 hover:bg-white/10 hover:opacity-100"
           >
-            <LogOut className="h-4 w-4" /> Çıkış
+            <LogOut className="h-4 w-4" /> {t("auth.signOut")}
           </button>
         </div>
       </aside>
@@ -88,6 +94,7 @@ function AppLayout() {
               <img src={gvnLogo.url} alt="GVN Trailer logosu" className="h-7 w-auto" />
             </Link>
             <div className="flex items-center gap-2">
+              <LanguageSwitcher />
               <span className="text-xs text-muted-foreground">
                 {profile?.ad_soyad ?? profile?.personel_id ?? ""}
               </span>
