@@ -12,23 +12,33 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
+import { I18nProvider, useT } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
+    <I18nProvider>
+      <NotFoundBody />
+    </I18nProvider>
+  );
+}
+
+function NotFoundBody() {
+  const t = useT();
+  return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Sayfa bulunamadı</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{t("error.notFoundTitle")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Aradığınız sayfa mevcut değil veya taşınmış olabilir.
+          {t("error.notFoundBody")}
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Ana sayfaya dön
+            {t("error.notFoundBack")}
           </Link>
         </div>
       </div>
@@ -124,10 +134,12 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Outlet />
-        <Toaster richColors position="top-center" />
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <Outlet />
+          <Toaster richColors position="top-center" />
+        </AuthProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }
