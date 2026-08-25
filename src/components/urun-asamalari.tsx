@@ -512,7 +512,7 @@ export function UrunAsamalari() {
                         </div>
                         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                           <span className="inline-flex items-center gap-1"><Timer className="h-3 w-3" />{dk(o.tahmini_sure_saniye ?? 0, t)}</span>
-                          <span>{t("yon.akis.hazirlik")}: {o.hazirlik_dakika ?? 0} {t("yon.akis.dk")}</span>
+                          <span>{t("yon.akis.hazirlikKisa")}: {o.hazirlik_dakika ?? 0} {t("yon.akis.dk")}</span>
                           {o.hedef_adet != null && <span>{t("yon.akis.hedefAdet")}: {o.hedef_adet}</span>}
                           {o.gereken_yetkinlik && <span>{t("yon.akis.yetkinlik")}: {o.gereken_yetkinlik}</span>}
                         </div>
