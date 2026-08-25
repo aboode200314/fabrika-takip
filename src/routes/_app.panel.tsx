@@ -133,19 +133,6 @@ function PanelPage() {
     },
   });
 
-  const { data: orders } = useQuery({
-    queryKey: ["orders-open"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("production_orders")
-        .select("id,kod,product_id,urun_kod_snapshot,urun_ad_snapshot,durum")
-        .in("durum", ["open", "in_progress"])
-        .order("kod");
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
   const { data: running, isLoading } = useQuery({
     queryKey: ["running-sessions"],
     queryFn: async () => {
@@ -225,7 +212,6 @@ function PanelPage() {
 
   // ---- start form
   const [machine, setMachine] = useState("");
-  const [order, setOrder] = useState("");
   const [product, setProduct] = useState("");
   const [operation, setOperation] = useState("");
   const [shift, setShift] = useState<Shift>(autoShift());
@@ -260,88 +246,13 @@ function PanelPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("product_operations")
-        .select("id,sira,ad,machine_id,tahmini_sure_saniye,hazirlik_dakika,hedef_adet")
+        .select("id,sira,ad,machine_id")
         .eq("product_id", product)
         .order("sira");
       if (error) throw error;
       return data ?? [];
     },
   });
-
-  const { data: orderProgress } = useQuery({
-    queryKey: ["order-operation-progress", order],
-    enabled: !!order,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("v_order_operation_progress")
-        .select("operation_id,uretilen,fire,yuzde,hedef_adet")
-        .eq("order_id", order);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const { data: opMachines } = useQuery({
-    queryKey: ["operation-machines", operation],
-    enabled: !!operation,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("operation_machines")
-        .select("machine_id")
-        .eq("operation_id", operation);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const progressByOp = useMemo(() => {
-    const m = new Map<string, { uretilen: number; hedef_adet: number | null }>();
-    for (const r of orderProgress ?? []) {
-      if (r.operation_id) m.set(r.operation_id, { uretilen: Number(r.uretilen ?? 0), hedef_adet: r.hedef_adet });
-    }
-    return m;
-  }, [orderProgress]);
-
-  const isStepCompleted = (op: { id: string; hedef_adet: number | null }) => {
-    const prog = progressByOp.get(op.id);
-    const hedef = prog?.hedef_adet ?? op.hedef_adet;
-    if (!hedef || hedef <= 0) return false;
-    const uretilen = prog?.uretilen ?? 0;
-    return uretilen >= hedef;
-  };
-
-  // Ürün seçildiğinde varsayılan olarak ilk tamamlanmamış aşamayı seç
-  useEffect(() => {
-    if (!product || !(operations ?? []).length) return;
-    setOperation((prev) => {
-      if (prev && (operations ?? []).some((o) => o.id === prev)) return prev;
-      const firstOpen = (operations ?? []).find((o) => !isStepCompleted(o));
-      return firstOpen?.id ?? operations![0].id;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product, operations, orderProgress]);
-
-  const selectedOperation = (operations ?? []).find((o) => o.id === operation) ?? null;
-
-  const allowedMachinesForStep = useMemo(() => {
-    if (!selectedOperation) return visibleMachines;
-    if (opMachines && opMachines.length > 0) {
-      const ids = new Set(opMachines.map((m) => m.machine_id));
-      return visibleMachines.filter((m) => ids.has(m.id));
-    }
-    if (selectedOperation.machine_id) {
-      return visibleMachines.filter((m) => m.id === selectedOperation.machine_id);
-    }
-    return visibleMachines;
-  }, [selectedOperation, opMachines, visibleMachines]);
-
-  // Seçilen aşama değiştiğinde artık uygun olmayan makineyi temizle
-  useEffect(() => {
-    if (machine && !allowedMachinesForStep.some((m) => m.id === machine)) {
-      setMachine("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allowedMachinesForStep]);
 
   const selectedMachine = (machines ?? []).find((m) => m.id === machine) ?? null;
   const isPlasma = isPlasmaMachine(selectedMachine);
@@ -391,7 +302,6 @@ function PanelPage() {
     const { error } = await supabase.from("production_sessions").insert({
       operator_id: user!.id,
       machine_id: machine,
-      order_id: order || null,
       product_id: product || null,
       operation_id: operation || null,
       vardiya: shift,
@@ -403,7 +313,6 @@ function PanelPage() {
     if (error) return toast.error(t("panel.toast.startFailed") + error.message);
     toast.success(t("panel.toast.jobStarted"));
     setStokId(""); setLevha("1");
-    setOrder(""); setProduct(""); setOperation(""); setMachine("");
     qc.invalidateQueries({ queryKey: ["running-sessions"] });
   }
 
@@ -613,22 +522,13 @@ function PanelPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">{t("panel.form.order")}</Label>
-                <Select
-                  value={order || "__none__"}
-                  onValueChange={(v) => {
-                    if (v === "__none__") { setOrder(""); return; }
-                    setOrder(v);
-                    const ord = (orders ?? []).find((o) => o.id === v);
-                    if (ord?.product_id) { setProduct(ord.product_id); setOperation(""); }
-                  }}
-                >
-                  <SelectTrigger className="tap-target"><SelectValue placeholder={t("panel.form.orderPlaceholder")} /></SelectTrigger>
+                <Label className="text-xs">{t("panel.form.machine")}</Label>
+                <Select value={machine} onValueChange={setMachine}>
+                  <SelectTrigger className="tap-target"><SelectValue placeholder={t("panel.form.machinePlaceholder")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">{t("panel.form.orderNone")}</SelectItem>
-                    {(orders ?? []).map((o) => (
-                      <SelectItem key={o.id} value={o.id}>
-                        {o.kod} — {o.urun_kod_snapshot ?? ""} {o.urun_ad_snapshot ?? ""}
+                    {visibleMachines.map((m) => (
+                      <SelectItem key={m.id} value={m.id} disabled={byMachine.has(m.id)}>
+                        {m.kod} — {m.ad} {byMachine.has(m.id) ? t("panel.form.machineBusy") : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -636,11 +536,7 @@ function PanelPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">{t("panel.form.product")}</Label>
-                <Select
-                  value={product}
-                  onValueChange={(v) => { setProduct(v); setOperation(""); }}
-                  disabled={!!order}
-                >
+                <Select value={product} onValueChange={(v) => { setProduct(v); setOperation(""); }}>
                   <SelectTrigger className="tap-target"><SelectValue placeholder={t("panel.form.productPlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {visibleProducts.map((p) => (
@@ -654,68 +550,18 @@ function PanelPage() {
             {product && (operations ?? []).length > 0 && (
               <div className="space-y-1.5">
                 <Label className="text-xs">{t("panel.form.operation")}</Label>
-                <div className="flex flex-col gap-2">
-                  {(operations ?? []).map((o) => {
-                    const completed = isStepCompleted(o);
-                    const isCurrent = o.id === operation;
-                    const prog = progressByOp.get(o.id);
-                    const hedef = prog?.hedef_adet ?? o.hedef_adet;
-                    return (
-                      <button
-                        key={o.id}
-                        type="button"
-                        onClick={() => setOperation(o.id)}
-                        className={`tap-target flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-start transition-colors ${
-                          isCurrent
-                            ? "border-primary bg-primary/10"
-                            : completed
-                              ? "border-success/30 bg-success/5 text-muted-foreground"
-                              : "border-muted bg-muted/30 text-muted-foreground"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                              completed ? "bg-success text-success-foreground" : isCurrent ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {completed ? "✓" : o.sira}
-                          </span>
-                          <span className={isCurrent ? "font-medium text-foreground" : ""}>{o.ad}</span>
-                        </span>
-                        <span className="flex flex-col items-end text-xs">
-                          {order && hedef ? (
-                            <span>{prog?.uretilen ?? 0} / {hedef}</span>
-                          ) : hedef ? (
-                            <span>{t("panel.form.stepTarget")}: {hedef}</span>
-                          ) : null}
-                          {o.tahmini_sure_saniye ? (
-                            <span className="text-muted-foreground">
-                              {t("panel.form.stepCycleTime")}: {o.tahmini_sure_saniye}s
-                              {o.hazirlik_dakika ? ` · ${t("panel.form.stepSetupTime")}: ${o.hazirlik_dakika}dk` : ""}
-                            </span>
-                          ) : null}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                <Select value={operation} onValueChange={setOperation}>
+                  <SelectTrigger className="tap-target"><SelectValue placeholder={t("panel.form.operationPlaceholder")} /></SelectTrigger>
+                  <SelectContent>
+                    {(operations ?? [])
+                      .filter((o) => !machine || !o.machine_id || o.machine_id === machine)
+                      .map((o) => (
+                        <SelectItem key={o.id} value={o.id}>{o.sira}. {o.ad}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t("panel.form.machine")}</Label>
-              <Select value={machine} onValueChange={setMachine}>
-                <SelectTrigger className="tap-target"><SelectValue placeholder={t("panel.form.machinePlaceholder")} /></SelectTrigger>
-                <SelectContent>
-                  {allowedMachinesForStep.map((m) => (
-                    <SelectItem key={m.id} value={m.id} disabled={byMachine.has(m.id)}>
-                      {m.kod} — {m.ad} {byMachine.has(m.id) ? t("panel.form.machineBusy") : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
             {isPlasma && (
               <div className="space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-4">

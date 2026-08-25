@@ -13,7 +13,6 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
 import { I18nProvider, useT } from "@/lib/i18n";
-import { LanguageSync } from "@/components/language-sync";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -137,7 +136,6 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <AuthProvider>
-          <LanguageSync />
           <Outlet />
           <Toaster richColors position="top-center" />
         </AuthProvider>

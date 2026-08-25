@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_OPERATOR_PERMISSIONS, expandPermissions, type DataScope } from "@/lib/permissions";
+import { DEFAULT_OPERATOR_PERMISSIONS } from "@/lib/permissions";
 
 export type AppRole = "operator" | "supervisor";
 
@@ -10,8 +10,6 @@ export interface ProfileData {
   personel_id: string;
   ad_soyad: string;
   departman: string | null;
-  dil?: string | null;
-  veri_kapsam?: string | null;
 }
 
 interface AuthState {
@@ -23,8 +21,6 @@ interface AuthState {
   roleKeys: string[];
   isSuperAdmin: boolean;
   permissions: string[];
-  /** Kullanıcının veri kapsamı: own | department | all */
-  dataScope: DataScope;
   can: (perm: string) => boolean;
   hasRoleKey: (key: string) => boolean;
   /** null => tüm makineler serbest */
@@ -71,13 +67,10 @@ async function loadProfileAndRole(userId: string) {
   const explicit = (perms ?? []).map((p) => p.permission);
   const fromRoles = (rolePerms ?? []).map((p) => p.permission);
   const merged = Array.from(new Set([...explicit, ...fromRoles]));
-  const base = merged.length > 0 ? merged : DEFAULT_OPERATOR_PERMISSIONS;
-  // Eski (page.*/kayit.*) ve yeni (modül.işlem) anahtarları birbirine denk say
-  const permissions = expandPermissions(base);
+  const permissions = merged.length > 0 ? merged : DEFAULT_OPERATOR_PERMISSIONS;
 
   return {
     profile: (profile as ProfileData | null) ?? null,
-    dataScope: ((profile as ProfileData | null)?.veri_kapsam as DataScope | undefined) ?? "own",
     role,
     roleKeys,
     isSuperAdmin,
@@ -96,7 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [permissions, setPermissions] = useState<string[]>([]);
-  const [dataScope, setDataScope] = useState<DataScope>("own");
   const [roleKeys, setRoleKeys] = useState<string[]>([]);
   const [allowedMachineIds, setAllowedMachineIds] = useState<string[] | null>(null);
   const [allowedProductIds, setAllowedProductIds] = useState<string[] | null>(null);
@@ -113,7 +105,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRoleKeys(r.roleKeys);
       setIsSuperAdmin(r.isSuperAdmin);
       setPermissions(r.permissions);
-      setDataScope(r.isSuperAdmin ? "all" : r.dataScope);
       setAllowedMachineIds(r.isSuperAdmin ? null : r.allowedMachineIds);
       setAllowedProductIds(r.isSuperAdmin ? null : r.allowedProductIds);
       setAllowedDepartmentIds(r.isSuperAdmin ? null : r.allowedDepartmentIds);
@@ -123,7 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRoleKeys([]);
       setIsSuperAdmin(false);
       setPermissions([]);
-      setDataScope("own");
       setAllowedMachineIds(null);
       setAllowedProductIds(null);
       setAllowedDepartmentIds(null);
@@ -154,7 +144,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roleKeys,
         isSuperAdmin,
         permissions,
-        dataScope,
         can,
         hasRoleKey,
 

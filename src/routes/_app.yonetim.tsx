@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
-import { Activity, Clock, Layers, TrendingUp, Trash2, Plus, Loader2, Save, Users, KeyRound, Cog } from "lucide-react";
+import { Activity, Clock, Layers, TrendingUp, Trash2, Plus, Loader2, Save, Users, KeyRound } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   createWorkerAccount, deleteWorkerAccount, listWorkers, setWorkerRole,
@@ -14,7 +14,6 @@ import { YetkilerTab } from "@/components/yetkiler-tab";
 import { StokMerkezi } from "@/components/stok-merkezi";
 import { DepartmanKapsam } from "@/components/departman-kapsam";
 import { UrunAsamalari } from "@/components/urun-asamalari";
-import { UretimEmirleri } from "@/components/uretim-emirleri";
 
 
 import { VardiyaAyarlari } from "@/components/vardiya-ayarlari";
@@ -32,12 +31,6 @@ import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { levhaKg, type StockRow } from "@/lib/sac";
 import { useAuth } from "@/lib/auth";
-import { LANGUAGES } from "@/lib/i18n";
-import { DATA_SCOPES } from "@/lib/permissions";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_app/yonetim")({
   component: YonetimGate,
@@ -70,11 +63,10 @@ function YonetimPanel() {
       </div>
 
       <Tabs defaultValue="ozet" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-8">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 lg:grid-cols-7">
           <TabsTrigger value="ozet">{t("yon.tab.ozet")}</TabsTrigger>
           <TabsTrigger value="master">{t("yon.tab.master")}</TabsTrigger>
           <TabsTrigger value="asamalar">{t("yon.tab.asamalar")}</TabsTrigger>
-          <TabsTrigger value="emirler">{t("yon.tab.emirler", "Üretim Emirleri")}</TabsTrigger>
           <TabsTrigger value="stok">{t("yon.tab.stok")}</TabsTrigger>
           <TabsTrigger value="vardiya">{t("yon.tab.vardiya")}</TabsTrigger>
           <TabsTrigger value="erisim">{t("yon.tab.erisim")}</TabsTrigger>
@@ -84,7 +76,6 @@ function YonetimPanel() {
         <TabsContent value="ozet"><OzetTab /></TabsContent>
         <TabsContent value="master"><MasterTab /></TabsContent>
         <TabsContent value="asamalar"><UrunAsamalari /></TabsContent>
-        <TabsContent value="emirler"><UretimEmirleri /></TabsContent>
         <TabsContent value="stok"><StokMerkezi /></TabsContent>
         <TabsContent value="vardiya"><VardiyaAyarlari /></TabsContent>
         <TabsContent value="erisim"><ErisimTab /></TabsContent>
@@ -366,51 +357,6 @@ function KullanicilarTab() {
     queryFn: () => listFn(),
   });
 
-  const { data: departments } = useQuery({
-    queryKey: ["departments-all"],
-    queryFn: async () => (await supabase.from("departments").select("id,kod,ad,aktif").order("ad")).data ?? [],
-  });
-
-  const { data: roles } = useQuery({
-    queryKey: ["roles-all"],
-    queryFn: async () => (await supabase.from("roles").select("key,ad,sira").order("sira")).data ?? [],
-  });
-
-  const { data: machines } = useQuery({
-    queryKey: ["machines-all"],
-    queryFn: async () => (await supabase.from("machines").select("id,kod,ad").order("kod")).data ?? [],
-  });
-
-  const { data: extra } = useQuery({
-    queryKey: ["workers-extra"],
-    queryFn: async () => {
-      const [{ data: profiles }, { data: assignments }, { data: userMachines }] = await Promise.all([
-        supabase.from("profiles").select("id,aktif,department_id,dil,veri_kapsam"),
-        supabase.from("user_role_assignments").select("user_id,role_key"),
-        supabase.from("user_machines").select("user_id,machine_id"),
-      ]);
-      const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
-      const assignMap = new Map<string, string[]>();
-      for (const a of assignments ?? []) {
-        const arr = assignMap.get(a.user_id) ?? [];
-        arr.push(a.role_key);
-        assignMap.set(a.user_id, arr);
-      }
-      const machMap = new Map<string, string[]>();
-      for (const m of userMachines ?? []) {
-        const arr = machMap.get(m.user_id) ?? [];
-        arr.push(m.machine_id);
-        machMap.set(m.user_id, arr);
-      }
-      return { profileMap, assignMap, machMap };
-    },
-  });
-
-  function invalidateWorkers() {
-    qc.invalidateQueries({ queryKey: ["workers"] });
-    qc.invalidateQueries({ queryKey: ["workers-extra"] });
-  }
-
   const [personelId, setPersonelId] = useState("");
   const [adSoyad, setAdSoyad] = useState("");
   const [departman, setDepartman] = useState("");
@@ -438,7 +384,7 @@ function KullanicilarTab() {
       });
       toast.success(t("yon.kul.hesapOlusturuldu"));
       setPersonelId(""); setAdSoyad(""); setDepartman(""); setUnvan(""); setPassword(""); setMakeSup(false);
-      invalidateWorkers();
+      qc.invalidateQueries({ queryKey: ["workers"] });
     } catch (err: any) {
       toast.error(err?.message ?? t("yon.kul.hataOlustu"));
     } finally {
@@ -496,18 +442,13 @@ function KullanicilarTab() {
         {isLoading ? (
           <div className="p-8 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" /></div>
         ) : (
-          <Table className="min-w-[1200px]">
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t("yon.th.personelId")}</TableHead>
                 <TableHead>{t("yon.th.adSoyad")}</TableHead>
                 <TableHead>{t("yon.th.unvan")}</TableHead>
                 <TableHead>{t("yon.th.departman")}</TableHead>
-                <TableHead>{t("yon.kul.roller", "Rol(ler)")}</TableHead>
-                <TableHead>{t("yon.kul.durum", "Durum")}</TableHead>
-                <TableHead>{t("yon.kul.dil", "Dil")}</TableHead>
-                <TableHead>{t("yon.kul.veriKapsami", "Veri Kapsamı")}</TableHead>
-                <TableHead>{t("yon.kul.makineler", "Makineler")}</TableHead>
                 <TableHead>{t("yon.th.supervisor")}</TableHead>
                 <TableHead />
               </TableRow>
@@ -515,11 +456,6 @@ function KullanicilarTab() {
             <TableBody>
               {workers?.map((w) => {
                 const isSup = w.roles.includes("supervisor");
-                const profile = extra?.profileMap.get(w.id);
-                const assignedRoleKeys = extra?.assignMap.get(w.id) ?? [];
-                const assignedRoleNames = assignedRoleKeys
-                  .map((k) => roles?.find((r) => r.key === k)?.ad ?? k);
-                const machineIds = extra?.machMap.get(w.id) ?? [];
                 return (
                   <TableRow key={w.id}>
                     <TableCell className="font-mono text-xs">{w.personel_id}</TableCell>
@@ -533,7 +469,7 @@ function KullanicilarTab() {
                           try {
                             await titleFn({ data: { user_id: w.id, unvan: yeni } });
                             toast.success(t("yon.kul.unvanGuncellendi"));
-                            invalidateWorkers();
+                            qc.invalidateQueries({ queryKey: ["workers"] });
                           } catch (err: any) {
                             toast.error(err?.message ?? t("yon.kul.hata"));
                           }
@@ -542,128 +478,14 @@ function KullanicilarTab() {
                         {w.unvan ?? t("yon.kul.ekle")}
                       </button>
                     </TableCell>
-                    <TableCell className="min-w-[160px]">
-                      <Select
-                        value={profile?.department_id ?? "none"}
-                        onValueChange={async (v) => {
-                          const { error } = await supabase
-                            .from("profiles")
-                            .update({ department_id: v === "none" ? null : v })
-                            .eq("id", w.id);
-                          if (error) return toast.error(error.message);
-                          invalidateWorkers();
-                        }}
-                      >
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">—</SelectItem>
-                          {departments?.map((d) => (
-                            <SelectItem key={d.id} value={d.id}>{d.ad}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="min-w-[160px] text-xs">
-                      {assignedRoleNames.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {assignedRoleNames.map((n, i) => (
-                            <Badge key={i} variant="secondary" className="font-normal">{n}</Badge>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={profile?.aktif ?? true}
-                        onCheckedChange={async (v) => {
-                          const { error } = await supabase.from("profiles").update({ aktif: v }).eq("id", w.id);
-                          if (error) return toast.error(error.message);
-                          invalidateWorkers();
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell className="min-w-[110px]">
-                      <Select
-                        value={profile?.dil ?? "tr"}
-                        onValueChange={async (v) => {
-                          const { error } = await supabase.from("profiles").update({ dil: v }).eq("id", w.id);
-                          if (error) return toast.error(error.message);
-                          invalidateWorkers();
-                        }}
-                      >
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {LANGUAGES.map((l) => (
-                            <SelectItem key={l.code} value={l.code}>{l.flag} {l.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="min-w-[180px]">
-                      <Select
-                        value={profile?.veri_kapsam ?? "own"}
-                        onValueChange={async (v) => {
-                          const { error } = await supabase.from("profiles").update({ veri_kapsam: v }).eq("id", w.id);
-                          if (error) return toast.error(error.message);
-                          invalidateWorkers();
-                        }}
-                      >
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {DATA_SCOPES.map((s) => (
-                            <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-8 text-xs gap-1">
-                            <Cog className="h-3.5 w-3.5" />
-                            {machineIds.length}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 max-h-72 overflow-y-auto space-y-1">
-                          <p className="mb-2 text-xs font-medium text-muted-foreground">
-                            {t("yon.kul.atanmisMakineler", "Atanmış Makineler")}
-                          </p>
-                          {machines?.length ? machines.map((m) => {
-                            const checked = machineIds.includes(m.id);
-                            return (
-                              <label key={m.id} className="flex items-center gap-2 text-sm py-1 cursor-pointer">
-                                <Checkbox
-                                  checked={checked}
-                                  onCheckedChange={async (v) => {
-                                    if (v) {
-                                      const { error } = await supabase.from("user_machines").insert({ user_id: w.id, machine_id: m.id });
-                                      if (error) return toast.error(error.message);
-                                    } else {
-                                      const { error } = await supabase.from("user_machines").delete().eq("user_id", w.id).eq("machine_id", m.id);
-                                      if (error) return toast.error(error.message);
-                                    }
-                                    qc.invalidateQueries({ queryKey: ["workers-extra"] });
-                                  }}
-                                />
-                                <span className="font-mono text-xs">{m.kod}</span>
-                                <span className="text-muted-foreground truncate">{m.ad}</span>
-                              </label>
-                            );
-                          }) : (
-                            <p className="text-xs text-muted-foreground">{t("yon.kul.makineYok", "Makine tanımlı değil")}</p>
-                          )}
-                        </PopoverContent>
-                      </Popover>
-                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{w.departman ?? "—"}</TableCell>
                     <TableCell>
                       <Switch
                         checked={isSup}
                         onCheckedChange={async (v) => {
                           try {
                             await roleFn({ data: { user_id: w.id, supervisor: v } });
-                            invalidateWorkers();
+                            qc.invalidateQueries({ queryKey: ["workers"] });
                           } catch (err: any) {
                             toast.error(err?.message ?? t("yon.kul.hata"));
                           }
@@ -697,7 +519,7 @@ function KullanicilarTab() {
                           try {
                             await deleteFn({ data: { user_id: w.id } });
                             toast.success(t("yon.kul.hesapSilindi"));
-                            invalidateWorkers();
+                            qc.invalidateQueries({ queryKey: ["workers"] });
                           } catch (err: any) {
                             toast.error(err?.message ?? t("yon.kul.hata"));
                           }
@@ -711,7 +533,7 @@ function KullanicilarTab() {
               })}
               {workers?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">
+                  <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
                     {t("yon.kul.henuzYok")}
                   </TableCell>
                 </TableRow>

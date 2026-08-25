@@ -110,10 +110,7 @@ export type Database = {
           id: string
           machine_id: string
           notlar: string | null
-          operation_id: string | null
           operator_id: string
-          order_id: string | null
-          session_id: string | null
           sure_dakika: number
           vardiya: Database["public"]["Enums"]["shift_type"]
         }
@@ -125,10 +122,7 @@ export type Database = {
           id?: string
           machine_id: string
           notlar?: string | null
-          operation_id?: string | null
           operator_id: string
-          order_id?: string | null
-          session_id?: string | null
           sure_dakika: number
           vardiya: Database["public"]["Enums"]["shift_type"]
         }
@@ -140,10 +134,7 @@ export type Database = {
           id?: string
           machine_id?: string
           notlar?: string | null
-          operation_id?: string | null
           operator_id?: string
-          order_id?: string | null
-          session_id?: string | null
           sure_dakika?: number
           vardiya?: Database["public"]["Enums"]["shift_type"]
         }
@@ -162,48 +153,6 @@ export type Database = {
             referencedRelation: "machines"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "downtime_logs_operation_id_fkey"
-            columns: ["operation_id"]
-            isOneToOne: false
-            referencedRelation: "product_operations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "downtime_logs_operation_id_fkey"
-            columns: ["operation_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_operation_progress"
-            referencedColumns: ["operation_id"]
-          },
-          {
-            foreignKeyName: "downtime_logs_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "production_orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "downtime_logs_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_operation_progress"
-            referencedColumns: ["order_id"]
-          },
-          {
-            foreignKeyName: "downtime_logs_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_progress"
-            referencedColumns: ["order_id"]
-          },
-          {
-            foreignKeyName: "downtime_logs_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "production_sessions"
-            referencedColumns: ["id"]
-          },
         ]
       }
       machines: {
@@ -214,8 +163,6 @@ export type Database = {
           department_id: string | null
           id: string
           kod: string
-          notlar: string | null
-          tip: string | null
         }
         Insert: {
           ad: string
@@ -224,8 +171,6 @@ export type Database = {
           department_id?: string | null
           id?: string
           kod: string
-          notlar?: string | null
-          tip?: string | null
         }
         Update: {
           ad?: string
@@ -234,8 +179,6 @@ export type Database = {
           department_id?: string | null
           id?: string
           kod?: string
-          notlar?: string | null
-          tip?: string | null
         }
         Relationships: [
           {
@@ -246,103 +189,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      operation_machines: {
-        Row: {
-          created_at: string
-          id: string
-          machine_id: string
-          operation_id: string
-          varsayilan: boolean
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          machine_id: string
-          operation_id: string
-          varsayilan?: boolean
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          machine_id?: string
-          operation_id?: string
-          varsayilan?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: "operation_machines_machine_id_fkey"
-            columns: ["machine_id"]
-            isOneToOne: false
-            referencedRelation: "machines"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "operation_machines_operation_id_fkey"
-            columns: ["operation_id"]
-            isOneToOne: false
-            referencedRelation: "product_operations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "operation_machines_operation_id_fkey"
-            columns: ["operation_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_operation_progress"
-            referencedColumns: ["operation_id"]
-          },
-        ]
-      }
-      permission_aliases: {
-        Row: {
-          alias: string
-          canonical: string
-          created_at: string
-        }
-        Insert: {
-          alias: string
-          canonical: string
-          created_at?: string
-        }
-        Update: {
-          alias?: string
-          canonical?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      permission_catalog: {
-        Row: {
-          action: string
-          created_at: string
-          islem_ad: string | null
-          key: string
-          modul_ad: string | null
-          module: string
-          sira: number
-          sistem: boolean
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          islem_ad?: string | null
-          key: string
-          modul_ad?: string | null
-          module: string
-          sira?: number
-          sistem?: boolean
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          islem_ad?: string | null
-          key?: string
-          modul_ad?: string | null
-          module?: string
-          sira?: number
-          sistem?: boolean
-        }
-        Relationships: []
       }
       plasma_cuts: {
         Row: {
@@ -420,12 +266,7 @@ export type Database = {
           aciklama: string | null
           ad: string
           created_at: string
-          gereken_yetkinlik: string | null
-          hazirlik_dakika: number
-          hedef_adet: number | null
           id: string
-          kalite_kontrol: boolean
-          kod: string | null
           machine_id: string | null
           product_id: string
           sira: number
@@ -435,12 +276,7 @@ export type Database = {
           aciklama?: string | null
           ad: string
           created_at?: string
-          gereken_yetkinlik?: string | null
-          hazirlik_dakika?: number
-          hedef_adet?: number | null
           id?: string
-          kalite_kontrol?: boolean
-          kod?: string | null
           machine_id?: string | null
           product_id: string
           sira: number
@@ -450,12 +286,7 @@ export type Database = {
           aciklama?: string | null
           ad?: string
           created_at?: string
-          gereken_yetkinlik?: string | null
-          hazirlik_dakika?: number
-          hedef_adet?: number | null
           id?: string
-          kalite_kontrol?: boolean
-          kod?: string | null
           machine_id?: string | null
           product_id?: string
           sira?: number
@@ -525,80 +356,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "production_logs_operation_id_fkey"
-            columns: ["operation_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_operation_progress"
-            referencedColumns: ["operation_id"]
-          },
-          {
             foreignKeyName: "production_logs_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      production_orders: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          department_id: string | null
-          durum: string
-          hedef_adet: number
-          id: string
-          kod: string
-          notlar: string | null
-          oncelik: number
-          product_id: string | null
-          teslim_tarihi: string | null
-          updated_at: string
-          urun_ad_snapshot: string | null
-          urun_kod_snapshot: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          department_id?: string | null
-          durum?: string
-          hedef_adet?: number
-          id?: string
-          kod: string
-          notlar?: string | null
-          oncelik?: number
-          product_id?: string | null
-          teslim_tarihi?: string | null
-          updated_at?: string
-          urun_ad_snapshot?: string | null
-          urun_kod_snapshot?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          department_id?: string | null
-          durum?: string
-          hedef_adet?: number
-          id?: string
-          kod?: string
-          notlar?: string | null
-          oncelik?: number
-          product_id?: string | null
-          teslim_tarihi?: string | null
-          updated_at?: string
-          urun_ad_snapshot?: string | null
-          urun_kod_snapshot?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "production_orders_department_id_fkey"
-            columns: ["department_id"]
-            isOneToOne: false
-            referencedRelation: "departments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_orders_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -615,7 +373,6 @@ export type Database = {
           created_at: string
           durum: string
           durus_sayisi: number
-          emir_kod_snapshot: string | null
           genislik_mm: number | null
           hurda: number
           id: string
@@ -628,7 +385,6 @@ export type Database = {
           notlar: string | null
           operation_id: string | null
           operator_id: string
-          order_id: string | null
           product_id: string | null
           sac_tipi: string | null
           stok_dusuldu: boolean
@@ -651,7 +407,6 @@ export type Database = {
           created_at?: string
           durum?: string
           durus_sayisi?: number
-          emir_kod_snapshot?: string | null
           genislik_mm?: number | null
           hurda?: number
           id?: string
@@ -664,7 +419,6 @@ export type Database = {
           notlar?: string | null
           operation_id?: string | null
           operator_id: string
-          order_id?: string | null
           product_id?: string | null
           sac_tipi?: string | null
           stok_dusuldu?: boolean
@@ -687,7 +441,6 @@ export type Database = {
           created_at?: string
           durum?: string
           durus_sayisi?: number
-          emir_kod_snapshot?: string | null
           genislik_mm?: number | null
           hurda?: number
           id?: string
@@ -700,7 +453,6 @@ export type Database = {
           notlar?: string | null
           operation_id?: string | null
           operator_id?: string
-          order_id?: string | null
           product_id?: string | null
           sac_tipi?: string | null
           stok_dusuldu?: boolean
@@ -729,34 +481,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "product_operations"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_sessions_operation_id_fkey"
-            columns: ["operation_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_operation_progress"
-            referencedColumns: ["operation_id"]
-          },
-          {
-            foreignKeyName: "production_sessions_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "production_orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "production_sessions_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_operation_progress"
-            referencedColumns: ["order_id"]
-          },
-          {
-            foreignKeyName: "production_sessions_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_progress"
-            referencedColumns: ["order_id"]
           },
           {
             foreignKeyName: "production_sessions_product_id_fkey"
@@ -831,11 +555,9 @@ export type Database = {
           created_at: string
           departman: string | null
           department_id: string | null
-          dil: string
           id: string
           personel_id: string
           unvan: string | null
-          veri_kapsam: string
         }
         Insert: {
           ad_soyad: string
@@ -843,11 +565,9 @@ export type Database = {
           created_at?: string
           departman?: string | null
           department_id?: string | null
-          dil?: string
           id: string
           personel_id: string
           unvan?: string | null
-          veri_kapsam?: string
         }
         Update: {
           ad_soyad?: string
@@ -855,11 +575,9 @@ export type Database = {
           created_at?: string
           departman?: string | null
           department_id?: string | null
-          dil?: string
           id?: string
           personel_id?: string
           unvan?: string | null
-          veri_kapsam?: string
         }
         Relationships: [
           {
@@ -877,12 +595,9 @@ export type Database = {
           id: string
           machine_id: string
           notlar: string | null
-          operation_id: string | null
           operator_id: string
-          order_id: string | null
           product_id: string
           red_miktari: number
-          session_id: string | null
           vardiya: Database["public"]["Enums"]["shift_type"]
         }
         Insert: {
@@ -890,12 +605,9 @@ export type Database = {
           id?: string
           machine_id: string
           notlar?: string | null
-          operation_id?: string | null
           operator_id: string
-          order_id?: string | null
           product_id: string
           red_miktari: number
-          session_id?: string | null
           vardiya: Database["public"]["Enums"]["shift_type"]
         }
         Update: {
@@ -903,12 +615,9 @@ export type Database = {
           id?: string
           machine_id?: string
           notlar?: string | null
-          operation_id?: string | null
           operator_id?: string
-          order_id?: string | null
           product_id?: string
           red_miktari?: number
-          session_id?: string | null
           vardiya?: Database["public"]["Enums"]["shift_type"]
         }
         Relationships: [
@@ -920,52 +629,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "quality_logs_operation_id_fkey"
-            columns: ["operation_id"]
-            isOneToOne: false
-            referencedRelation: "product_operations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quality_logs_operation_id_fkey"
-            columns: ["operation_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_operation_progress"
-            referencedColumns: ["operation_id"]
-          },
-          {
-            foreignKeyName: "quality_logs_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "production_orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quality_logs_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_operation_progress"
-            referencedColumns: ["order_id"]
-          },
-          {
-            foreignKeyName: "quality_logs_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "v_order_progress"
-            referencedColumns: ["order_id"]
-          },
-          {
             foreignKeyName: "quality_logs_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "quality_logs_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "production_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -1460,50 +1127,7 @@ export type Database = {
       }
     }
     Views: {
-      v_order_operation_progress: {
-        Row: {
-          fire: number | null
-          hedef_adet: number | null
-          operation_ad: string | null
-          operation_id: string | null
-          order_id: string | null
-          order_kod: string | null
-          product_id: string | null
-          sira: number | null
-          uretilen: number | null
-          yuzde: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "production_orders_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      v_order_progress: {
-        Row: {
-          adim_sayisi: number | null
-          hedef_adet: number | null
-          order_id: string | null
-          order_kod: string | null
-          product_id: string | null
-          toplam_fire: number | null
-          toplam_uretilen: number | null
-          yuzde: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "production_orders_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       has_app_role: {
@@ -1552,7 +1176,6 @@ export type Database = {
           yogunluk: number
         }[]
       }
-      machine_in_my_scope: { Args: { _machine_id: string }; Returns: boolean }
       my_department_ids: {
         Args: never
         Returns: {
@@ -1565,14 +1188,7 @@ export type Database = {
           permission: string
         }[]
       }
-      my_scope: { Args: never; Returns: string }
       net_work_minutes: { Args: { _gun: number }; Returns: number }
-      permission_equivalents: {
-        Args: { _perm: string }
-        Returns: {
-          permission: string
-        }[]
-      }
     }
     Enums: {
       app_role: "operator" | "supervisor"
