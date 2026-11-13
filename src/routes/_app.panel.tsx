@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { isPlasmaMachine, levhaKg, SAC_TIPLERI, type StockRow } from "@/lib/sac";
+import { isSawMachine, profileLabel, type ProfileStock } from "@/lib/profile-stock";
 import { useT } from "@/lib/i18n";
 
 
@@ -233,6 +234,7 @@ function PanelPage() {
       const { data, error } = await supabase
         .from("sheet_stock")
         .select("id,sac_tipi,kalinlik_mm,uzunluk_mm,genislik_mm,adet,kritik_adet,yogunluk,notlar")
+        .eq("malzeme_turu", "sac")
         .order("sac_tipi")
         .order("kalinlik_mm");
       if (error) throw error;
@@ -256,10 +258,23 @@ function PanelPage() {
 
   const selectedMachine = (machines ?? []).find((m) => m.id === machine) ?? null;
   const isPlasma = isPlasmaMachine(selectedMachine);
+  const isSaw = isSawMachine(selectedMachine);
+  const [profileId, setProfileId] = useState("__none__");
+  const [profileQty, setProfileQty] = useState("1");
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profile-stock"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("sheet_stock").select("*").in("malzeme_turu", ["profil", "boru"]).order("sac_tipi");
+      if (error) throw error;
+      return data as ProfileStock[];
+    },
+    refetchInterval: 15000,
+  });
   const isCustomSheet = stokId === CUSTOM;
   const selectedStock = (stock ?? []).find((s) => s.id === stokId) ?? null;
 
   async function start() {
+    if (!user) return;
     if (!machine) return toast.error(t("panel.toast.selectMachine"));
     if (byMachine.has(machine)) return toast.error(t("panel.toast.machineBusy"));
 
@@ -298,9 +313,17 @@ function PanelPage() {
     }
 
 
+    if (isSaw && profileId !== "__none__") {
+      const material = profiles.find(s => s.id === profileId);
+      const consumed = Number(profileQty);
+      if (!material) return toast.error(t("stok.err.kalemSeciniz"));
+      if (!Number.isFinite(consumed) || consumed <= 0) return toast.error(t("stok.err.gecerliAdet"));
+      if (consumed > material.adet) return toast.error(t("stok.err.yetersizStok").replace("{n}", String(material.adet)));
+      plasma = { stok_id: material.id, levha_adedi: consumed };
+    }
     setBusy(true);
     const { error } = await supabase.from("production_sessions").insert({
-      operator_id: user!.id,
+      operator_id: user?.id ?? "",
       machine_id: machine,
       product_id: product || null,
       operation_id: operation || null,
@@ -312,7 +335,7 @@ function PanelPage() {
     setBusy(false);
     if (error) return toast.error(t("panel.toast.startFailed") + error.message);
     toast.success(t("panel.toast.jobStarted"));
-    setStokId(""); setLevha("1");
+    setStokId(""); setLevha("1"); setProfileId("__none__"); setProfileQty("1");
     qc.invalidateQueries({ queryKey: ["running-sessions"] });
   }
 
@@ -328,7 +351,7 @@ function PanelPage() {
     setBusy(true);
     const { error } = await supabase.from("session_pauses").insert({
       session_id: pauseFor.id,
-      operator_id: user!.id,
+      operator_id: user?.id ?? "",
       neden: reason,
       baslangic: new Date().toISOString(),
       notlar: pauseNote.trim() || null,
@@ -423,6 +446,9 @@ function PanelPage() {
     qc.invalidateQueries({ queryKey: ["running-sessions"] });
     qc.invalidateQueries({ queryKey: ["running-pauses"] });
     qc.invalidateQueries({ queryKey: ["session-history"] });
+    qc.invalidateQueries({ queryKey: ["sheet-stock"] });
+    qc.invalidateQueries({ queryKey: ["profile-stock"] });
+    qc.invalidateQueries({ queryKey: ["stock-moves-full"] });
   }
 
 
@@ -563,6 +589,13 @@ function PanelPage() {
               </div>
             )}
 
+            {isSaw && <div className="space-y-3 border-t pt-4">
+              <h3 className="text-sm font-semibold">{t("profil.saw")}</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5"><Label>{t("stok.stokKalemi")}</Label><Select value={profileId} onValueChange={setProfileId}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="__none__">{t("profil.outside")}</SelectItem>{profiles.map(s => <SelectItem key={s.id} value={s.id} disabled={s.adet <= 0}>{profileLabel(s)} · {s.adet} {t("profil.unit")}</SelectItem>)}</SelectContent></Select></div>
+                {profileId !== "__none__" && <div className="space-y-1.5"><Label htmlFor="profile-consumed">{t("profil.consumed")}</Label><Input id="profile-consumed" type="number" min="0.01" step="0.01" value={profileQty} onChange={e => setProfileQty(e.target.value)} /></div>}
+              </div>
+            </div>}
             {isPlasma && (
               <div className="space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-primary">

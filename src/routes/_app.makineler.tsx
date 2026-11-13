@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { plannedMinutes } from "@/lib/planned-time";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/makineler")({
@@ -28,9 +29,7 @@ export const Route = createFileRoute("/_app/makineler")({
 type Period = "gun" | "hafta" | "ay" | "ozel";
 
 function isoDay(d: Date) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x.toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 }
 
 function rangeFor(p: Period, from: string, to: string) {
@@ -100,6 +99,18 @@ function MakinelerPage() {
     },
   });
 
+  const { data: schedules } = useQuery({ queryKey: ["work-schedules"], queryFn: async () => {
+    const { data, error } = await supabase.from("work_schedules").select("id,gun,tatil,baslangic,bitis");
+    if (error) throw error;
+    return data ?? [];
+  }, refetchInterval: 15000 });
+  const { data: breaks } = useQuery({ queryKey: ["work-breaks"], queryFn: async () => {
+    const { data, error } = await supabase.from("work_breaks").select("schedule_id,baslangic,bitis");
+    if (error) throw error;
+    return data ?? [];
+  }, refetchInterval: 15000 });
+  const planned = schedules && breaks ? plannedMinutes(period === "ozel" ? from : isoDay(start), period === "ozel" ? to : isoDay(end), schedules, breaks) : 0;
+
   const idealOf = useMemo(() => {
     const m = new Map<string, number | null>();
     for (const p of products ?? []) m.set(p.id, p.ideal_cevrim_saniye ?? null);
@@ -120,8 +131,8 @@ function MakinelerPage() {
       const hurda = rows.reduce((s, r) => s + (r.hurda ?? 0), 0);
       const levha = rows.reduce((s, r) => s + Number(r.levha_adedi ?? 0), 0);
 
-      const planli = calisma + durus;
-      const availability = planli > 0 ? (calisma / planli) * 100 : 0;
+      const planli = planned;
+      const availability = planli > 0 ? Math.min(100, (calisma / planli) * 100) : 0;
 
       let idealDk = 0;
       let idealVar = false;
@@ -153,11 +164,11 @@ function MakinelerPage() {
 
       return {
         machine: m, calisma, durus, uretim, hurda, levha,
-        availability, performance, quality, oee, sebepler,
+        availability, performance, quality, oee, sebepler, planli,
         kayit: rows.length,
       };
     });
-  }, [machines, machineId, sessions, downtimes, idealOf]);
+  }, [machines, machineId, sessions, downtimes, idealOf, planned]);
 
   return (
     <div className="space-y-6">
@@ -231,6 +242,7 @@ function MakinelerPage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+            <Kpi icon={Clock} label={t("profil.planned")} value={(s.planli / 60).toFixed(1)} unit={t("mak.unit.hour")} tone="text-foreground" />
             <Kpi icon={Package} label={t("mak.kpi.produced")} value={String(s.uretim)} unit={t("mak.unit.piece")} tone="text-primary" />
             <Kpi icon={XCircle} label={t("mak.kpi.scrap")} value={String(s.hurda)} unit={t("mak.unit.piece")} tone="text-destructive" />
             <Kpi icon={Activity} label={t("mak.kpi.cutSheet")} value={s.levha.toFixed(2)} unit={t("mak.unit.sheet")} tone="text-foreground" />

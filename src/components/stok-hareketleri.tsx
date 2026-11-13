@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { levhaKg, type StockRow } from "@/lib/sac";
 import { useAuth } from "@/lib/auth";
+import { profileLabel, type ProfileStock } from "@/lib/profile-stock";
 import { useT } from "@/lib/i18n";
 
 const dtFmt = new Intl.DateTimeFormat("tr-TR", {
@@ -31,7 +32,7 @@ interface MoveRow {
   created_at: string;
 }
 
-export function StokHareketleri() {
+export function StokHareketleri({ material = "sac" }: { material?: "sac" | "profil" }) {
   const t = useT();
   const qc = useQueryClient();
   const { can } = useAuth();
@@ -60,35 +61,36 @@ export function StokHareketleri() {
   const [busy, setBusy] = useState(false);
 
   const { data: stocks } = useQuery({
-    queryKey: ["sheet-stock"],
+    queryKey: ["sheet-stock", material],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sheet_stock")
-        .select("id,sac_tipi,kalinlik_mm,uzunluk_mm,genislik_mm,adet,kritik_adet,yogunluk,notlar")
+        .select("*")
+        .in("malzeme_turu", material === "sac" ? ["sac"] : ["profil", "boru"])
         .order("sac_tipi").order("kalinlik_mm");
       if (error) throw error;
-      return (data ?? []) as StockRow[];
+      return (data ?? []) as ProfileStock[];
     },
   });
 
   const { data: moves, isLoading } = useQuery({
-    queryKey: ["stock-moves-full", filtre],
+    queryKey: ["stock-moves-full", material, filtre],
     queryFn: async () => {
       let q = supabase
         .from("sheet_stock_moves")
-        .select("id,stock_id,degisim,tip,yon,sebep,notlar,user_ad,bakiye_sonrasi,ters_kayit_id,created_at")
+        .select("id,stock_id,degisim,tip,yon,sebep,notlar,user_ad,bakiye_sonrasi,ters_kayit_id,created_at,malzeme_snapshot")
         .order("created_at", { ascending: false })
         .limit(300);
       if (filtre !== "hepsi") q = q.eq("stock_id", filtre);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as MoveRow[];
+      return (data ?? []).filter(m => material === "sac" ? !m.malzeme_snapshot : !!m.malzeme_snapshot) as MoveRow[];
     },
   });
 
   const stokAdi = (id: string | null) => {
     const r = (stocks ?? []).find((x) => x.id === id);
-    return r ? `${r.sac_tipi} · ${r.kalinlik_mm}mm · ${r.uzunluk_mm}×${r.genislik_mm}` : "—";
+    return r ? (material === "profil" ? profileLabel(r) : `${r.sac_tipi} · ${r.kalinlik_mm}mm · ${r.uzunluk_mm}×${r.genislik_mm}`) : "—";
   };
   const stokById = (id: string | null) => (stocks ?? []).find((x) => x.id === id);
 
@@ -157,7 +159,7 @@ export function StokHareketleri() {
       </div>
 
       <form onSubmit={submit} className="space-y-3 rounded-2xl border bg-card p-5">
-        <h3 className="text-lg">{t("stok.formTitle")}</h3>
+        <h3 className="text-lg">{t(material === "sac" ? "stok.formTitle" : "profil.moves")}</h3>
         <div className="grid gap-3 lg:grid-cols-6">
           <div className="space-y-1.5">
             <Label className="text-xs">{t("stok.hareketYonu")}</Label>
@@ -183,14 +185,14 @@ export function StokHareketleri() {
               <SelectContent>
                 {stocks?.map((s) => (
                   <SelectItem key={s.id} value={s.id}>
-                    {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm} ({t("stok.mevcut")} {s.adet})
+                    {stokAdi(s.id)} ({t("stok.mevcut")} {s.adet})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">{t("stok.levhaAdedi")}</Label>
+            <Label className="text-xs">{t(material === "sac" ? "stok.levhaAdedi" : "stok.adet")}</Label>
             <Input type="number" step="0.01" min={0} value={adet} onChange={(e) => setAdet(e.target.value)} placeholder="0" />
           </div>
           <div className="space-y-1.5">
@@ -216,7 +218,7 @@ export function StokHareketleri() {
             <Input value={notlar} onChange={(e) => setNotlar(e.target.value)} placeholder={t("stok.notPlaceholder2")} />
           </div>
         </div>
-        {stockId && adet && Number(adet) > 0 && (
+        {material === "sac" && stockId && adet && Number(adet) > 0 && (
           <p className="text-xs text-muted-foreground">
             {t("stok.yaklasikAgirlik")}{" "}
             <span className="font-mono">
@@ -224,7 +226,7 @@ export function StokHareketleri() {
             </span>
             {" · "}{t("stok.islemSonrasiBakiye")}{" "}
             <span className="font-mono">
-              {(stokById(stockId)?.adet ?? 0) + (yon === "giris" ? Number(adet) : -Number(adet))} {t("stok.levha")}
+              {(stokById(stockId)?.adet ?? 0) + (yon === "giris" ? Number(adet) : -Number(adet))} {t(material === "sac" ? "stok.levha" : "profil.unit")}
             </span>
           </p>
         )}
@@ -244,7 +246,7 @@ export function StokHareketleri() {
               <SelectItem value="hepsi">{t("stok.tumStokKalemleri")}</SelectItem>
               {stocks?.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
-                  {s.sac_tipi} · {s.kalinlik_mm}mm · {s.uzunluk_mm}×{s.genislik_mm}
+                  {stokAdi(s.id)}
                 </SelectItem>
               ))}
             </SelectContent>

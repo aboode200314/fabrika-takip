@@ -3,6 +3,7 @@ import { Layers } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StokTab } from "@/components/stok-tab";
 import { StokHareketleri } from "@/components/stok-hareketleri";
+import { ProfilStok } from "@/components/profil-stok";
 import { useT } from "@/lib/i18n";
 
 /** Sac stoğu ve stok hareketleri tek merkezde: bakiye + giriş/çıkış geçmişi. */
@@ -20,6 +21,12 @@ export function StokMerkezi() {
         </p>
       </div>
 
+      <Tabs defaultValue="sac" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="sac">{t("profil.sheet")}</TabsTrigger>
+          <TabsTrigger value="profil">{t("profil.title")}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="sac">
       <Tabs defaultValue="bakiye" className="space-y-4">
         <TabsList>
           <TabsTrigger value="bakiye">{t("stok.tab.bakiye")}</TabsTrigger>
@@ -27,6 +34,9 @@ export function StokMerkezi() {
         </TabsList>
         <TabsContent value="bakiye"><StokTab /></TabsContent>
         <TabsContent value="hareketler"><StokHareketleri /></TabsContent>
+      </Tabs>
+        </TabsContent>
+        <TabsContent value="profil"><ProfilStok /></TabsContent>
       </Tabs>
     </div>
   );

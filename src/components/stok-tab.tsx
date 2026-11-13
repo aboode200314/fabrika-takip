@@ -35,6 +35,7 @@ export function StokTab() {
       const { data, error } = await supabase
         .from("sheet_stock")
         .select("id,sac_tipi,kalinlik_mm,uzunluk_mm,genislik_mm,adet,kritik_adet,yogunluk,notlar")
+        .eq("malzeme_turu", "sac")
         .order("sac_tipi")
         .order("kalinlik_mm");
       if (error) throw error;

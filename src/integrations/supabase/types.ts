@@ -624,6 +624,7 @@ export type Database = {
           machine_id: string
           makine_ad_snapshot: string | null
           makine_kod_snapshot: string | null
+          malzeme_snapshot: Json | null
           miktar: number | null
           notlar: string | null
           operation_id: string | null
@@ -660,6 +661,7 @@ export type Database = {
           machine_id: string
           makine_ad_snapshot?: string | null
           makine_kod_snapshot?: string | null
+          malzeme_snapshot?: Json | null
           miktar?: number | null
           notlar?: string | null
           operation_id?: string | null
@@ -696,6 +698,7 @@ export type Database = {
           machine_id?: string
           makine_ad_snapshot?: string | null
           makine_kod_snapshot?: string | null
+          malzeme_snapshot?: Json | null
           miktar?: number | null
           notlar?: string | null
           operation_id?: string | null
@@ -1077,41 +1080,53 @@ export type Database = {
         Row: {
           adet: number
           created_at: string
+          dis_cap_mm: number | null
           genislik_mm: number
+          ic_cap_mm: number | null
           id: string
           kalinlik_mm: number
           kritik_adet: number
+          malzeme_turu: string
           notlar: string | null
           sac_tipi: string
           updated_at: string
           uzunluk_mm: number
           yogunluk: number
+          yukseklik_mm: number | null
         }
         Insert: {
           adet?: number
           created_at?: string
+          dis_cap_mm?: number | null
           genislik_mm: number
+          ic_cap_mm?: number | null
           id?: string
           kalinlik_mm: number
           kritik_adet?: number
+          malzeme_turu?: string
           notlar?: string | null
           sac_tipi: string
           updated_at?: string
           uzunluk_mm: number
           yogunluk?: number
+          yukseklik_mm?: number | null
         }
         Update: {
           adet?: number
           created_at?: string
+          dis_cap_mm?: number | null
           genislik_mm?: number
+          ic_cap_mm?: number | null
           id?: string
           kalinlik_mm?: number
           kritik_adet?: number
+          malzeme_turu?: string
           notlar?: string | null
           sac_tipi?: string
           updated_at?: string
           uzunluk_mm?: number
           yogunluk?: number
+          yukseklik_mm?: number | null
         }
         Relationships: []
       }
@@ -1124,6 +1139,7 @@ export type Database = {
           genislik_mm_snapshot: number | null
           id: string
           kalinlik_mm_snapshot: number | null
+          malzeme_snapshot: Json | null
           notlar: string | null
           sac_tipi_snapshot: string | null
           sebep: string | null
@@ -1145,6 +1161,7 @@ export type Database = {
           genislik_mm_snapshot?: number | null
           id?: string
           kalinlik_mm_snapshot?: number | null
+          malzeme_snapshot?: Json | null
           notlar?: string | null
           sac_tipi_snapshot?: string | null
           sebep?: string | null
@@ -1166,6 +1183,7 @@ export type Database = {
           genislik_mm_snapshot?: number | null
           id?: string
           kalinlik_mm_snapshot?: number | null
+          malzeme_snapshot?: Json | null
           notlar?: string | null
           sac_tipi_snapshot?: string | null
           sebep?: string | null

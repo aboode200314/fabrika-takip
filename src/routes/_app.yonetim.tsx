@@ -119,7 +119,7 @@ function OzetTab() {
           .select("id,machine_id,vardiya,miktar,hurda,sure_dakika,toplam_durus_dakika,bitis,durum,levha_adedi")
           .gte("baslangic", sinceIso),
         supabase.from("machines").select("id,kod,ad,aktif").order("kod"),
-        supabase.from("sheet_stock").select("id,sac_tipi,kalinlik_mm,uzunluk_mm,genislik_mm,adet,kritik_adet,yogunluk,notlar"),
+        supabase.from("sheet_stock").select("id,sac_tipi,kalinlik_mm,uzunluk_mm,genislik_mm,adet,kritik_adet,yogunluk,notlar").eq("malzeme_turu", "sac"),
       ]);
       const rows = sessions ?? [];
       const toplamUretim = rows.reduce((s, r) => s + (r.miktar ?? 0), 0);

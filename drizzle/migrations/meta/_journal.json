@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794559637847,
+      "tag": "0000_extend_existing_stock_for_profiles_and_pipes",
+      "breakpoints": true
+    }
+  ]
+}

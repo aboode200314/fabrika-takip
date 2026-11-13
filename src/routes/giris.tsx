@@ -15,6 +15,14 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 
 export const Route = createFileRoute("/giris")({
   component: GirisPage,
+  head: () => ({ meta: [
+    { title: "Personel Girişi — GVN Trailer" },
+    { name: "description", content: "GVN Trailer üretim takip sistemine personel girişi." },
+    { property: "og:title", content: "Personel Girişi — GVN Trailer" },
+    { property: "og:description", content: "GVN Trailer personel hesabına giriş." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
 });
 
 const makeLoginSchema = (t: (k: string) => string) =>
