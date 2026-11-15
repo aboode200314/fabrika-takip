@@ -30,6 +30,7 @@ interface MoveRow {
   bakiye_sonrasi: number | null;
   ters_kayit_id: string | null;
   created_at: string;
+  malzeme_snapshot: ProfileStock | null;
 }
 
 export function StokHareketleri({ material = "sac" }: { material?: "sac" | "profil" }) {
@@ -81,10 +82,11 @@ export function StokHareketleri({ material = "sac" }: { material?: "sac" | "prof
         .select("id,stock_id,degisim,tip,yon,sebep,notlar,user_ad,bakiye_sonrasi,ters_kayit_id,created_at,malzeme_snapshot")
         .order("created_at", { ascending: false })
         .limit(300);
+      q = material === "sac" ? q.is("malzeme_snapshot", null) : q.not("malzeme_snapshot", "is", null);
       if (filtre !== "hepsi") q = q.eq("stock_id", filtre);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []).filter(m => material === "sac" ? !m.malzeme_snapshot : !!m.malzeme_snapshot) as MoveRow[];
+      return (data ?? []) as unknown as MoveRow[];
     },
   });
 
@@ -127,6 +129,7 @@ export function StokHareketleri({ material = "sac" }: { material?: "sac" | "prof
     setAdet(""); setNotlar("");
     qc.invalidateQueries({ queryKey: ["stock-moves-full"] });
     qc.invalidateQueries({ queryKey: ["sheet-stock"] });
+    qc.invalidateQueries({ queryKey: ["profile-stock"] });
     qc.invalidateQueries({ queryKey: ["sheet-stock-moves"] });
   }
 
@@ -145,6 +148,7 @@ export function StokHareketleri({ material = "sac" }: { material?: "sac" | "prof
     toast.success(t("stok.success.terslendi"));
     qc.invalidateQueries({ queryKey: ["stock-moves-full"] });
     qc.invalidateQueries({ queryKey: ["sheet-stock"] });
+    qc.invalidateQueries({ queryKey: ["profile-stock"] });
   }
 
   const iptalEdilenler = new Set((moves ?? []).map((m) => m.ters_kayit_id).filter(Boolean) as string[]);
@@ -281,7 +285,7 @@ export function StokHareketleri({ material = "sac" }: { material?: "sac" | "prof
                       <TableCell className="whitespace-nowrap font-mono text-xs">
                         {dtFmt.format(new Date(m.created_at))}
                       </TableCell>
-                      <TableCell className="text-xs">{stokAdi(m.stock_id)}</TableCell>
+                      <TableCell className="text-xs">{m.malzeme_snapshot ? profileLabel(m.malzeme_snapshot) : stokAdi(m.stock_id)}</TableCell>
                       <TableCell className="text-xs uppercase tracking-wide text-muted-foreground">{m.tip}</TableCell>
                       <TableCell className="text-xs">{m.sebep ?? "—"}</TableCell>
                       <TableCell className="text-xs">{m.user_ad ?? t("stok.sistem")}</TableCell>

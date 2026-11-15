@@ -49,6 +49,7 @@ export function StokTab() {
       const { data, error } = await supabase
         .from("sheet_stock_moves")
         .select("id,stock_id,degisim,tip,notlar,created_at")
+        .is("malzeme_snapshot", null)
         .order("created_at", { ascending: false })
         .limit(30);
       if (error) throw error;
